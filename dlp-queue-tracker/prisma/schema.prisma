@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Park {
+  id         String       @id
+  name       String
+  timezone   String
+  attractions Attraction[]
+  queueData  QueueData[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model Attraction {
+  id         String      @id
+  name       String
+  parkId     String
+  park       Park        @relation(fields: [parkId], references: [id])
+  type       String?
+  area       String?
+  queueData  QueueData[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([parkId])
+}
+
+model QueueData {
+  id           String     @id @default(cuid())
+  attractionId String
+  attraction   Attraction @relation(fields: [attractionId], references: [id])
+  parkId       String
+  park         Park       @relation(fields: [parkId], references: [id])
+  waitTime     Int?       // null means attraction is closed
+  status       String     // OPERATING, DOWN, CLOSED, REFURBISHMENT
+  timestamp    DateTime   @default(now())
+
+  @@index([attractionId, timestamp])
+  @@index([parkId, timestamp])
+  @@index([timestamp])
+}
+
+model DailyStats {
+  id           String   @id @default(cuid())
+  attractionId String
+  parkId       String
+  date         DateTime
+  avgWaitTime  Float?
+  maxWaitTime  Int?
+  minWaitTime  Int?
+  peakHour     Int?
+  totalSamples Int
+  createdAt    DateTime @default(now())
+
+  @@unique([attractionId, date])
+  @@index([parkId, date])
+}
