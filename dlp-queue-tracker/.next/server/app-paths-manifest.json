@@ -1,9 +1,0 @@
-{
-  "/api/queue-times/route": "app/api/queue-times/route.js",
-  "/api/attractions/route": "app/api/attractions/route.js",
-  "/api/attractions/[id]/route": "app/api/attractions/[id]/route.js",
-  "/api/attractions/[id]/downtime/route": "app/api/attractions/[id]/downtime/route.js",
-  "/page": "app/page.js",
-  "/attractions/page": "app/attractions/page.js",
-  "/statistics/page": "app/statistics/page.js"
-}
