@@ -260,7 +260,8 @@ export async function seedDatabase() {
   ];
 
   console.log("\n👥 Inserting teams...");
-  const teamIds: string[] = [];
+  // Create a mapping of team names to IDs for safe lookup
+  const teamNameToIdMap = new Map<string, string>();
   for (const team of teams) {
     // Check if team already exists
     const { data: existing } = await supabaseAdmin
@@ -270,7 +271,7 @@ export async function seedDatabase() {
       .maybeSingle();
 
     if (existing) {
-      teamIds.push(existing.id);
+      teamNameToIdMap.set(team.name, existing.id);
       console.log(`  ✓ Team "${team.name}" already exists (skipping)`);
     } else {
       const { data, error } = await supabaseAdmin
@@ -282,24 +283,38 @@ export async function seedDatabase() {
       if (error) {
         console.error(`  ❌ Error inserting team "${team.name}":`, error.message);
       } else if (data) {
-        teamIds.push(data.id);
+        teamNameToIdMap.set(team.name, data.id);
         console.log(`  ✅ Created "${team.name}"`);
       }
     }
   }
 
-  if (teamIds.length === 0) {
+  if (teamNameToIdMap.size === 0) {
     throw new Error("No teams were created or found. Cannot proceed with team documents.");
   }
 
-  // Insert team documents
-  const teamDocuments = [
-    {
-      team_id: teamIds[0], // Application team
-      application_id: "test-app-1",
-      title: "Feature Development Guide",
-      category: "Development",
-      content: `<h1>Feature Development Guide</h1>
+  // Get team IDs safely, checking existence before use
+  const applicationTeamId = teamNameToIdMap.get("Application");
+  const systemsTeamId = teamNameToIdMap.get("Systems");
+  const supportTeamId = teamNameToIdMap.get("Support");
+
+  // Insert team documents (only for teams that exist)
+  const teamDocuments: Array<{
+    team_id: string;
+    application_id: string;
+    title: string;
+    category: string;
+    content: string;
+  }> = [];
+
+  if (applicationTeamId) {
+    teamDocuments.push(
+      {
+        team_id: applicationTeamId, // Application team
+        application_id: "test-app-1",
+        title: "Feature Development Guide",
+        category: "Development",
+        content: `<h1>Feature Development Guide</h1>
 
 <h2>Development Process</h2>
 <p>Our team follows agile development practices with 2-week sprints.</p>
@@ -319,13 +334,13 @@ export async function seedDatabase() {
   <li>Wait for code review approval</li>
   <li>Merge after CI passes</li>
 </ol>`,
-    },
-    {
-      team_id: teamIds[0], // Application team
-      application_id: "test-app-2",
-      title: "Admin Dashboard Customizations",
-      category: "Customization",
-      content: `<h1>Admin Dashboard Customizations</h1>
+      },
+      {
+        team_id: applicationTeamId, // Application team
+        application_id: "test-app-2",
+        title: "Admin Dashboard Customizations",
+        category: "Customization",
+        content: `<h1>Admin Dashboard Customizations</h1>
 
 <h2>Available Customizations</h2>
 <ul>
@@ -340,13 +355,18 @@ export async function seedDatabase() {
   <li><code>config/widgets.json</code> - Dashboard widgets</li>
   <li><code>config/reports.json</code> - Report templates</li>
 </ul>`,
-    },
-    {
-      team_id: teamIds[1], // Systems team
-      application_id: "test-app-1",
-      title: "Deployment Runbook",
-      category: "Operations",
-      content: `<h1>Deployment Runbook</h1>
+      },
+    );
+  }
+
+  if (systemsTeamId) {
+    teamDocuments.push(
+      {
+        team_id: systemsTeamId, // Systems team
+        application_id: "test-app-1",
+        title: "Deployment Runbook",
+        category: "Operations",
+        content: `<h1>Deployment Runbook</h1>
 
 <h2>Pre-Deployment Checklist</h2>
 <ul>
@@ -368,13 +388,13 @@ export async function seedDatabase() {
 <h2>Rollback Procedure</h2>
 <p>If issues occur, immediately rollback to previous version:</p>
 <pre><code>kubectl rollout undo deployment/customer-portal</code></pre>`,
-    },
-    {
-      team_id: teamIds[1], // Systems team
-      application_id: "test-app-2",
-      title: "Monitoring & Alerts",
-      category: "Operations",
-      content: `<h1>Monitoring & Alerts</h1>
+      },
+      {
+        team_id: systemsTeamId, // Systems team
+        application_id: "test-app-2",
+        title: "Monitoring & Alerts",
+        category: "Operations",
+        content: `<h1>Monitoring & Alerts</h1>
 
 <h2>Monitoring Tools</h2>
 <ul>
@@ -397,13 +417,18 @@ export async function seedDatabase() {
   <li>Response time > 2s for 10 minutes</li>
   <li>CPU usage > 80% for 15 minutes</li>
 </ul>`,
-    },
-    {
-      team_id: teamIds[2], // Support team
-      application_id: "test-app-1",
-      title: "Common Support Issues",
-      category: "Support",
-      content: `<h1>Common Support Issues</h1>
+      },
+    );
+  }
+
+  if (supportTeamId) {
+    teamDocuments.push(
+      {
+        team_id: supportTeamId, // Support team
+        application_id: "test-app-1",
+        title: "Common Support Issues",
+        category: "Support",
+        content: `<h1>Common Support Issues</h1>
 
 <h2>Account Access Issues</h2>
 <ul>
@@ -425,13 +450,13 @@ export async function seedDatabase() {
   <li>Level 2: Application team (technical issues)</li>
   <li>Level 3: Systems team (infrastructure issues)</li>
 </ol>`,
-    },
-    {
-      team_id: teamIds[2], // Support team
-      application_id: "test-app-2",
-      title: "Admin User Training Guide",
-      category: "Training",
-      content: `<h1>Admin User Training Guide</h1>
+      },
+      {
+        team_id: supportTeamId, // Support team
+        application_id: "test-app-2",
+        title: "Admin User Training Guide",
+        category: "Training",
+        content: `<h1>Admin User Training Guide</h1>
 
 <h2>Getting Started</h2>
 <ul>
@@ -453,8 +478,9 @@ export async function seedDatabase() {
   <li>Use filters to narrow down searches</li>
   <li>Export reports before major operations</li>
 </ul>`,
-    },
-  ];
+      },
+    );
+  }
 
   console.log("\n📝 Inserting team documents...");
   let teamDocCount = 0;
@@ -671,7 +697,7 @@ export async function seedDatabase() {
   console.log(`\n📊 Summary:`);
   console.log(`   • ${applications.length} applications`);
   console.log(`   • ${baseDocCount} base documents`);
-  console.log(`   • ${teamIds.length} teams`);
+  console.log(`   • ${teamNameToIdMap.size} teams`);
   console.log(`   • ${teamDocCount} team documents`);
   console.log(`   • ${templateCount} document templates`);
 }
