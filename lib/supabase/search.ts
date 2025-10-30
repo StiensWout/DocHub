@@ -1,7 +1,35 @@
 import { supabase } from "@/lib/supabase/client";
 import type { Document } from "@/types";
 
-export interface SearchResult extends Document {
+export interface DocumentSearchResult extends Document {
+  appName: string;
+  appId: string;
+  relevanceScore?: number;
+}
+
+export interface ApplicationSearchResult {
+  type: 'application';
+  id: string;
+  name: string;
+  icon_name: string;
+  color: string;
+  group_id?: string | null;
+  document_count?: number;
+}
+
+export interface GroupSearchResult {
+  type: 'group';
+  id: string;
+  name: string;
+  icon_name?: string | null;
+  color?: string | null;
+  application_count: number;
+}
+
+export type SearchResult = DocumentSearchResult | ApplicationSearchResult | GroupSearchResult;
+
+// Legacy type alias for backward compatibility
+export interface SearchResultLegacy extends Document {
   appName: string;
   appId: string;
   relevanceScore?: number;
@@ -90,12 +118,12 @@ function fuzzyMatchScore(text: string, query: string): number {
 export async function searchDocuments(
   query: string,
   filters: SearchFilters = {}
-): Promise<SearchResult[]> {
+): Promise<DocumentSearchResult[]> {
   if (!query.trim()) return [];
 
   const searchTerm = query.trim().toLowerCase();
-  const results: SearchResult[] = [];
-  const fuzzyResults: SearchResult[] = [];
+  const results: DocumentSearchResult[] = [];
+  const fuzzyResults: DocumentSearchResult[] = [];
 
   // Search base documents
   if (!filters.documentType || filters.documentType === "all" || filters.documentType === "base") {
@@ -132,7 +160,7 @@ export async function searchDocuments(
         const categoryFuzzy = fuzzyMatchScore(doc.category, searchTerm);
         const fuzzyScore = Math.max(titleFuzzy, categoryFuzzy);
         
-        const result: SearchResult = {
+        const result: DocumentSearchResult = {
           id: doc.id,
           title: doc.title,
           category: doc.category,
@@ -192,7 +220,7 @@ export async function searchDocuments(
         const categoryFuzzy = fuzzyMatchScore(doc.category, searchTerm);
         const fuzzyScore = Math.max(titleFuzzy, categoryFuzzy);
         
-        const result: SearchResult = {
+        const result: DocumentSearchResult = {
           id: doc.id,
           title: doc.title,
           category: doc.category,
@@ -376,4 +404,158 @@ function formatTimeAgo(timestamp: string): string {
   } else {
     return `${diffWeeks} ${diffWeeks === 1 ? "week" : "weeks"} ago`;
   }
+}
+
+// Search applications by name
+export async function searchApplications(query: string): Promise<ApplicationSearchResult[]> {
+  if (!query.trim()) return [];
+
+  const searchTerm = query.trim().toLowerCase();
+  
+  // Search for applications matching the query (case-insensitive)
+  const { data, error } = await supabase
+    .from("applications")
+    .select("id, name, icon_name, color, group_id")
+    .ilike("name", `%${searchTerm}%`)
+    .order("name")
+    .limit(10);
+
+  if (error) {
+    console.error("Error searching applications:", error);
+    return [];
+  }
+
+  if (!data) return [];
+
+  // Get document counts for each application
+  const appsWithCounts = await Promise.all(
+    data.map(async (app) => {
+      // Count base documents
+      const { count: baseCount } = await supabase
+        .from("base_documents")
+        .select("id", { count: "exact", head: true })
+        .eq("application_id", app.id);
+
+      // Count team documents (across all teams)
+      const { count: teamCount } = await supabase
+        .from("team_documents")
+        .select("id", { count: "exact", head: true })
+        .eq("application_id", app.id);
+
+      const documentCount = (baseCount || 0) + (teamCount || 0);
+
+      return {
+        type: 'application' as const,
+        id: app.id,
+        name: app.name,
+        icon_name: app.icon_name,
+        color: app.color,
+        group_id: app.group_id,
+        document_count: documentCount,
+      };
+    })
+  );
+
+  // Sort by relevance: exact match first, then starts with, then contains
+  return appsWithCounts.sort((a, b) => {
+    const aName = a.name.toLowerCase();
+    const bName = b.name.toLowerCase();
+    
+    if (aName === searchTerm && bName !== searchTerm) return -1;
+    if (aName !== searchTerm && bName === searchTerm) return 1;
+    if (aName.startsWith(searchTerm) && !bName.startsWith(searchTerm)) return -1;
+    if (!aName.startsWith(searchTerm) && bName.startsWith(searchTerm)) return 1;
+    
+    return a.name.localeCompare(b.name);
+  });
+}
+
+// Search application groups by name
+export async function searchApplicationGroups(query: string): Promise<GroupSearchResult[]> {
+  if (!query.trim()) return [];
+
+  const searchTerm = query.trim().toLowerCase();
+  
+  // Search for groups matching the query (case-insensitive)
+  const { data, error } = await supabase
+    .from("application_groups")
+    .select("id, name, icon_name, color")
+    .ilike("name", `%${searchTerm}%`)
+    .order("display_order")
+    .order("name")
+    .limit(10);
+
+  if (error) {
+    console.error("Error searching application groups:", error);
+    return [];
+  }
+
+  if (!data) return [];
+
+  // Get application counts for each group
+  const groupsWithCounts = await Promise.all(
+    data.map(async (group) => {
+      const { count } = await supabase
+        .from("applications")
+        .select("id", { count: "exact", head: true })
+        .eq("group_id", group.id);
+
+      return {
+        type: 'group' as const,
+        id: group.id,
+        name: group.name,
+        icon_name: group.icon_name,
+        color: group.color,
+        application_count: count || 0,
+      };
+    })
+  );
+
+  // Sort by relevance: exact match first, then starts with, then contains
+  // Also filter out groups with 0 applications
+  return groupsWithCounts
+    .filter(group => group.application_count > 0)
+    .sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      
+      if (aName === searchTerm && bName !== searchTerm) return -1;
+      if (aName !== searchTerm && bName === searchTerm) return 1;
+      if (aName.startsWith(searchTerm) && !bName.startsWith(searchTerm)) return -1;
+      if (!aName.startsWith(searchTerm) && bName.startsWith(searchTerm)) return 1;
+      
+      return a.name.localeCompare(b.name);
+    });
+}
+
+// Get application suggestions for autocomplete
+export async function getApplicationSuggestions(query: string): Promise<string[]> {
+  if (!query.trim()) return [];
+
+  const searchTerm = query.trim().toLowerCase();
+  
+  const { data } = await supabase
+    .from("applications")
+    .select("name")
+    .ilike("name", `%${searchTerm}%`)
+    .order("name")
+    .limit(3);
+
+  return (data || []).map(app => app.name);
+}
+
+// Get group suggestions for autocomplete
+export async function getGroupSuggestions(query: string): Promise<string[]> {
+  if (!query.trim()) return [];
+
+  const searchTerm = query.trim().toLowerCase();
+  
+  const { data } = await supabase
+    .from("application_groups")
+    .select("name")
+    .ilike("name", `%${searchTerm}%`)
+    .order("name")
+    .limit(2);
+
+  return (data || []).map(group => group.name);
 }

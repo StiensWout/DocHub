@@ -19,7 +19,7 @@ import { useRecentDocuments } from "@/hooks/useRecentDocuments";
 import { useToast } from "@/components/Toast";
 import { supabase } from "@/lib/supabase/client";
 import type { ApplicationWithDocs, Team, Application, Document, BreadcrumbItem } from "@/types";
-import type { SearchResult } from "@/lib/supabase/search";
+import type { SearchResult, DocumentSearchResult } from "@/lib/supabase/search";
 
 export default function Home() {
   const [teams, setTeams] = useState<Team[]>([]);
@@ -321,13 +321,33 @@ export default function Home() {
               </div>
               <div className="relative flex-1 max-w-md mx-8">
                 <SearchBar
-                  onResultClick={(result) => {
-                    setSelectedDocument(result);
-                    setSelectedDocumentAppName(result.appName);
-                    setSelectedDocumentAppId(result.appId);
-                    const app = applications.find((a) => a.name === result.appName);
-                    if (app) {
-                      setSelectedApp(app.id);
+                  onResultClick={(result: SearchResult) => {
+                    // Handle different result types
+                    if (result.type === 'application') {
+                      // Navigate to application
+                      setSelectedApp(result.id);
+                      setSelectedDocument(null);
+                      setSelectedDocumentAppName("");
+                      setSelectedDocumentAppId("");
+                    } else if (result.type === 'group') {
+                      // For groups, we'll expand it in the sidebar and navigate to it
+                      // TODO: Implement group expansion in sidebar (requires Sidebar component changes)
+                      // For now, just clear document/app selection to show home view
+                      setSelectedApp(null);
+                      setSelectedDocument(null);
+                      setSelectedDocumentAppName("");
+                      setSelectedDocumentAppId("");
+                      // In the future: expandGroupInSidebar(result.id);
+                    } else {
+                      // Document result (existing behavior)
+                      const docResult = result as DocumentSearchResult;
+                      setSelectedDocument(docResult);
+                      setSelectedDocumentAppName(docResult.appName);
+                      setSelectedDocumentAppId(docResult.appId);
+                      const app = applications.find((a) => a.name === docResult.appName);
+                      if (app) {
+                        setSelectedApp(app.id);
+                      }
                     }
                   }}
                   teamId={selectedTeamId}

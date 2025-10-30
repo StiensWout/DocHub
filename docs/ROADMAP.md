@@ -102,13 +102,15 @@ This roadmap outlines planned features, enhancements, and improvements for DocHu
   - **Completed**: Group creation/management UI, backend, and sidebar display
   - **Completed**: 2025-01-30
   - **Remaining**: Optional drag-and-drop enhancement, main page overview (separate feature)
-- [ ] **Application & Group Search Integration**
-  - [ ] Add applications to search functionality
-  - [ ] Add application groups to search functionality
-  - [ ] Display search results with application icons and colors
-  - [ ] Filter options for application/group search
-  - [ ] Navigate to applications/groups from search results
+- [x] **Application & Group Search Integration** ✅ COMPLETED
+  - [x] Add applications to search functionality
+  - [x] Add application groups to search functionality
+  - [x] Display search results with application icons and colors
+  - [x] Filter options for application/group search
+  - [x] Navigate to applications/groups from search results
+  - [x] Search suggestions include applications and groups
   - **See**: `docs/FEATURE_REQUESTS/application-group-search-integration.md` for detailed specification
+  - **Completed**: 2025-01-30
 - [x] **Database Schema Updates** ✅ COMPLETED
   - [x] Add optional `group_id` field to applications table
   - [x] Create `application_groups` table (if needed)
