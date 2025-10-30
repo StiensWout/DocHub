@@ -26,6 +26,7 @@ This feature request outlines the implementation of comprehensive application ma
 7. **Reorder applications within groups** so I can prioritize important applications
 8. **Manage application groups** so I can create, edit, or delete groups as my workspace evolves
 9. **Access application settings** so I can manage all application properties in one place
+10. **Search for applications and groups** so I can quickly find specific applications or application groups when I have many of them
 
 ## Current State
 
@@ -251,7 +252,79 @@ CREATE TABLE application_groups (
 CREATE INDEX idx_applications_group_id ON applications(group_id);
 ```
 
-### 4. UI Components
+### 4. Application & Group Search Integration
+
+Integrate applications and application groups into the main search functionality, allowing users to search for and navigate directly to applications and groups from the search bar.
+
+#### Features
+- **Application Search**: Search applications by name
+- **Group Search**: Search application groups by name
+- **Search Result Display**: Show application results with icons and colors
+- **Group Result Display**: Show group results with group icons and colors
+- **Quick Navigation**: Click on search results to navigate directly to the application or group
+- **Search Filters**: Option to filter search results by type (applications, groups, documents)
+- **Integration**: Seamlessly integrate with existing search functionality
+
+#### UI Design
+
+**Search Results with Applications:**
+```
+┌────────────────────────────────────────┐
+│  Search: "customer"                    │
+├────────────────────────────────────────┤
+│  Applications (2)                      │
+│  ┌──────────────────────────────────┐  │
+│  │ [Icon] Customer Portal           │  │
+│  │        customer-portal            │  │
+│  └──────────────────────────────────┘  │
+│  ┌──────────────────────────────────┐  │
+│  │ [Icon] Customer Support           │  │
+│  │        customer-support            │  │
+│  └──────────────────────────────────┘  │
+│                                        │
+│  Groups (1)                            │
+│  ┌──────────────────────────────────┐  │
+│  │ [Icon] Customer Apps             │  │
+│  └──────────────────────────────────┘  │
+│                                        │
+│  Documents (5)                         │
+│  ...                                   │
+└────────────────────────────────────────┘
+```
+
+#### Technical Requirements
+- Component: Update `components/SearchBar.tsx` to include applications and groups
+- Query Functions: Add search functions for applications and groups in `lib/supabase/search.ts` or `lib/supabase/queries.ts`
+- Result Types: Extend search result types to include applications and groups
+- Navigation: Handle clicks on application/group results to navigate to them
+- Styling: Apply application colors and icons in search results
+
+#### Implementation Details
+```typescript
+interface ApplicationSearchResult {
+  type: 'application';
+  id: string;
+  name: string;
+  icon_name: string;
+  color: string;
+  group_id?: string;
+}
+
+interface GroupSearchResult {
+  type: 'group';
+  id: string;
+  name: string;
+  icon_name?: string;
+  color?: string;
+}
+
+// Update search to include applications and groups
+const searchResults = await searchDocuments(query, teamId);
+const applicationResults = await searchApplications(query);
+const groupResults = await searchApplicationGroups(query);
+```
+
+### 5. UI Components
 
 #### Icon Picker Component
 
@@ -407,15 +480,15 @@ USING (created_by = auth.uid());
 - **Migration File**: `supabase/migration_application_groups.sql`
 - **Completed**: 2025-01-30
 
-### Phase 4: Application Grouping (Basic) ⚠️ PARTIALLY COMPLETED
+### Phase 4: Application Grouping (Basic) ✅ COMPLETED
 - [x] Create `ApplicationGroupManager` component
 - [x] Implement group creation
 - [x] Implement group assignment in application forms
-- [ ] Update sidebar to display groups
-- [ ] Add collapsible/expandable groups
-- [ ] Test grouping functionality
-- **Completed**: 2025-01-30 (Management UI)
-- **Remaining**: Sidebar display integration
+- [x] Update sidebar to display groups
+- [x] Add collapsible/expandable groups
+- [x] Test grouping functionality
+- **Completed**: 2025-01-30 (Management UI & Sidebar Display)
+- **Status**: Complete - Groups are displayed in sidebar with collapsible sections
 
 ### Phase 5: Advanced Grouping Features ⚠️ PARTIALLY COMPLETED
 - [ ] Implement drag-and-drop for reordering (optional)
@@ -427,14 +500,18 @@ USING (created_by = auth.uid());
 - **Completed**: 2025-01-30 (CRUD operations)
 - **Remaining**: Drag-and-drop (optional enhancement)
 
-### Phase 7: Main Page Group Overview (New Feature)
-- [ ] Replace recent documents section with group overview
-- [ ] Display groups as cards/sections
-- [ ] Show applications within groups in grid layout
-- [ ] Implement ungrouped applications section
-- [ ] Add navigation from group overview to applications
-- [ ] Test with various group configurations
-- [ ] Add group statistics (document counts) - optional
+### Phase 7: Main Page Group Overview (Separate Feature Request)
+- **See**: `docs/FEATURE_REQUESTS/main-page-group-overview.md` for detailed specification
+- **Status**: Separate feature request, not part of core application management
+
+### Phase 8: Application & Group Search Integration
+- [ ] Add applications to search functionality
+- [ ] Add application groups to search functionality
+- [ ] Update search UI to display application results with icons and colors
+- [ ] Update search UI to display group results
+- [ ] Add filter options for application/group search
+- [ ] Implement click handlers to navigate to applications from search results
+- [ ] Test search with many applications and groups
 - [x] Add loading states for all operations
 - [x] Improve error handling and user feedback
 - [x] Add keyboard shortcuts (Escape to close dialogs)
@@ -449,7 +526,9 @@ USING (created_by = auth.uid());
 - ✅ Users can create new applications with custom names, icons, and colors
 - ✅ Users can edit existing applications (Phase 2 completed)
 - ✅ Applications can be organized into groups
-- ⚠️ Groups are displayed in sidebar and main view (groups created, sidebar display pending)
+- ✅ Groups are displayed in sidebar with collapsible sections (Phase 4 completed)
+- ⚠️ Groups are displayed in main view (sidebar complete, main page overview pending - separate feature)
+- ⚠️ Users can search for applications and application groups in the main search bar (pending)
 - ✅ All forms have proper validation and error handling
 - ✅ Changes persist correctly in the database
 - ✅ UI is responsive and accessible
@@ -465,7 +544,6 @@ USING (created_by = auth.uid());
 - **Application Import/Export**: Export application configurations for backup/sharing
 - **Custom Icons**: Upload custom icons instead of only using Lucide icons
 - **Application Archiving**: Archive applications instead of deleting them
-- **Application Search**: Search and filter applications by name, group, etc.
 
 ## Related Features
 
@@ -491,8 +569,9 @@ USING (created_by = auth.uid());
 
 **Status**: ⚠️ In Progress  
 **Completed**: 2025-01-30  
-**Phases Completed**: Phase 1, Phase 2, Phase 3, Phase 4 (partial), Phase 5 (partial), Phase 6 (partial)  
-**Remaining Work**: Phase 4 (Sidebar Display), Phase 5 (Drag-and-Drop), Main Page Group Overview
+**Phases Completed**: Phase 1, Phase 2, Phase 3, Phase 4, Phase 5 (partial), Phase 6 (partial), Phase 8 (pending)  
+**Remaining Work**: Phase 5 (Drag-and-Drop - optional), Phase 8 (Search Integration)  
+**Note**: Main Page Group Overview is now a separate feature request (see `main-page-group-overview.md`)
 
 ### Completed Features
 
@@ -527,19 +606,28 @@ USING (created_by = auth.uid());
 
 ### Remaining Work
 
-1. **Sidebar Group Display** (Phase 4)
-   - Organize applications by group
-   - Collapsible/expandable groups
-   - Ungrouped applications section
+1. **Sidebar Group Display** (Phase 4) ✅ COMPLETED
+   - ✅ Organize applications by group
+   - ✅ Collapsible/expandable groups
+   - ✅ Ungrouped applications section
+   - ✅ Group icons and colors displayed
+   - ✅ Expanded state persistence
+   - ✅ Keyboard navigation support
+   - **Completed**: 2025-01-30
 
-2. **Main Page Group Overview** (New Feature Request)
-   - Replace recent documents with application groups overview
-   - Display groups as cards/sections
-   - Show applications within each group
-   - Quick access to applications from main page
-   - Visual organization by groups
+2. **Main Page Group Overview** (Separate Feature Request)
+   - **See**: `docs/FEATURE_REQUESTS/main-page-group-overview.md` for detailed specification
+   - Separate feature request document created
 
-3. **Optional Enhancements**
+3. **Application & Group Search Integration** (Phase 8)
+   - Integrate applications into search functionality
+   - Integrate application groups into search functionality
+   - Display search results with application icons and colors
+   - Display group results in search
+   - Filter options for application/group search results
+   - Navigate to applications/groups from search results
+
+4. **Optional Enhancements**
    - Drag-and-drop for group/app reordering
    - Advanced animations
    - Performance testing

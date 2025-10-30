@@ -5,6 +5,7 @@ import type React from "react";
 import {
   BookOpen,
   ChevronRight,
+  ChevronDown,
   Home,
   FileText,
   Star,
@@ -13,8 +14,10 @@ import {
   Menu,
   X,
   Clock,
+  Layers,
 } from "lucide-react";
-import type { Team, Application, Document, RecentDocument } from "@/types";
+import type { Team, Application, Document, RecentDocument, ApplicationGroup } from "@/types";
+import { getApplicationGroups } from "@/lib/supabase/queries";
 
 interface SidebarProps {
   teams: Team[];
@@ -54,22 +57,66 @@ export default function Sidebar({
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  const [groups, setGroups] = useState<ApplicationGroup[]>([]);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Use external collapsed state if provided, otherwise use internal
   const collapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed;
   const toggleCollapse = externalToggleCollapse || (() => setInternalCollapsed((prev) => !prev));
 
-  // Load sidebar state from localStorage
+  // Load sidebar state and groups from localStorage
   useEffect(() => {
     try {
       const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
       if (stored !== null) {
         setInternalCollapsed(JSON.parse(stored));
       }
+      
+      // Load expanded groups from localStorage
+      const expandedGroupsStored = localStorage.getItem("dochub_expanded_groups");
+      if (expandedGroupsStored) {
+        try {
+          const storedExpanded = JSON.parse(expandedGroupsStored);
+          if (Array.isArray(storedExpanded) && storedExpanded.length > 0) {
+            setExpandedGroups(new Set(storedExpanded));
+          }
+        } catch (e) {
+          // If parse fails, will default to all expanded when groups load
+        }
+      }
     } catch (error) {
       console.error("Error loading sidebar state:", error);
     }
+    
+    // Load application groups
+    loadGroups();
   }, []);
+
+  // Load application groups
+  const loadGroups = async () => {
+    try {
+      const groupsData = await getApplicationGroups();
+      setGroups(groupsData);
+      // If no stored expanded state, expand all groups by default
+      setExpandedGroups(prev => {
+        if (prev.size === 0) {
+          return new Set(groupsData.map(g => g.id));
+        }
+        return prev;
+      });
+    } catch (error) {
+      console.error("Error loading application groups:", error);
+    }
+  };
+
+  // Save expanded groups to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem("dochub_expanded_groups", JSON.stringify(Array.from(expandedGroups)));
+    } catch (error) {
+      console.error("Error saving expanded groups:", error);
+    }
+  }, [expandedGroups]);
 
   // Save sidebar state to localStorage
   useEffect(() => {
@@ -102,9 +149,66 @@ export default function Sidebar({
     }
   };
 
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  };
+
+  // Group applications by group_id
+  const grouped: Record<string, Application[]> = {};
+  const ungrouped: Application[] = [];
+  
+  applications.forEach(app => {
+    if (app.group_id) {
+      if (!grouped[app.group_id]) {
+        grouped[app.group_id] = [];
+      }
+      grouped[app.group_id].push(app);
+    } else {
+      ungrouped.push(app);
+    }
+  });
+
+  // Sort groups by display_order, then by name
+  const sortedGroups = [...groups].sort((a, b) => {
+    if (a.display_order !== b.display_order) {
+      return a.display_order - b.display_order;
+    }
+    return a.name.localeCompare(b.name);
+  });
+
+  // Get flat list of visible applications for keyboard navigation
+  const getVisibleApplications = (): Application[] => {
+    if (collapsed) {
+      return applications;
+    }
+    const visible: Application[] = [];
+    sortedGroups.forEach(group => {
+      if (expandedGroups.has(group.id)) {
+        visible.push(...(grouped[group.id] || []));
+      }
+    });
+    visible.push(...ungrouped);
+    return visible;
+  };
+
+  // Calculate total items for keyboard navigation
+  const getTotalItems = () => {
+    const visibleApps = getVisibleApplications();
+    return 1 + visibleApps.length + teams.length; // Home + apps + teams
+  };
+
   // Keyboard navigation handler
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
-    const totalItems = 1 + applications.length + teams.length; // Home + apps + teams
+    const totalItems = getTotalItems();
+    const visibleApps = getVisibleApplications();
     let nextIndex: number | null = null;
 
     switch (e.key) {
@@ -124,10 +228,10 @@ export default function Sidebar({
         // Trigger click action
         if (index === 0) {
           handleHomeClick();
-        } else if (index <= applications.length) {
-          handleAppClick(applications[index - 1].id);
+        } else if (index <= visibleApps.length) {
+          handleAppClick(visibleApps[index - 1].id);
         } else {
-          const teamIndex = index - applications.length - 1;
+          const teamIndex = index - visibleApps.length - 1;
           handleTeamClick(teams[teamIndex].id);
         }
         break;
@@ -248,12 +352,8 @@ export default function Sidebar({
             </div>
           )}
 
-          {applications.map((app, appIndex) => {
-            const isAppSelected = selectedAppId === app.id;
-            const AppIcon = app.icon;
-            const index = appIndex + 1; // +1 for Home button
-            
-            // Get color values from app.color (e.g., "blue-500" -> hex values)
+          {(() => {
+            // Helper function to get color values
             const getColorValues = (colorString: string) => {
               const [colorName, shade] = (colorString || 'blue-500').split('-');
               const shadeNum = shade || '500';
@@ -272,49 +372,191 @@ export default function Sidebar({
               const baseColor = colorMap[colorName]?.[shadeNum] || colorMap.blue['500'];
               return {
                 icon: baseColor,
-                bg: `${baseColor}33`, // 20% opacity
-                border: `${baseColor}80`, // 50% opacity for border
+                bg: `${baseColor}33`,
+                border: `${baseColor}80`,
                 ring: baseColor,
               };
             };
 
-            const colors = getColorValues(app.color || 'blue-500');
+            let appIndex = 0; // Track global app index for keyboard navigation
 
             return (
-              <button
-                key={app.id}
-                onClick={() => handleAppClick(app.id)}
-                onKeyDown={(e) => handleKeyDown(e, index)}
-                className={`
-                  w-full px-4 py-2 text-left flex items-center gap-3
-                  hover:bg-white/10 active:bg-white/15 transition-colors focus:outline-none focus:ring-2 focus:ring-inset
-                  min-h-[44px] touch-manipulation
-                  ${focusedIndex === index ? "ring-2 ring-inset" : ""}
-                `}
-                style={isAppSelected ? {
-                  backgroundColor: colors.bg,
-                  borderLeft: `2px solid ${colors.border}`,
-                  ...(focusedIndex === index ? { outline: `2px solid ${colors.ring}`, outlineOffset: '-2px' } : {})
-                } : (focusedIndex === index ? {
-                  outline: `2px solid ${colors.ring}`,
-                  outlineOffset: '-2px'
-                } : {})}
-                aria-label={`Open ${app.name} application`}
-                aria-current={isAppSelected ? "page" : undefined}
-                aria-describedby={!collapsed ? "applications-heading" : undefined}
-                tabIndex={0}
-              >
-                {collapsed ? (
-                  <AppIcon className="w-4 h-4 flex-shrink-0 mx-auto" style={{ color: colors.icon }} aria-hidden="true" />
-                ) : (
+              <>
+                {/* Grouped Applications */}
+                {!collapsed && sortedGroups.map((group) => {
+                  const groupApps = grouped[group.id] || [];
+                  if (groupApps.length === 0) return null; // Don't show empty groups
+                  
+                  const isExpanded = expandedGroups.has(group.id);
+                  const GroupIcon = group.icon || Layers;
+                  
+                  // Get group color
+                  const groupColor = group.color ? getColorValues(group.color) : getColorValues('gray-500');
+
+                  return (
+                    <div key={group.id}>
+                      {/* Group Header */}
+                      <button
+                        onClick={() => toggleGroup(group.id)}
+                        className="w-full px-4 py-2 text-left flex items-center gap-2 hover:bg-white/5 transition-colors"
+                        aria-label={`Toggle ${group.name} group`}
+                        aria-expanded={isExpanded}
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="w-3 h-3 text-gray-400" />
+                        ) : (
+                          <ChevronRight className="w-3 h-3 text-gray-400" />
+                        )}
+                        {GroupIcon && (
+                          <GroupIcon 
+                            className="w-4 h-4 flex-shrink-0" 
+                            style={{ color: groupColor.icon }}
+                            aria-hidden="true" 
+                          />
+                        )}
+                        <span className="text-xs font-semibold text-gray-400 truncate flex-1">
+                          {group.name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          ({groupApps.length})
+                        </span>
+                      </button>
+
+                      {/* Applications in Group */}
+                      {isExpanded && (
+                        <div className="pl-4">
+                          {groupApps.map((app) => {
+                            appIndex++;
+                            const isAppSelected = selectedAppId === app.id;
+                            const AppIcon = app.icon;
+                            const index = appIndex;
+                            const colors = getColorValues(app.color || 'blue-500');
+
+                            return (
+                              <button
+                                key={app.id}
+                                onClick={() => handleAppClick(app.id)}
+                                onKeyDown={(e) => handleKeyDown(e, index)}
+                                className={`
+                                  w-full px-4 py-2 text-left flex items-center gap-3
+                                  hover:bg-white/10 active:bg-white/15 transition-colors focus:outline-none focus:ring-2 focus:ring-inset
+                                  min-h-[44px] touch-manipulation
+                                  ${focusedIndex === index ? "ring-2 ring-inset" : ""}
+                                `}
+                                style={isAppSelected ? {
+                                  backgroundColor: colors.bg,
+                                  borderLeft: `2px solid ${colors.border}`,
+                                  ...(focusedIndex === index ? { outline: `2px solid ${colors.ring}`, outlineOffset: '-2px' } : {})
+                                } : (focusedIndex === index ? {
+                                  outline: `2px solid ${colors.ring}`,
+                                  outlineOffset: '-2px'
+                                } : {})}
+                                aria-label={`Open ${app.name} application`}
+                                aria-current={isAppSelected ? "page" : undefined}
+                                tabIndex={0}
+                              >
+                                <AppIcon className="w-4 h-4 flex-shrink-0" style={{ color: colors.icon }} aria-hidden="true" />
+                                <span className="text-sm truncate">{app.name}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Ungrouped Applications */}
+                {ungrouped.length > 0 && (
                   <>
-                    <AppIcon className="w-4 h-4 flex-shrink-0" style={{ color: colors.icon }} aria-hidden="true" />
-                    <span className="text-sm truncate">{app.name}</span>
+                    {!collapsed && (
+                      <div className="px-4 py-2 mt-2 border-t border-white/10">
+                        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                          Other
+                        </h3>
+                      </div>
+                    )}
+                    {ungrouped.map((app) => {
+                      appIndex++;
+                      const isAppSelected = selectedAppId === app.id;
+                      const AppIcon = app.icon;
+                      const index = appIndex;
+                      const colors = getColorValues(app.color || 'blue-500');
+
+                      return (
+                        <button
+                          key={app.id}
+                          onClick={() => handleAppClick(app.id)}
+                          onKeyDown={(e) => handleKeyDown(e, index)}
+                          className={`
+                            w-full px-4 py-2 text-left flex items-center gap-3
+                            hover:bg-white/10 active:bg-white/15 transition-colors focus:outline-none focus:ring-2 focus:ring-inset
+                            min-h-[44px] touch-manipulation
+                            ${focusedIndex === index ? "ring-2 ring-inset" : ""}
+                          `}
+                          style={isAppSelected ? {
+                            backgroundColor: colors.bg,
+                            borderLeft: `2px solid ${colors.border}`,
+                            ...(focusedIndex === index ? { outline: `2px solid ${colors.ring}`, outlineOffset: '-2px' } : {})
+                          } : (focusedIndex === index ? {
+                            outline: `2px solid ${colors.ring}`,
+                            outlineOffset: '-2px'
+                          } : {})}
+                          aria-label={`Open ${app.name} application`}
+                          aria-current={isAppSelected ? "page" : undefined}
+                          tabIndex={0}
+                        >
+                          {collapsed ? (
+                            <AppIcon className="w-4 h-4 flex-shrink-0 mx-auto" style={{ color: colors.icon }} aria-hidden="true" />
+                          ) : (
+                            <>
+                              <AppIcon className="w-4 h-4 flex-shrink-0" style={{ color: colors.icon }} aria-hidden="true" />
+                              <span className="text-sm truncate">{app.name}</span>
+                            </>
+                          )}
+                        </button>
+                      );
+                    })}
                   </>
                 )}
-              </button>
+
+                {/* Fallback: If collapsed or no groups, show all apps flat */}
+                {collapsed && applications.map((app, idx) => {
+                  const isAppSelected = selectedAppId === app.id;
+                  const AppIcon = app.icon;
+                  const index = idx + 1;
+                  const colors = getColorValues(app.color || 'blue-500');
+
+                  return (
+                    <button
+                      key={app.id}
+                      onClick={() => handleAppClick(app.id)}
+                      onKeyDown={(e) => handleKeyDown(e, index)}
+                      className={`
+                        w-full px-4 py-2 text-left flex items-center gap-3
+                        hover:bg-white/10 active:bg-white/15 transition-colors focus:outline-none focus:ring-2 focus:ring-inset
+                        min-h-[44px] touch-manipulation
+                        ${focusedIndex === index ? "ring-2 ring-inset" : ""}
+                      `}
+                      style={isAppSelected ? {
+                        backgroundColor: colors.bg,
+                        borderLeft: `2px solid ${colors.border}`,
+                        ...(focusedIndex === index ? { outline: `2px solid ${colors.ring}`, outlineOffset: '-2px' } : {})
+                      } : (focusedIndex === index ? {
+                        outline: `2px solid ${colors.ring}`,
+                        outlineOffset: '-2px'
+                      } : {})}
+                      aria-label={`Open ${app.name} application`}
+                      aria-current={isAppSelected ? "page" : undefined}
+                      tabIndex={0}
+                    >
+                      <AppIcon className="w-4 h-4 flex-shrink-0 mx-auto" style={{ color: colors.icon }} aria-hidden="true" />
+                    </button>
+                  );
+                })}
+              </>
             );
-          })}
+          })()}
 
           {/* Teams Section */}
           {!collapsed && (
@@ -327,7 +569,8 @@ export default function Sidebar({
 
           {teams.map((team, teamIndex) => {
             const isSelected = selectedTeamId === team.id;
-            const index = teamIndex + applications.length + 1; // +1 for Home, +applications.length
+            const visibleApps = getVisibleApplications();
+            const index = teamIndex + visibleApps.length + 1; // +1 for Home
 
             return (
               <button
