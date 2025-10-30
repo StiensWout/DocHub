@@ -352,7 +352,7 @@ export default function Home() {
           </div>
         </header>
 
-        <main className={`flex-1 max-w-7xl mx-auto px-6 py-8 w-full ${sidebarCollapsed ? "lg:ml-0" : "lg:ml-0"}`}>
+        <main className="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">
         {/* Welcome Section */}
         {!selectedApp && !selectedDocument && (
           <div className="mb-12">
