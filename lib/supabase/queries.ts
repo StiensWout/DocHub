@@ -1,13 +1,25 @@
 import { supabase } from "@/lib/supabase/client";
 import { Globe, Database, Zap, Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { Document, Application, Team, DocumentFile } from "@/types";
+import type { Document, Application, Team, DocumentFile, ApplicationGroup } from "@/types";
+import * as LucideIcons from "lucide-react"; // Import all Lucide icons
 
 export interface DatabaseApplication {
   id: string;
   name: string;
   icon_name: string;
   color: string;
+  group_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DatabaseApplicationGroup {
+  id: string;
+  name: string;
+  icon_name?: string | null;
+  color?: string | null;
+  display_order: number;
   created_at: string;
   updated_at: string;
 }
@@ -59,6 +71,83 @@ export async function getTeams(): Promise<Team[]> {
   }));
 }
 
+// Create a new application
+export async function createApplication(
+  id: string,
+  name: string,
+  iconName: string,
+  color: string,
+  groupId?: string | null
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from("applications")
+      .insert({
+        id,
+        name,
+        icon_name: iconName,
+        color,
+        group_id: groupId || null,
+      });
+
+    if (error) {
+      console.error("Error creating application:", error);
+      // Provide more helpful error messages
+      if (error.code === "23505") {
+        return { success: false, error: "An application with this ID already exists" };
+      }
+      if (error.code === "42501") {
+        return { success: false, error: "Permission denied. Please check RLS policies." };
+      }
+      return { success: false, error: error.message || "Failed to create application" };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Unexpected error creating application:", err);
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+// Update an existing application
+export async function updateApplication(
+  id: string,
+  updates: {
+    name?: string;
+    icon_name?: string;
+    color?: string;
+    group_id?: string | null;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from("applications")
+    .update(updates)
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating application:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+// Check if application ID already exists
+export async function checkApplicationIdExists(id: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("applications")
+    .select("id")
+    .eq("id", id)
+    .single();
+
+  if (error && error.code !== "PGRST116") { // PGRST116 = no rows returned
+    console.error("Error checking application ID:", error);
+    return false;
+  }
+
+  return !!data;
+}
+
 // Fetch all applications
 export async function getApplications(): Promise<Application[]> {
   const { data, error } = await supabase
@@ -71,19 +160,19 @@ export async function getApplications(): Promise<Application[]> {
     return [];
   }
 
-  // Map icon names to actual icon components
-  const iconMap: Record<string, LucideIcon> = {
-    Globe,
-    Database,
-    Zap,
-    Settings,
+  // Map icon names to actual icon components dynamically
+  const getIconComponent = (iconName: string): LucideIcon => {
+    const Icon = LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcon;
+    return Icon || Globe; // Fallback to Globe if icon not found
   };
 
   return (data || []).map((app: DatabaseApplication) => ({
     id: app.id,
     name: app.name,
-    icon: iconMap[app.icon_name] || Globe,
+    icon: getIconComponent(app.icon_name),
+    icon_name: app.icon_name,
     color: app.color,
+    group_id: app.group_id || null,
     baseDocuments: [], // Will be populated separately
   }));
 }
@@ -392,4 +481,121 @@ export async function getFileMetadata(fileId: string): Promise<DocumentFile | nu
   }
 
   return data as DocumentFile;
+}
+
+// ============================================================================
+// Application Groups Functions
+// ============================================================================
+
+// Fetch all application groups
+export async function getApplicationGroups(): Promise<ApplicationGroup[]> {
+  const { data, error } = await supabase
+    .from("application_groups")
+    .select("*")
+    .order("display_order")
+    .order("name");
+
+  if (error) {
+    console.error("Error fetching application groups:", error);
+    return [];
+  }
+
+  // Map icon names to actual icon components
+  const getIconComponent = (iconName: string | null | undefined): LucideIcon | undefined => {
+    if (!iconName) return undefined;
+    const Icon = LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcon;
+    return Icon;
+  };
+
+  return (data || []).map((group: DatabaseApplicationGroup) => ({
+    id: group.id,
+    name: group.name,
+    icon_name: group.icon_name || undefined,
+    icon: group.icon_name ? getIconComponent(group.icon_name) : undefined,
+    color: group.color || undefined,
+    display_order: group.display_order,
+    created_at: group.created_at,
+    updated_at: group.updated_at,
+  }));
+}
+
+// Create a new application group
+export async function createApplicationGroup(
+  name: string,
+  iconName?: string,
+  color?: string,
+  displayOrder?: number
+): Promise<{ success: boolean; error?: string; groupId?: string }> {
+  try {
+    // Get max display_order if not provided
+    let order = displayOrder;
+    if (order === undefined) {
+      const { data: maxOrderData } = await supabase
+        .from("application_groups")
+        .select("display_order")
+        .order("display_order", { ascending: false })
+        .limit(1)
+        .single();
+      order = maxOrderData ? (maxOrderData.display_order || 0) + 1 : 0;
+    }
+
+    const { data, error } = await supabase
+      .from("application_groups")
+      .insert({
+        name,
+        icon_name: iconName || null,
+        color: color || null,
+        display_order: order,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("Error creating application group:", error);
+      return { success: false, error: error.message || "Failed to create application group" };
+    }
+
+    return { success: true, groupId: data.id };
+  } catch (err) {
+    console.error("Unexpected error creating application group:", err);
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+// Update an existing application group
+export async function updateApplicationGroup(
+  id: string,
+  updates: {
+    name?: string;
+    icon_name?: string;
+    color?: string;
+    display_order?: number;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from("application_groups")
+    .update(updates)
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating application group:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+// Delete an application group
+export async function deleteApplicationGroup(id: string): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from("application_groups")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error deleting application group:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
 }

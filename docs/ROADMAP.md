@@ -77,43 +77,69 @@ This roadmap outlines planned features, enhancements, and improvements for DocHu
 - **Completed**: 2025-01-30
 
 ### Application Management
-- [ ] **Create New Applications**
-  - [ ] Application creation dialog/form
-  - [ ] Application name input with validation
-  - [ ] Icon selection from available icons (Lucide icons)
-  - [ ] Color theme selection
-  - [ ] Application ID generation or custom ID input
-  - [ ] Success feedback and navigation to new application
-- [ ] **Edit Existing Applications**
-  - [ ] Edit application name
-  - [ ] Change application icon
-  - [ ] Update color theme
-  - [ ] Application settings page/dialog
-  - [ ] Update validation and error handling
-- [ ] **Application Grouping**
-  - [ ] Create application groups/categories
-  - [ ] Assign applications to groups
-  - [ ] Group display in sidebar and main view
-  - [ ] Collapsible/expandable groups
-  - [ ] Drag-and-drop to reorganize groups
-  - [ ] Group icons and colors
-  - [ ] Group management (create, edit, delete groups)
-- [ ] **Database Schema Updates**
-  - [ ] Add optional `group_id` field to applications table
-  - [ ] Create `application_groups` table (if needed)
-  - [ ] Update RLS policies for application management
-- [ ] **UI Components**
-  - [ ] Application creation dialog component
-  - [ ] Application editor component
-  - [ ] Icon picker component
-  - [ ] Color picker component
-  - [ ] Group manager component
+- [x] **Create New Applications** ✅ COMPLETED
+  - [x] Application creation dialog/form
+  - [x] Application name input with validation
+  - [x] Icon selection from available icons (Lucide icons)
+  - [x] Color theme selection
+  - [x] Application ID generation or custom ID input
+  - [x] Success feedback and navigation to new application
+- [x] **Edit Existing Applications** ✅ COMPLETED
+  - [x] Edit application name
+  - [x] Change application icon
+  - [x] Update color theme
+  - [x] Application settings page/dialog
+  - [x] Update validation and error handling
+  - **Completed**: 2025-01-30
+- [x] **Application Grouping** ⚠️ PARTIALLY COMPLETED
+  - [x] Create application groups/categories
+  - [x] Assign applications to groups
+  - [x] Group display in sidebar ✅ COMPLETED
+  - [x] Collapsible/expandable groups ✅ COMPLETED
+  - [ ] Drag-and-drop to reorganize groups (optional)
+  - [x] Group icons and colors
+  - [x] Group management (create, edit, delete groups)
+  - **Completed**: Group creation/management UI, backend, and sidebar display
+  - **Completed**: 2025-01-30
+  - **Remaining**: Optional drag-and-drop enhancement, main page overview (separate feature)
+- [ ] **Application & Group Search Integration**
+  - [ ] Add applications to search functionality
+  - [ ] Add application groups to search functionality
+  - [ ] Display search results with application icons and colors
+  - [ ] Filter options for application/group search
+  - [ ] Navigate to applications/groups from search results
+  - **See**: `docs/FEATURE_REQUESTS/application-group-search-integration.md` for detailed specification
+- [x] **Database Schema Updates** ✅ COMPLETED
+  - [x] Add optional `group_id` field to applications table
+  - [x] Create `application_groups` table (if needed)
+  - [x] Update RLS policies for application management
+  - **Migration**: `supabase/migration_application_groups.sql`
+- [x] **UI Components** ✅ MOSTLY COMPLETED
+  - [x] Application creation dialog component
+  - [x] Application editor component ✅ COMPLETED
+  - [x] Icon picker component
+  - [x] Color picker component
+  - [x] Group manager component
   - [ ] Application settings page
 - **See**: `docs/FEATURE_REQUESTS/application-management.md` for detailed specification
 - **Priority**: High  
 **Estimated Effort**: 1-2 weeks
+**Status**: ⚠️ In Progress - Phase 1 & 2 complete, sidebar display and search integration pending
 
 ## 🎯 Medium Term (Next 1-2 Months)
+
+### Main Page Group Overview
+- [ ] **Application Groups Overview**
+  - [ ] Replace recent documents with application groups overview
+  - [ ] Display groups as cards/sections on main page
+  - [ ] Show applications within each group in grid layout
+  - [ ] Quick navigation to applications from main page
+  - [ ] Ungrouped applications section
+  - [ ] Visual organization with group/app colors
+  - **See**: `docs/FEATURE_REQUESTS/main-page-group-overview.md` for detailed specification
+  - **Priority**: Medium
+  - **Estimated Effort**: 3-5 days
+  - **Dependencies**: Application Management Phase 3 (Groups Backend)
 
 ### Authentication & Authorization
 - [ ] **User Authentication**

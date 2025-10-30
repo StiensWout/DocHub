@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { FileText, Search, BookOpen, ChevronRight, Layers, Plus } from "lucide-react";
+import { FileText, Search, BookOpen, ChevronRight, Layers, Plus, FolderKanban, Settings } from "lucide-react";
 import { getTeams, getApplications, getAllDocumentsForApp } from "@/lib/supabase/queries";
 import TeamSelector from "@/components/TeamSelector";
 import DocumentViewer from "@/components/DocumentViewer";
@@ -12,6 +12,9 @@ import FileUploadButton from "@/components/FileUploadButton";
 import ApplicationFileList from "@/components/ApplicationFileList";
 import Sidebar from "@/components/Sidebar";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ApplicationCreateDialog from "@/components/ApplicationCreateDialog";
+import ApplicationGroupManager from "@/components/ApplicationGroupManager";
+import ApplicationEditDialog from "@/components/ApplicationEditDialog";
 import { useRecentDocuments } from "@/hooks/useRecentDocuments";
 import { useToast } from "@/components/Toast";
 import { supabase } from "@/lib/supabase/client";
@@ -30,6 +33,10 @@ export default function Home() {
   const [selectedDocumentAppId, setSelectedDocumentAppId] = useState<string>("");
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
   const [showNewDocumentDialog, setShowNewDocumentDialog] = useState(false);
+  const [showCreateApplicationDialog, setShowCreateApplicationDialog] = useState(false);
+  const [showGroupManagerDialog, setShowGroupManagerDialog] = useState(false);
+  const [showEditApplicationDialog, setShowEditApplicationDialog] = useState(false);
+  const [editingApplication, setEditingApplication] = useState<Application | null>(null);
   const [newDocumentAppId, setNewDocumentAppId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -204,11 +211,11 @@ export default function Home() {
         setSidebarCollapsed((prev) => !prev);
       }
 
-      // Ctrl/Cmd + N to create new document
+      // Ctrl/Cmd + N to create new document (only when an application is selected)
       if ((e.ctrlKey || e.metaKey) && e.key === "n") {
         e.preventDefault();
-        if (applications.length > 0) {
-          setNewDocumentAppId(applications[0].id);
+        if (selectedApp) {
+          setNewDocumentAppId(selectedApp);
           setShowNewDocumentDialog(true);
         }
       }
@@ -226,12 +233,21 @@ export default function Home() {
         if (showNewDocumentDialog) {
           setShowNewDocumentDialog(false);
         }
+        if (showCreateApplicationDialog) {
+          setShowCreateApplicationDialog(false);
+        }
+        if (showGroupManagerDialog) {
+          setShowGroupManagerDialog(false);
+        }
+        if (showEditApplicationDialog) {
+          setShowEditApplicationDialog(false);
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [applications, selectedDocument, editingDocument, showNewDocumentDialog]);
+  }, [selectedApp, selectedDocument, editingDocument, showNewDocumentDialog, showCreateApplicationDialog, showGroupManagerDialog, showEditApplicationDialog]);
 
   // Handle document selection from sidebar
   const handleDocumentSelect = useCallback((documentId: string) => {
@@ -264,30 +280,16 @@ export default function Home() {
           setSelectedDocumentAppName("");
           setSelectedDocumentAppId("");
         }}
-        onDocumentSelect={handleDocumentSelect}
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
-        recentDocuments={recentDocuments}
-        onCreateDocument={() => {
-          if (applications.length > 0) {
-            setNewDocumentAppId(applications[0].id);
-            setShowNewDocumentDialog(true);
-          }
-        }}
-        onUploadFile={() => {
-          // Could open a file upload dialog, or scroll to an upload area
-          // For now, we'll just focus the first application if available
-          if (selectedApp) {
-            // File upload is available in ApplicationDetails
-            // This could trigger a scroll or show a modal
-          }
-        }}
-        onHomeClick={() => {
-          setSelectedApp(null);
-          setSelectedDocument(null);
-          setSelectedDocumentAppName("");
-          setSelectedDocumentAppId("");
-        }}
+            onDocumentSelect={handleDocumentSelect}
+            collapsed={sidebarCollapsed}
+            onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
+            recentDocuments={recentDocuments}
+            onHomeClick={() => {
+              setSelectedApp(null);
+              setSelectedDocument(null);
+              setSelectedDocumentAppName("");
+              setSelectedDocumentAppId("");
+            }}
       />
 
       {/* Main Content */}
@@ -336,16 +338,20 @@ export default function Home() {
                   <TeamSelector teams={teams} selectedTeamId={selectedTeamId} onTeamChange={setSelectedTeamId} />
                 )}
                 <button
-                  onClick={() => {
-                    if (applications.length > 0) {
-                      setNewDocumentAppId(applications[0].id);
-                      setShowNewDocumentDialog(true);
-                    }
-                  }}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 border border-blue-500 rounded-lg text-sm transition-all flex items-center gap-2"
+                  onClick={() => setShowGroupManagerDialog(true)}
+                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 border border-gray-600 rounded-lg text-sm transition-all flex items-center gap-2"
+                  title="Manage application groups"
+                >
+                  <FolderKanban className="w-4 h-4" />
+                  <span className="hidden sm:inline">Groups</span>
+                </button>
+                <button
+                  onClick={() => setShowCreateApplicationDialog(true)}
+                  className="px-4 py-2 bg-purple-500 hover:bg-purple-600 border border-purple-500 rounded-lg text-sm transition-all flex items-center gap-2"
+                  title="Create new application"
                 >
                   <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">New Doc</span>
+                  <span className="hidden sm:inline">New App</span>
                 </button>
               </div>
             </div>
@@ -369,16 +375,27 @@ export default function Home() {
         {/* Application Details */}
         {selectedApp && !selectedDocument && (
           <div className="mb-12">
-            <ApplicationDetails
-              appId={selectedApp}
-              teamId={selectedTeamId}
-              onClose={() => setSelectedApp(null)}
-              onDocumentClick={(doc, appName) => {
-                setSelectedDocument(doc);
-                setSelectedDocumentAppName(appName);
-              }}
-              setSelectedDocumentAppId={setSelectedDocumentAppId}
-            />
+              <ApplicationDetails
+                appId={selectedApp}
+                teamId={selectedTeamId}
+                onClose={() => setSelectedApp(null)}
+                onDocumentClick={(doc, appName) => {
+                  setSelectedDocument(doc);
+                  setSelectedDocumentAppName(appName);
+                }}
+                setSelectedDocumentAppId={setSelectedDocumentAppId}
+                onCreateDocument={() => {
+                  setNewDocumentAppId(selectedApp);
+                  setShowNewDocumentDialog(true);
+                }}
+                onEdit={() => {
+                  const app = applications.find((a) => a.id === selectedApp);
+                  if (app) {
+                    setEditingApplication(app);
+                    setShowEditApplicationDialog(true);
+                  }
+                }}
+              />
           </div>
         )}
 
@@ -539,6 +556,56 @@ export default function Home() {
           }}
         />
       )}
+
+      {/* Create Application Dialog */}
+      {showCreateApplicationDialog && (
+        <ApplicationCreateDialog
+          isOpen={showCreateApplicationDialog}
+          onClose={() => setShowCreateApplicationDialog(false)}
+          onSuccess={async () => {
+            // Refresh applications list
+            const updatedApps = await getApplications();
+            setApplications(updatedApps);
+          }}
+        />
+      )}
+
+      {/* Application Group Manager Dialog */}
+      {showGroupManagerDialog && (
+        <ApplicationGroupManager
+          isOpen={showGroupManagerDialog}
+          onClose={() => setShowGroupManagerDialog(false)}
+          onGroupCreated={async () => {
+            // Refresh applications to get updated group assignments
+            const updatedApps = await getApplications();
+            setApplications(updatedApps);
+          }}
+        />
+      )}
+
+      {/* Edit Application Dialog */}
+      {showEditApplicationDialog && editingApplication && (
+        <ApplicationEditDialog
+          isOpen={showEditApplicationDialog}
+          application={editingApplication}
+          onClose={() => {
+            setShowEditApplicationDialog(false);
+            setEditingApplication(null);
+          }}
+          onSuccess={async () => {
+            // Refresh applications list
+            const updatedApps = await getApplications();
+            setApplications(updatedApps);
+            // Update selected app if it was the one being edited
+            if (editingApplication && selectedApp === editingApplication.id) {
+              const updatedApp = updatedApps.find((a) => a.id === editingApplication.id);
+              if (updatedApp) {
+                setSelectedApp(updatedApp.id);
+              }
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -549,12 +616,16 @@ function ApplicationDetails({
   onClose,
   onDocumentClick,
   setSelectedDocumentAppId,
+  onCreateDocument,
+  onEdit,
 }: {
   appId: string;
   teamId: string;
   onClose: () => void;
   onDocumentClick: (doc: Document, appName: string) => void;
   setSelectedDocumentAppId: (appId: string) => void;
+  onCreateDocument: () => void;
+  onEdit: () => void;
 }) {
   const [app, setApp] = useState<ApplicationWithDocs | null>(null);
   const [loading, setLoading] = useState(true);
@@ -593,9 +664,36 @@ function ApplicationDetails({
     <div className="bg-white/5 border border-white/10 rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className={`p-3 rounded-lg ${app.color} border`}>
-            <app.icon className="w-6 h-6" />
-          </div>
+          {(() => {
+            // Parse color string (e.g., "blue-500") and apply it
+            const [colorName, shade] = (app.color || 'blue-500').split('-');
+            const shadeNum = shade || '500';
+            const colorMap: Record<string, Record<string, string>> = {
+              blue: { '400': '#60a5fa', '500': '#3b82f6', '600': '#2563eb' },
+              purple: { '400': '#c084fc', '500': '#a855f7', '600': '#9333ea' },
+              green: { '400': '#4ade80', '500': '#22c55e', '600': '#16a34a' },
+              red: { '400': '#f87171', '500': '#ef4444', '600': '#dc2626' },
+              orange: { '400': '#fb923c', '500': '#f97316', '600': '#ea580c' },
+              yellow: { '400': '#facc15', '500': '#eab308', '600': '#ca8a04' },
+              indigo: { '400': '#818cf8', '500': '#6366f1', '600': '#4f46e5' },
+              pink: { '400': '#f472b6', '500': '#ec4899', '600': '#db2777' },
+              teal: { '400': '#2dd4bf', '500': '#14b8a6', '600': '#0d9488' },
+              cyan: { '400': '#22d3ee', '500': '#06b6d4', '600': '#0891b2' },
+            };
+            const bgColor = colorMap[colorName]?.[shadeNum] || colorMap.blue['500'];
+            const iconColor = colorMap[colorName]?.[shadeNum] || colorMap.blue['500'];
+            return (
+              <div 
+                className="p-3 rounded-lg border border-white/20"
+                style={{ 
+                  backgroundColor: `${bgColor}20`,
+                  borderColor: `${bgColor}40`
+                }}
+              >
+                <app.icon className="w-6 h-6" style={{ color: iconColor }} />
+              </div>
+            );
+          })()}
           <div>
             <h3 className="text-2xl font-bold">{app.name}</h3>
             <p className="text-sm text-gray-400">
@@ -603,12 +701,30 @@ function ApplicationDetails({
             </p>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm transition-all"
-        >
-          Close
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onCreateDocument}
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 border border-blue-500 rounded-lg text-sm transition-all flex items-center gap-2"
+            title="Create new document"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">New Document</span>
+          </button>
+          <button
+            onClick={onEdit}
+            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 border border-gray-600 rounded-lg text-sm transition-all flex items-center gap-2"
+            title="Edit application"
+          >
+            <Settings className="w-4 h-4" />
+            <span className="hidden sm:inline">Edit</span>
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm transition-all"
+          >
+            Close
+          </button>
+        </div>
       </div>
 
       {/* Base Documents */}
