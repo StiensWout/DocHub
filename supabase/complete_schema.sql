@@ -4,6 +4,7 @@
 -- This script cleans and recreates the entire database schema to the latest version
 -- Run this in Supabase SQL Editor to reset your database
 -- WARNING: This will DELETE ALL DATA in the following tables:
+--   - document_files
 --   - document_versions
 --   - document_templates
 --   - team_documents
@@ -26,8 +27,10 @@ DROP TRIGGER IF EXISTS update_base_documents_updated_at ON base_documents;
 DROP TRIGGER IF EXISTS update_applications_updated_at ON applications;
 DROP TRIGGER IF EXISTS update_teams_updated_at ON teams;
 DROP TRIGGER IF EXISTS update_document_templates_updated_at ON document_templates;
+DROP TRIGGER IF EXISTS update_document_files_updated_at ON document_files;
 
 -- Drop tables (drop dependent tables first)
+DROP TABLE IF EXISTS document_files CASCADE;
 DROP TABLE IF EXISTS document_versions CASCADE;
 DROP TABLE IF EXISTS document_templates CASCADE;
 DROP TABLE IF EXISTS team_documents CASCADE;
@@ -215,6 +218,36 @@ CREATE TABLE document_versions (
   UNIQUE(document_id, document_type, version_number)
 );
 
+-- Document files table (stores metadata for files attached to documents or applications)
+CREATE TABLE document_files (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  document_id UUID, -- NULL for application-level files
+  document_type TEXT CHECK (document_type IN ('base', 'team')), -- NULL for application-level files
+  application_id TEXT REFERENCES applications(id) ON DELETE CASCADE, -- NULL for document-level files
+  team_id UUID REFERENCES teams(id) ON DELETE CASCADE, -- NULL for public application files
+  file_name TEXT NOT NULL,
+  file_path TEXT NOT NULL, -- Supabase Storage path
+  file_type TEXT NOT NULL, -- MIME type
+  file_size BIGINT NOT NULL, -- bytes
+  storage_bucket TEXT NOT NULL DEFAULT 'documents',
+  visibility TEXT NOT NULL DEFAULT 'team' CHECK (visibility IN ('public', 'team')), -- public = all teams, team = specific team
+  uploaded_by UUID, -- REFERENCES auth.users(id) when auth is implemented
+  uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Note: Foreign key constraint handled in application logic
+  -- (can't use FK because document_id references different tables)
+  
+  -- Ensure file paths are unique
+  UNIQUE(file_path),
+  
+  -- Ensure we have either document_id or application_id
+  CHECK (
+    (document_id IS NOT NULL AND document_type IS NOT NULL) OR
+    (application_id IS NOT NULL)
+  )
+);
+
 -- ============================================================================
 -- STEP 5: CREATE INDEXES
 -- ============================================================================
@@ -232,6 +265,14 @@ CREATE INDEX idx_document_templates_app_id ON document_templates(application_id)
 CREATE INDEX idx_document_versions_doc ON document_versions(document_id, document_type);
 CREATE INDEX idx_document_versions_created ON document_versions(created_at DESC);
 
+-- Indexes for files
+CREATE INDEX idx_document_files_document ON document_files(document_id, document_type);
+CREATE INDEX idx_document_files_application ON document_files(application_id);
+CREATE INDEX idx_document_files_team ON document_files(team_id);
+CREATE INDEX idx_document_files_visibility ON document_files(visibility);
+CREATE INDEX idx_document_files_uploaded_at ON document_files(uploaded_at DESC);
+CREATE INDEX idx_document_files_file_type ON document_files(file_type);
+
 -- ============================================================================
 -- STEP 6: ENABLE ROW LEVEL SECURITY (RLS)
 -- ============================================================================
@@ -242,6 +283,7 @@ ALTER TABLE base_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_versions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE document_files ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================================
 -- STEP 7: CREATE RLS POLICIES
@@ -266,6 +308,9 @@ CREATE POLICY "Allow public read access to document_templates" ON document_templ
 CREATE POLICY "Allow public read access to document_versions" ON document_versions
   FOR SELECT USING (true);
 
+CREATE POLICY "Allow public read access to document_files" ON document_files
+  FOR SELECT USING (true);
+
 -- Insert policies for documents
 CREATE POLICY "Allow public insert to base_documents" ON base_documents
   FOR INSERT WITH CHECK (true);
@@ -274,6 +319,9 @@ CREATE POLICY "Allow public insert to team_documents" ON team_documents
   FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Allow public insert to document_versions" ON document_versions
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow public insert to document_files" ON document_files
   FOR INSERT WITH CHECK (true);
 
 -- Update policies for documents
@@ -288,6 +336,12 @@ CREATE POLICY "Allow public delete to base_documents" ON base_documents
   FOR DELETE USING (true);
 
 CREATE POLICY "Allow public delete to team_documents" ON team_documents
+  FOR DELETE USING (true);
+
+CREATE POLICY "Allow public update to document_files" ON document_files
+  FOR UPDATE USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow public delete to document_files" ON document_files
   FOR DELETE USING (true);
 
 -- ============================================================================
@@ -308,6 +362,9 @@ CREATE TRIGGER update_team_documents_updated_at BEFORE UPDATE ON team_documents
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_document_templates_updated_at BEFORE UPDATE ON document_templates
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_document_files_updated_at BEFORE UPDATE ON document_files
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Triggers for version tracking (initial versions)

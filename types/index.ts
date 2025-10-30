@@ -36,3 +36,29 @@ export interface ApplicationWithDocs extends Application {
   totalDocuments: number;
   lastUpdated: string;
 }
+
+export interface DocumentFile {
+  id: string;
+  document_id: string | null;
+  document_type: DocumentType | null;
+  application_id: string | null;
+  team_id: string | null;
+  file_name: string;
+  file_path: string;
+  file_type: string; // MIME type
+  file_size: number; // bytes
+  storage_bucket: string;
+  visibility: 'public' | 'team'; // public = all teams, team = specific team
+  uploaded_by?: string | null;
+  uploaded_at: string;
+  updated_at: string;
+}
+
+export interface FileUploadParams {
+  documentId?: string;
+  documentType?: DocumentType;
+  applicationId?: string;
+  teamId?: string;
+  file: File;
+  visibility?: 'public' | 'team';
+}

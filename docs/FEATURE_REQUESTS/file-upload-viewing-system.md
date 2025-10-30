@@ -1,9 +1,9 @@
 # Feature Request: File Upload & Viewing System
 
 **Priority:** 1 (High)  
-**Status:** Planning  
+**Status:** ✅ Completed  
 **Created:** 2025-01-30  
-**Target Completion:** Next 1-2 weeks
+**Completed:** 2025-01-30
 
 ## Overview
 
@@ -81,11 +81,108 @@ CREATE INDEX idx_document_files_uploaded_at ON document_files(uploaded_at DESC);
 #### Bucket: `documents`
 - **Public access:** Read-only for viewing
 - **Upload policy:** Authenticated users only (or public for now)
-- **File size limit:** 50MB per file
+- **File size limit:** 50MB per file (configurable per file type)
 - **Allowed file types:** 
-  - Documents: PDF, DOCX, DOC, XLSX, XLS, PPTX, PPT, TXT, MD
-  - Images: JPG, JPEG, PNG, GIF, WEBP, SVG
-  - Archives: ZIP, RAR (download only)
+
+  **Standard Documents:**
+  - PDF, DOCX, DOC, XLSX, XLS, PPTX, PPT
+  - TXT, MD (Markdown)
+  
+  **Code Files:**
+  - JavaScript/TypeScript: `.js`, `.jsx`, `.ts`, `.tsx`, `.mjs`, `.cjs`
+  - Python: `.py`, `.pyw`, `.pyc`, `.pyo`
+  - Java: `.java`, `.class`, `.jar`, `.war`
+  - C/C++: `.c`, `.cpp`, `.cc`, `.cxx`, `.h`, `.hpp`, `.hxx`
+  - C#: `.cs`, `.csx`
+  - Go: `.go`
+  - Rust: `.rs`
+  - Ruby: `.rb`, `.rbw`
+  - PHP: `.php`, `.phtml`
+  - Swift: `.swift`
+  - Kotlin: `.kt`, `.kts`
+  - Scala: `.scala`
+  - R: `.r`, `.R`
+  - Perl: `.pl`, `.pm`
+  - Lua: `.lua`
+  - Shell: `.sh`, `.bash`, `.zsh`, `.fish`
+  - PowerShell: `.ps1`, `.psm1`, `.psd1`
+  - Batch: `.bat`, `.cmd`
+  
+  **Configuration Files:**
+  - JSON: `.json`, `.jsonc`
+  - YAML: `.yaml`, `.yml`
+  - XML: `.xml`, `.xsd`, `.xsl`
+  - TOML: `.toml`
+  - INI: `.ini`, `.cfg`, `.conf`
+  - Environment: `.env`, `.env.local`, `.env.production`
+  - Properties: `.properties`
+  
+  **Infrastructure & DevOps:**
+  - Docker: `Dockerfile`, `.dockerignore`
+  - Docker Compose: `docker-compose.yml`, `docker-compose.yaml`
+  - Kubernetes: `.yaml`, `.yml` (manifests)
+  - Terraform: `.tf`, `.tfvars`, `.tfstate`
+  - Ansible: `.yaml`, `.yml` (playbooks)
+  - CloudFormation: `.json`, `.yaml`, `.yml`, `.template`
+  - Helm: `.yaml`, `.yml` (charts)
+  - Vagrant: `Vagrantfile`
+  - Packer: `.json`, `.hcl`
+  
+  **CI/CD:**
+  - GitHub Actions: `.yml`, `.yaml` (workflows)
+  - GitLab CI: `.gitlab-ci.yml`
+  - Jenkins: `Jenkinsfile`, `.xml`
+  - CircleCI: `.circleci/config.yml`
+  - Azure DevOps: `.yml` (pipelines)
+  
+  **Database:**
+  - SQL: `.sql`, `.psql`
+  - SQLite: `.sqlite`, `.sqlite3`, `.db`
+  - Database dumps: `.dump`, `.bak`
+  
+  **Data Formats:**
+  - CSV: `.csv`
+  - TSV: `.tsv`
+  - Excel: `.xlsx`, `.xls`, `.xlsm`
+  - Parquet: `.parquet`
+  
+  **Architecture & Design:**
+  - DrawIO: `.drawio`, `.xml` (draw.io format)
+  - PlantUML: `.puml`, `.plantuml`
+  - Mermaid: `.mmd`, `.mermaid`
+  - Graphviz: `.dot`, `.gv`
+  - Lucidchart: `.lucid`
+  
+  **Images:**
+  - Raster: JPG, JPEG, PNG, GIF, WEBP, BMP, TIFF, ICO
+  - Vector: SVG, EPS
+  - Diagrams: PNG, SVG (screenshots/diagrams)
+  
+  **Logs & Text:**
+  - Log files: `.log`, `.txt` (log content)
+  - README: `README.md`, `README.txt`
+  - License: `LICENSE`, `LICENSE.txt`
+  - Changelog: `CHANGELOG.md`, `CHANGELOG.txt`
+  
+  **Security & Certificates:**
+  - Certificates: `.pem`, `.crt`, `.cer`, `.der`, `.p12`, `.pfx`
+  - Keys: `.key`, `.pub`, `.pem`
+  - SSH: `id_rsa`, `id_ed25519`, `authorized_keys`
+  - OpenSSL: `.csr`, `.pem`
+  
+  **Special Formats:**
+  - WebAssembly: `.wasm`, `.wat`
+  - Fonts: `.ttf`, `.otf`, `.woff`, `.woff2`
+  - Icons: `.ico`, `.icns`
+  - Font Awesome: `.svg` (icons)
+  
+  **Documentation:**
+  - Markdown: `.md`, `.markdown`
+  - AsciiDoc: `.adoc`, `.asciidoc`
+  - ReStructuredText: `.rst`
+  - HTML: `.html`, `.htm`
+  
+  **Note:** Some file types may not have standard MIME types and will default to `application/octet-stream` or `text/plain`. The system should handle these gracefully.
 
 #### Storage Structure
 ```
@@ -107,10 +204,11 @@ documents/
   - Download button
 
 #### DOCX Viewer
-- **Library:** `mammoth` (DOCX to HTML conversion)
+- **Library:** `docx-preview` (DOCX rendering with formatting preservation)
 - **Features:**
-  - Convert DOCX to HTML
-  - Render in styled container
+  - Render DOCX files directly in browser
+  - Preserves fonts, colors, images, layout, and formatting
+  - Better fidelity to original Word documents
   - Download original file
 
 #### XLSX Viewer
@@ -210,9 +308,40 @@ documents/
 ### File Size Limits
 
 - **Default:** 50MB per file
-- **Images:** 10MB recommended
+- **Code files:** 10MB recommended (most code files are small)
+- **Configuration files:** 5MB recommended (typically very small)
 - **Documents:** 50MB
-- **Archives:** 100MB (for extraction)
+- **Images:** 10MB recommended
+- **Database dumps:** 100MB (may need adjustment based on database size)
+- **Log files:** 50MB (can be very large)
+
+### File Type Validation Strategy
+
+**Current Implementation:**
+- Uses MIME type validation (`file.type` in browser)
+- Some file types may not have standard MIME types
+- Browser detection may be inconsistent
+
+**Recommended Enhancement:**
+- Use file extension as fallback validation
+- Map file extensions to allowed types
+- Support both MIME type and extension validation
+- Allow `application/octet-stream` for unknown binary types with known extensions
+- Allow `text/plain` for known text-based file types (code, config, etc.)
+
+**Implementation Priority:**
+1. **Phase 1 (Current):** Basic document and image types ✅
+2. **Phase 2:** Add code file extensions (`.js`, `.py`, `.ts`, etc.)
+3. **Phase 3:** Add configuration file extensions (`.json`, `.yaml`, `.env`, etc.)
+4. **Phase 4:** Add infrastructure file extensions (`.tf`, `Dockerfile`, etc.)
+5. **Phase 5:** Add remaining IT-specific types
+
+**MIME Type Mapping:**
+- Text files: `text/plain` (common for code/config files)
+- Binary files: `application/octet-stream` (fallback for unknown types)
+- Code files: Often detected as `text/plain` or `application/octet-stream`
+- Configuration files: Often detected as `text/plain` or `application/json`
+- Infrastructure files: Often detected as `text/plain` or `application/x-yaml`
 
 ### Error Handling
 
@@ -246,7 +375,7 @@ documents/
 4. Type detection and routing
 
 ### Phase 4: File Viewing - Advanced (Days 7-8)
-1. DOCX viewer (mammoth conversion)
+1. DOCX viewer (docx-preview for formatting preservation)
 2. XLSX viewer (table display)
 3. PPTX viewer (basic implementation)
 4. Generic download fallback
@@ -267,14 +396,63 @@ documents/
 5. Update documentation
 6. Update roadmap
 
+### Implementation Notes
+
+**File Type Detection Challenges:**
+- Many IT file types don't have standard MIME types
+- Browsers may report `application/octet-stream` or `text/plain` for code/config files
+- File extension validation is more reliable for IT-specific files
+- Consider implementing extension-based validation as primary check with MIME type as secondary
+
+**Recommended File Validation Approach:**
+```typescript
+// Pseudo-code for improved validation
+const ALLOWED_EXTENSIONS = [
+  // Code files
+  '.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.go', '.rs',
+  // Config files
+  '.json', '.yaml', '.yml', '.xml', '.toml', '.ini', '.env', '.conf',
+  // Infrastructure
+  '.tf', '.tfvars', '.yaml', '.yml', // Terraform, Kubernetes, etc.
+  // Add more as needed...
+];
+
+function isValidFile(file: File): boolean {
+  // Check extension first
+  const ext = getFileExtension(file.name);
+  if (ALLOWED_EXTENSIONS.includes(ext)) {
+    return true;
+  }
+  
+  // Then check MIME type
+  if (ALLOWED_MIME_TYPES.includes(file.type)) {
+    return true;
+  }
+  
+  // Allow text/plain for known text-based file types
+  if (file.type === 'text/plain' && isTextBasedExtension(ext)) {
+    return true;
+  }
+  
+  return false;
+}
+```
+
+**Security Considerations:**
+- ⚠️ **Executable files:** Consider blocking `.exe`, `.dll`, `.deb`, `.rpm`, `.msi` unless explicitly needed
+- ⚠️ **Script files:** `.sh`, `.ps1`, `.bat` files may need special handling or warnings
+- ⚠️ **Certificate/Key files:** Should be stored securely, consider encryption
+- ⚠️ **Database dumps:** May contain sensitive data, consider access controls
+- ⚠️ **Environment files:** `.env` files often contain secrets, consider warnings or encryption
+
 ## Dependencies
 
 ### NPM Packages
-- `react-pdf` or `@react-pdf-viewer/core` - PDF viewing
-- `mammoth` - DOCX to HTML conversion
+- `react-pdf` - PDF viewing
+- `docx-preview` - DOCX rendering with formatting preservation
 - `xlsx` - Excel file parsing
 - `file-saver` - File download helper
-- `react-dropzone` - Drag & drop file upload (optional)
+- `react-dropzone` - Drag & drop file upload (optional, currently using custom implementation)
 
 ### Supabase
 - Storage bucket configured
@@ -341,9 +519,78 @@ documents/
 
 - [Supabase Storage Documentation](https://supabase.com/docs/guides/storage)
 - [react-pdf Documentation](https://react-pdf.org/)
-- [mammoth Documentation](https://github.com/mwilliamson/mammoth.js)
+- [docx-preview Documentation](https://github.com/VolodymyrBaydalka/docxjs)
 
 ---
 
 **Note:** This feature request serves as a living document. Update as requirements evolve or new information becomes available.
+
+---
+
+## ✅ Implementation Summary
+
+**Completed:** 2025-01-30
+
+### Implemented Features
+
+#### Core Functionality
+- ✅ File upload to documents (`document_id` + `document_type`)
+- ✅ File upload to applications (`application_id`)
+- ✅ File storage in Supabase Storage (`documents` bucket)
+- ✅ File metadata tracking in `document_files` table
+- ✅ File validation (size limit: 50MB, type validation)
+- ✅ Drag-and-drop file upload support
+- ✅ Upload progress indicators
+
+#### File Management
+- ✅ File list display in document viewer
+- ✅ Application files list component
+- ✅ File download functionality (via Supabase Storage URLs)
+- ✅ File deletion with confirmation
+- ✅ File metadata display (name, size, type, visibility)
+- ✅ File type icons
+
+#### Database Schema
+- ✅ `document_files` table with flexible relationships
+  - Supports document-level files (`document_id` + `document_type`)
+  - Supports application-level files (`application_id`)
+  - Visibility control (`public` vs `team`)
+  - File metadata (name, size, type, storage path)
+- ✅ Indexes for performance optimization
+- ✅ RLS policies for file access control
+- ✅ Migration script for existing databases
+
+#### UI Components
+- ✅ `FileUploadButton` component (button and dropzone variants)
+- ✅ `FileList` component for document files
+- ✅ `ApplicationFileList` component for application files
+- ✅ Visibility selector (public/team) for application files
+- ✅ Integration with document editor and viewer
+
+#### API Endpoints
+- ✅ `POST /api/files/upload` - File upload handler
+- ✅ `DELETE /api/files/[fileId]` - File deletion handler
+- ✅ Storage cleanup on deletion
+- ✅ Error handling and validation
+
+### Future Enhancements
+- 🔄 Excel spreadsheet viewer (XLSX viewing)
+- 🔄 PowerPoint viewer (PPTX viewing)
+- 🔄 File preview thumbnails
+- 🔄 Enhanced DOCX editing capabilities
+
+### Files Created/Modified
+- `supabase/files_schema.sql` - File schema definition
+- `supabase/migration_add_files_table.sql` - Migration script
+- `supabase/complete_schema.sql` - Updated with file schema
+- `types/index.ts` - Added `DocumentFile` and `FileUploadParams` types
+- `lib/supabase/queries.ts` - Added file query functions
+- `app/api/files/upload/route.ts` - Upload API endpoint
+- `app/api/files/[fileId]/route.ts` - Delete API endpoint
+- `components/FileUploadButton.tsx` - Upload component with drag-and-drop
+- `components/FileList.tsx` - Document files list component
+- `components/ApplicationFileList.tsx` - Application files list component
+- `components/DocumentEditor.tsx` - Integrated file upload
+- `components/DocumentViewer.tsx` - Integrated file list
+- `app/page.tsx` - Added application-level file upload
 
