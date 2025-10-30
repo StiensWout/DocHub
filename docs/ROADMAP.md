@@ -1,6 +1,6 @@
 # DocHub - Roadmap
 
-## 🚀 Short Term (Next 1-2 Weeks)
+## 🚀 Short Term (Next 1-2 Weeks) - PRIORITY 1
 
 ### Core Functionality
 - [x] **Search Functionality**
@@ -28,7 +28,33 @@
   - [x] Edit existing documents
   - [x] Delete documents
   - [x] Document metadata (tags, category, etc.)
-  - [ ] Document versioning/history (planned)
+  - [x] Document versioning/history (implemented)
+
+### 🔥 PRIORITY 1: File Upload & Viewing System
+- [ ] **File Upload Support**
+  - [ ] Upload files (PDF, DOCX, XLSX, PPTX, images, etc.)
+  - [ ] File storage in Supabase Storage
+  - [ ] File metadata tracking (name, size, type, upload date)
+  - [ ] Support for multiple file attachments per document
+  - [ ] File validation and size limits
+  - [ ] File preview thumbnails
+
+- [ ] **In-App File Viewing**
+  - [ ] PDF viewer component (embedded PDF.js or similar)
+  - [ ] Word document viewer (DOCX to HTML conversion)
+  - [ ] Excel spreadsheet viewer (XLSX viewing)
+  - [ ] PowerPoint viewer (PPTX viewing)
+  - [ ] Image viewer (full-screen gallery)
+  - [ ] Generic file download fallback
+  - [ ] File type detection and appropriate viewer selection
+
+- [ ] **File Management UI**
+  - [ ] File upload button in document editor
+  - [ ] File list display in document viewer
+  - [ ] File preview modal/overlay
+  - [ ] File download functionality
+  - [ ] File deletion with confirmation
+  - [ ] File replacement/update option
 
 ### UI Improvements
 - [ ] **Enhanced Navigation**
