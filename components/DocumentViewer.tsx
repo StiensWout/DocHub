@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Edit, Trash2, Clock } from "lucide-react";
+import { X, Edit, Trash2, Clock, Printer, Download, Share2 } from "lucide-react";
 import { useState } from "react";
 import DocumentVersionHistory from "./DocumentVersionHistory";
 import FileList from "./FileList";
@@ -8,6 +8,8 @@ import Breadcrumbs from "./Breadcrumbs";
 import { useToast } from "./Toast";
 import { supabase } from "@/lib/supabase/client";
 import type { Document, BreadcrumbItem } from "@/types";
+import TurndownService from "turndown";
+import html2pdf from "html2pdf.js";
 
 interface DocumentViewerProps {
   document: Document | null;
@@ -23,19 +25,228 @@ interface DocumentViewerProps {
 
 export default function DocumentViewer({ document, appName, appId, teamId, onClose, onEdit, onDelete, onVersionRestored, breadcrumbs }: DocumentViewerProps) {
   const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const toast = useToast();
 
   if (!document) return null;
+
+  // Handle print
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // Handle export to PDF
+  const handleExportPDF = async () => {
+    if (!document) return;
+    
+    setIsExporting(true);
+    let tempContainer: HTMLElement | null = null;
+    
+    try {
+      // Dynamic import for html2pdf to avoid SSR issues
+      const html2pdf = (await import('html2pdf.js')).default;
+      
+      const element = window.document.getElementById(`document-content-${document.id}`);
+      if (!element) {
+        toast.error("Could not find document content");
+        return;
+      }
+
+      // Create a clone of the element
+      const clone = element.cloneNode(true) as HTMLElement;
+      
+      // Remove the prose-invert class and add print-friendly classes
+      clone.classList.remove('prose-invert');
+      clone.classList.add('prose');
+      
+      // Apply print-friendly base styles
+      clone.style.backgroundColor = 'white';
+      clone.style.color = 'black';
+      clone.style.padding = '40px';
+      clone.style.maxWidth = '8.5in';
+      clone.style.margin = '0 auto';
+      clone.style.fontSize = '16px';
+      clone.style.lineHeight = '1.6';
+      
+      // Create a style element with print-friendly CSS
+      const style = window.document.createElement('style');
+      style.textContent = `
+        .pdf-export * {
+          color: black !important;
+        }
+        .pdf-export h1,
+        .pdf-export h2,
+        .pdf-export h3,
+        .pdf-export h4,
+        .pdf-export h5,
+        .pdf-export h6 {
+          color: black !important;
+          font-weight: bold;
+        }
+        .pdf-export strong,
+        .pdf-export b {
+          color: black !important;
+          font-weight: bold;
+        }
+        .pdf-export code {
+          background-color: #f5f5f5 !important;
+          color: black !important;
+          border: 1px solid #e0e0e0 !important;
+        }
+        .pdf-export pre {
+          background-color: #f5f5f5 !important;
+          color: black !important;
+          border: 1px solid #e0e0e0 !important;
+        }
+        .pdf-export a {
+          color: #0066cc !important;
+        }
+        .pdf-export blockquote {
+          border-left-color: #ccc !important;
+          color: #666 !important;
+        }
+        .pdf-export table {
+          border-color: #e0e0e0 !important;
+        }
+        .pdf-export th,
+        .pdf-export td {
+          border-color: #e0e0e0 !important;
+          color: black !important;
+        }
+      `;
+      
+      // Add the PDF export class
+      clone.classList.add('pdf-export');
+      
+      // Create a temporary container
+      tempContainer = window.document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '0';
+      tempContainer.style.width = '8.5in';
+      tempContainer.style.backgroundColor = 'white';
+      tempContainer.style.padding = '0';
+      tempContainer.appendChild(style);
+      tempContainer.appendChild(clone);
+      window.document.body.appendChild(tempContainer);
+
+      // Wait a bit for styles to apply
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const opt = {
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: `${document.title}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          windowWidth: 816, // 8.5in at 96 DPI
+          windowHeight: 1056, // 11in at 96 DPI
+        },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      await html2pdf().set(opt).from(clone).save();
+      
+      toast.success("PDF exported successfully!");
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export PDF");
+    } finally {
+      // Clean up temporary container regardless of success or failure
+      if (tempContainer && tempContainer.parentNode) {
+        window.document.body.removeChild(tempContainer);
+      }
+      setIsExporting(false);
+      setShowExportMenu(false);
+    }
+  };
+
+  // Handle export to Markdown
+  const handleExportMarkdown = () => {
+    if (!document || !document.content) return;
+
+    try {
+      const turndownService = new TurndownService({
+        headingStyle: 'atx',
+        codeBlockStyle: 'fenced'
+      });
+
+      // Convert HTML to Markdown
+      const markdown = turndownService.turndown(document.content);
+      
+      // Add document title as header
+      const fullMarkdown = `# ${document.title}\n\n${markdown}`;
+
+      // Create blob and download
+      const blob = new Blob([fullMarkdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = window.document.createElement('a');
+      a.href = url;
+      a.download = `${document.title}.md`;
+      window.document.body.appendChild(a);
+      a.click();
+      window.document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success("Markdown exported successfully!");
+      setShowExportMenu(false);
+    } catch (error) {
+      console.error("Error exporting Markdown:", error);
+      toast.error("Failed to export Markdown");
+    }
+  };
+
+  // Handle share link
+  const handleShare = () => {
+    const shareUrl = getShareUrl();
+    
+    if (!shareUrl) {
+      toast.error("Cannot generate share link");
+      return;
+    }
+
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      toast.success("Link copied to clipboard!");
+      setShowShareDialog(false);
+    }).catch(() => {
+      toast.error("Failed to copy link");
+    });
+  };
+
+  // Get share URL
+  const getShareUrl = () => {
+    if (!document || !appId) return "";
+    // For base documents, use "base" as teamId placeholder
+    const shareTeamId = document.type === "base" ? "base" : teamId || "base";
+    return `${window.location.origin}/documents/${shareTeamId}/${appId}/${document.id}`;
+  };
 
   // Render HTML content safely
   const renderContent = (content: string | undefined) => {
     if (!content) return <p className="text-gray-400 italic">No content available</p>;
 
     return (
-      <div
-        className="prose prose-invert max-w-none"
-        dangerouslySetInnerHTML={{ __html: content }}
-      />
+      <div className="print-content">
+        {/* Print-only header */}
+        <div className="document-print-header hidden print:block">
+          <h1 className="document-print-title">{document.title}</h1>
+          <div className="document-print-meta">
+            {appName} • {document.category} • {document.updated}
+          </div>
+        </div>
+        
+        <div
+          id={`document-content-${document.id}`}
+          className="prose prose-invert max-w-none"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      </div>
     );
   };
 
@@ -43,7 +254,7 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
     <div className="w-full animate-[fadeIn_0.3s_ease-in-out]">
       <div className="bg-background-tertiary border border-border rounded-xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-background-tertiary z-10">
+        <div className="flex items-center justify-between p-6 border-b border-border sticky top-0 bg-background-tertiary z-10 no-print">
           <div className="flex-1 min-w-0">
             {/* Breadcrumbs */}
             {breadcrumbs && breadcrumbs.length > 0 && (
@@ -70,6 +281,63 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
             </div>
           </div>
           <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+            <button
+              onClick={handlePrint}
+              className="p-2 hover:bg-glass-hover rounded-lg transition-colors"
+              title="Print document"
+              aria-label="Print document"
+            >
+              <Printer className="w-5 h-5 text-foreground-secondary" />
+            </button>
+            
+            {/* Export Menu */}
+            <div className="relative">
+              <button
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                disabled={isExporting}
+                className="p-2 hover:bg-glass-hover rounded-lg transition-colors disabled:opacity-50"
+                title="Export document"
+                aria-label="Export document"
+              >
+                <Download className="w-5 h-5 text-foreground-secondary" />
+              </button>
+              {showExportMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowExportMenu(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 bg-background-tertiary border border-border rounded-lg shadow-theme-lg z-50 min-w-[160px]">
+                    <button
+                      onClick={handleExportPDF}
+                      disabled={isExporting}
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-glass-hover transition-colors disabled:opacity-50 flex items-center gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      {isExporting ? "Exporting..." : "Export to PDF"}
+                    </button>
+                    <button
+                      onClick={handleExportMarkdown}
+                      disabled={isExporting}
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-glass-hover transition-colors disabled:opacity-50 flex items-center gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Export to Markdown
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <button
+              onClick={() => setShowShareDialog(true)}
+              className="p-2 hover:bg-glass-hover rounded-lg transition-colors"
+              title="Share document"
+              aria-label="Share document"
+            >
+              <Share2 className="w-5 h-5 text-foreground-secondary" />
+            </button>
+
             <button
               onClick={() => setShowVersionHistory(true)}
               className="p-2 hover:bg-glass-hover rounded-lg transition-colors"
@@ -113,7 +381,7 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
           {renderContent(document.content)}
           
           {/* File List */}
-          <div className="mt-8 pt-8 border-t border-border">
+          <div className="mt-8 pt-8 border-t border-border no-print">
             <FileList
               documentId={document.id}
               documentType={document.type}
@@ -126,6 +394,43 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
           </div>
         </div>
       </div>
+
+      {/* Share Dialog */}
+      {showShareDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-overlay">
+          <div
+            className="fixed inset-0"
+            onClick={() => setShowShareDialog(false)}
+          />
+          <div className="relative bg-background-tertiary border border-border rounded-xl p-6 max-w-md w-full shadow-theme-xl">
+            <h3 className="text-xl font-bold mb-4">Share Document</h3>
+            <p className="text-sm text-foreground-secondary mb-4">
+              Anyone with this link can view the document:
+            </p>
+            <div className="flex items-center gap-2 mb-4">
+              <input
+                type="text"
+                readOnly
+                value={getShareUrl()}
+                className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-sm"
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+              />
+              <button
+                onClick={handleShare}
+                className="px-4 py-2 bg-accent-primary hover:bg-accent-primary-hover rounded-lg text-sm font-medium transition-colors"
+              >
+                Copy
+              </button>
+            </div>
+            <button
+              onClick={() => setShowShareDialog(false)}
+              className="w-full px-4 py-2 bg-glass hover:bg-glass-hover rounded-lg text-sm transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Version History Modal */}
       {showVersionHistory && (
