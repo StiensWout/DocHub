@@ -2,8 +2,51 @@
 
 import { useState, useMemo } from "react";
 import { Search, X } from "lucide-react";
-import * as LucideIcons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import {
+  Globe, Database, Zap, Settings, Server, Cloud, Code, Box,
+  Layers, Package, FileText, BookOpen, Folder, Grid, Layout,
+  Monitor, Smartphone, Tablet, HardDrive, Key, Lock, Shield,
+  Users, User, Mail, MessageSquare, Bell, Calendar, Clock,
+  BarChart, PieChart, TrendingUp, DollarSign, ShoppingCart,
+  Map, Compass, Camera, Image, Video, Music, Film,
+  Gamepad2, Heart, Star, Bookmark, Flag, Tag, Filter,
+  Home, Building, Store, ShoppingBag, Briefcase,
+  Coffee, Utensils, Car, Plane, Ship, Bike, Wrench,
+  Hammer, Paintbrush, Palette, Sparkles, Rocket,
+  Target, Award, Trophy, Crown, Diamond, Gem, Infinity,
+  Circle, Square, Triangle, Hexagon, Pentagon, Octagon,
+  Activity, Airplay, AlertCircle, Anchor, Archive, ArrowRight,
+  AtSign, Baby, Backpack, Battery, Beaker, BellRing,
+  Bluetooth, Book, BookmarkCheck, Bot, Brain, BriefcaseMedical,
+  Bug, Building2, Calculator, CalendarCheck, CameraOff,
+  Cast, ChevronDown, ChevronUp, Command, Copy,
+  CreditCard, Crosshair, Cpu, DatabaseBackup, Disc, Download,
+  Droplet, Edit, Eye, Fan, File, FileCheck, FileX,
+  Flame, Focus, FolderOpen, FolderPlus, Gauge,
+  Gift, GitBranch, GitCommit, GitMerge, GitPullRequest, Github,
+  Gitlab, Globe2, GraduationCap, Headphones, HelpCircle,
+  History, Inbox, Info, Instagram, Keyboard, Laptop, LifeBuoy,
+  Lightbulb, Link, Link2, List, ListChecks, Loader,
+  LockOpen, LogIn, LogOut, Magnet, MailCheck, MailOpen,
+  MailQuestion, MailWarning, Maximize, Menu, MessageCircle, Mic,
+  MicOff, Minimize, Minus, Moon, MoreHorizontal, MoreVertical,
+  Mouse, MousePointer, Move, Move3D, Music2, Network,
+  Newspaper, OctagonAlert, Package2, Paperclip, Pause,
+  PenTool, Phone, PhoneCall, PhoneIncoming, PhoneMissed, PhoneOff,
+  PhoneOutgoing, Play, PlayCircle, Plug, Plus, PlusCircle,
+  Power, Printer, Radio, RefreshCw, Repeat, RotateCcw,
+  RotateCw, Save, Scissors, Send, ServerCrash, Share,
+  Share2, ShieldAlert, ShieldCheck, ShieldOff, Shuffle, SkipBack,
+  SkipForward, Sliders, Smile, Speaker, SquareIcon,
+  StopCircle, Sun, Terminal,
+  Thermometer, ThumbsDown, ThumbsUp, Timer, ToggleLeft, ToggleRight,
+  Trash, Trash2, TrendingDown, Truck, Tv, Umbrella,
+  Upload, UploadCloud, UserCheck, UserMinus, UserPlus, UserX,
+  Verified, VideoOff, Volume, Volume1, Volume2, VolumeX,
+  Wallet, Watch, Wifi, WifiOff, Wind, XCircle,
+  Youtube, ZapOff, ZoomIn, ZoomOut,
+} from "lucide-react";
 
 interface IconPickerProps {
   selectedIcon: string;
@@ -11,37 +54,64 @@ interface IconPickerProps {
   availableIcons?: string[];
 }
 
-// Common Lucide icons for applications (curated list)
-const COMMON_ICONS = [
-  "Globe", "Database", "Zap", "Settings", "Server", "Cloud", "Code", "Box",
-  "Layers", "Package", "FileText", "BookOpen", "Folder", "Grid", "Layout",
-  "Monitor", "Smartphone", "Tablet", "HardDrive", "Key", "Lock", "Shield",
-  "Users", "User", "Mail", "MessageSquare", "Bell", "Calendar", "Clock",
-  "BarChart", "PieChart", "TrendingUp", "DollarSign", "ShoppingCart",
-  "Map", "Compass", "Camera", "Image", "Video", "Music", "Film",
-  "Gamepad2", "Heart", "Star", "Bookmark", "Flag", "Tag", "Filter",
-  "Search", "Home", "Building", "Store", "ShoppingBag", "Briefcase",
-  "Coffee", "Utensils", "Car", "Plane", "Ship", "Bike", "Wrench",
-  "Tool", "Hammer", "Paintbrush", "Palette", "Sparkles", "Rocket",
-  "Target", "Award", "Trophy", "Crown", "Diamond", "Gem", "Infinity",
-];
+// Icon map: name -> component
+const ICON_MAP: Record<string, LucideIcon> = {
+  Globe, Database, Zap, Settings, Server, Cloud, Code, Box,
+  Layers, Package, FileText, BookOpen, Folder, Grid, Layout,
+  Monitor, Smartphone, Tablet, HardDrive, Key, Lock, Shield,
+  Users, User, Mail, MessageSquare, Bell, Calendar, Clock,
+  BarChart, PieChart, TrendingUp, DollarSign, ShoppingCart,
+  Map, Compass, Camera, Image, Video, Music, Film,
+  Gamepad2, Heart, Star, Bookmark, Flag, Tag, Filter,
+  Search, Home, Building, Store, ShoppingBag, Briefcase,
+  Coffee, Utensils, Car, Plane, Ship, Bike, Wrench,
+  Hammer, Paintbrush, Palette, Sparkles, Rocket,
+  Target, Award, Trophy, Crown, Diamond, Gem, Infinity,
+  Circle, Square, Triangle, Hexagon, Pentagon, Octagon,
+  Activity, Airplay, AlertCircle, Anchor, Archive, ArrowRight,
+  AtSign, Baby, Backpack, Battery, Beaker, BellRing,
+  Bluetooth, Book, BookmarkCheck, Bot, Brain, BriefcaseMedical,
+  Bug, Building2, Calculator, CalendarCheck, CameraOff,
+  Cast, ChevronDown, ChevronUp, Command, Copy,
+  CreditCard, Crosshair, Cpu, DatabaseBackup, Disc, Download,
+  Droplet, Edit, Eye, Fan, File, FileCheck, FileX,
+  Flame, Focus, FolderOpen, FolderPlus, Gauge,
+  Gift, GitBranch, GitCommit, GitMerge, GitPullRequest, Github,
+  Gitlab, Globe2, GraduationCap, Headphones, HelpCircle,
+  History, Inbox, Info, Instagram, Keyboard, Laptop, LifeBuoy,
+  Lightbulb, Link, Link2, List, ListChecks, Loader,
+  LockOpen, LogIn, LogOut, Magnet, MailCheck, MailOpen,
+  MailQuestion, MailWarning, Maximize, Menu, MessageCircle, Mic,
+  MicOff, Minimize, Minus, Moon, MoreHorizontal, MoreVertical,
+  Mouse, MousePointer, Move, Move3D, Music2, Network,
+  Newspaper, OctagonAlert, Package2, Paperclip, Pause,
+  PenTool, Phone, PhoneCall, PhoneIncoming, PhoneMissed, PhoneOff,
+  PhoneOutgoing, Play, PlayCircle, Plug, Plus, PlusCircle,
+  Power, Printer, Radio, RefreshCw, Repeat, RotateCcw,
+  RotateCw, Save, Scissors, Send, ServerCrash, Share,
+  Share2, ShieldAlert, ShieldCheck, ShieldOff, Shuffle, SkipBack,
+  SkipForward, Sliders, Smile, Speaker, SquareIcon,
+  StopCircle, Sun, Terminal,
+  Thermometer, ThumbsDown, ThumbsUp, Timer, ToggleLeft, ToggleRight,
+  Trash, Trash2, TrendingDown, Truck, Tv, Umbrella,
+  Upload, UploadCloud, UserCheck, UserMinus, UserPlus, UserX,
+  Verified, VideoOff, Volume, Volume1, Volume2, VolumeX,
+  Wallet, Watch, Wifi, WifiOff, Wind, XCircle,
+  Youtube, ZapOff, ZoomIn, ZoomOut,
+};
+
+// Available icon names
+const ICON_NAMES = Object.keys(ICON_MAP);
 
 export default function IconPicker({ selectedIcon, onSelect, availableIcons }: IconPickerProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Get all available icons from Lucide React
+  // Get all available icons
   const iconNames = useMemo(() => {
     if (availableIcons) {
       return availableIcons;
     }
-    
-    // Get all exported icons from lucide-react
-    const allIcons = Object.keys(LucideIcons).filter(
-      (key) => key !== "createLucideIcon" && typeof LucideIcons[key as keyof typeof LucideIcons] === "function"
-    ) as string[];
-    
-    // Filter to common icons or allow all
-    return COMMON_ICONS.filter(icon => allIcons.includes(icon));
+    return ICON_NAMES;
   }, [availableIcons]);
 
   // Filter icons based on search query
@@ -54,8 +124,7 @@ export default function IconPicker({ selectedIcon, onSelect, availableIcons }: I
   }, [iconNames, searchQuery]);
 
   const getIconComponent = (iconName: string): LucideIcon | null => {
-    const Icon = LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcon;
-    return Icon || null;
+    return ICON_MAP[iconName] || null;
   };
 
   const handleIconSelect = (iconName: string) => {
