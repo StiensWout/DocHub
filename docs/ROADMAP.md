@@ -46,19 +46,22 @@ This roadmap outlines planned features, enhancements, and improvements for DocHu
 **See**: `docs/FEATURE_REQUESTS/file-upload-viewing-system.md` for detailed specification
 
 ### UI Improvements
-- [ ] **Enhanced Navigation**
-  - [ ] Sidebar navigation
-  - [ ] Breadcrumbs
-  - [ ] Quick access menu
+- [x] **Enhanced Navigation**
+  - [x] Sidebar navigation
+  - [x] Breadcrumbs
+  - [x] Quick access menu (integrated into sidebar)
   - **See**: `docs/FEATURE_REQUESTS/enhanced-navigation.md` for detailed specification
+  - **Completed**: 2025-01-30
 - [ ] **Document Viewer Enhancements**
   - [ ] Print-friendly view
   - [ ] Export to PDF/Markdown
   - [ ] Share document link
-- [ ] **Notifications**
-  - [ ] Toast notifications for actions
-  - [ ] Success/error feedback
-  - [ ] Loading indicators (improved)
+  - **See**: `docs/FEATURE_REQUESTS/document-viewer-enhancements.md` for detailed specification
+- [x] **Notifications**
+  - [x] Toast notifications for actions
+  - [x] Success/error feedback
+  - [x] Loading indicators (improved)
+  - **Completed**: 2025-01-30
 
 ### Search Enhancements
 - [ ] Search suggestions/autocomplete
