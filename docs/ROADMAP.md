@@ -3,11 +3,14 @@
 ## 🚀 Short Term (Next 1-2 Weeks)
 
 ### Core Functionality
-- [ ] **Search Functionality**
-  - [ ] Implement full-text search across documents
-  - [ ] Search by title, category, content
-  - [ ] Filter by application and team
-  - [ ] Search suggestions/autocomplete
+- [x] **Search Functionality**
+  - [x] Implement full-text search across documents
+  - [x] Search by title, category, content
+  - [x] Filter by application and team
+  - [x] Search results with relevance scoring
+  - [x] Real-time search with debouncing
+  - [x] Search result highlighting
+  - [ ] Search suggestions/autocomplete (enhancement planned)
 
 - [x] **Document Viewing**
   - [x] Document detail page/view
@@ -210,5 +213,5 @@
 
 ---
 
-*Last Updated: Initial Roadmap*
+*Last Updated: Search Functionality Completed*
 *Review and update quarterly*
