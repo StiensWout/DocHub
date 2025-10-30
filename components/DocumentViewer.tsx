@@ -42,6 +42,8 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
     if (!document) return;
     
     setIsExporting(true);
+    let tempContainer: HTMLElement | null = null;
+    
     try {
       // Dynamic import for html2pdf to avoid SSR issues
       const html2pdf = (await import('html2pdf.js')).default;
@@ -119,7 +121,7 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
       clone.classList.add('pdf-export');
       
       // Create a temporary container
-      const tempContainer = window.document.createElement('div');
+      tempContainer = window.document.createElement('div');
       tempContainer.style.position = 'absolute';
       tempContainer.style.left = '-9999px';
       tempContainer.style.top = '0';
@@ -151,14 +153,15 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
 
       await html2pdf().set(opt).from(clone).save();
       
-      // Clean up
-      window.document.body.removeChild(tempContainer);
-      
       toast.success("PDF exported successfully!");
     } catch (error) {
       console.error("Error exporting PDF:", error);
       toast.error("Failed to export PDF");
     } finally {
+      // Clean up temporary container regardless of success or failure
+      if (tempContainer && tempContainer.parentNode) {
+        window.document.body.removeChild(tempContainer);
+      }
       setIsExporting(false);
       setShowExportMenu(false);
     }
