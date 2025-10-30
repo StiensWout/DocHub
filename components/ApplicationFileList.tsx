@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Download, Trash2, Loader2, Globe, Users, RefreshCw } from "lucide-react";
+import { Download, Trash2, Loader2, Globe, Users, RefreshCw, Eye } from "lucide-react";
 import { getApplicationFiles } from "@/lib/supabase/queries";
 import { supabase } from "@/lib/supabase/client";
 import type { DocumentFile } from "@/types";
+import FileViewer from "./FileViewer";
 
 interface ApplicationFileListProps {
   applicationId: string;
@@ -23,6 +24,7 @@ export default function ApplicationFileList({
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [replacingId, setReplacingId] = useState<string | null>(null);
+  const [viewingFile, setViewingFile] = useState<DocumentFile | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -177,9 +179,12 @@ export default function ApplicationFileList({
             <span className="text-2xl">{getFileIcon(file.file_type)}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <div className="text-sm font-medium text-gray-200 truncate">
+                <button
+                  onClick={() => setViewingFile(file)}
+                  className="text-sm font-medium text-gray-200 truncate hover:text-purple-400 transition-colors text-left"
+                >
                   {file.file_name}
-                </div>
+                </button>
                 {file.visibility && (
                   <span className={`
                     flex items-center gap-1 px-1.5 py-0.5 rounded text-xs
@@ -224,6 +229,17 @@ export default function ApplicationFileList({
               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.jpg,.jpeg,.png,.gif,.webp,.svg"
               disabled={replacingId === file.id || deletingId === file.id}
             />
+
+            <button
+              onClick={() => setViewingFile(file)}
+              className="
+                p-2 rounded hover:bg-gray-700/50 transition-colors
+                text-gray-400 hover:text-purple-400
+              "
+              title="View file"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
 
             <button
               onClick={() => {
@@ -274,6 +290,13 @@ export default function ApplicationFileList({
           </div>
         </div>
       ))}
+
+      {/* File Viewer Modal */}
+      <FileViewer
+        file={viewingFile}
+        isOpen={viewingFile !== null}
+        onClose={() => setViewingFile(null)}
+      />
     </div>
   );
 }

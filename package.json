@@ -12,16 +12,18 @@
     "validate": "bun run scripts/validate.ts"
   },
   "dependencies": {
-    "next": "^14.2.0",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0",
-    "lucide-react": "^0.427.0",
     "@supabase/supabase-js": "^2.39.0",
-    "@tiptap/react": "^2.1.13",
-    "@tiptap/starter-kit": "^2.1.13",
     "@tiptap/extension-image": "^2.1.13",
     "@tiptap/extension-link": "^2.1.13",
-    "@tiptap/extension-placeholder": "^2.1.13"
+    "@tiptap/extension-placeholder": "^2.1.13",
+    "@tiptap/react": "^2.1.13",
+    "@tiptap/starter-kit": "^2.1.13",
+    "lucide-react": "^0.427.0",
+    "next": "^14.2.0",
+    "pdfjs-dist": "3.11.174",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-pdf": "7.7.3"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

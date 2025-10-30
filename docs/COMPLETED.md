@@ -176,6 +176,22 @@ This document tracks all completed features and functionality in DocHub. Last up
   - File deletion with confirmation
   - File metadata display (name, size, type, visibility)
   - File type icons
+  - Clickable file names to open viewer by default
+  - Collapsible application files section
+- ✅ **In-App File Viewing**
+  - PDF viewer with multi-page scrolling support
+  - Image viewer with lightbox
+  - Text file viewer with formatted display
+  - File viewer modal/overlay
+  - File type detection and routing
+  - Zoom controls for PDFs
+  - Fullscreen mode for PDFs
+- ✅ **In-App File Editing**
+  - Edit text files directly in the viewer
+  - Support for code files (JS, TS, Python, etc.)
+  - Support for configuration files (JSON, YAML, XML, etc.)
+  - Save edited files back to storage
+  - Edit mode toggle with save/cancel buttons
 - ✅ **Database Schema**
   - `document_files` table with flexible relationships
   - Support for document-level and application-level files
@@ -185,6 +201,7 @@ This document tracks all completed features and functionality in DocHub. Last up
   - RLS policies for file access control
 - ✅ **API Endpoints**
   - `POST /api/files/upload` - File upload handler
+  - `PUT /api/files/[fileId]` - File replacement/update handler
   - `DELETE /api/files/[fileId]` - File deletion handler
   - Storage cleanup on deletion
   - Error handling and validation
@@ -299,6 +316,16 @@ After running `bun run seed`:
   - Application-level files with visibility controls (public/team)
   - File metadata tracking and management
   - File download and deletion
+  - File replacement/update functionality
+- ✅ **In-App File Viewing**
+  - PDF viewer with multi-page scrolling
+  - Image viewer with lightbox
+  - Text file viewer
+  - Clickable file names to open viewer
+- ✅ **In-App File Editing**
+  - Edit text files directly in the viewer
+  - Support for code and configuration files
+  - Save edited files back to storage
 - ✅ Document versioning system with history
 - ✅ Version comparison and restore
 - ✅ Improved seed script with error handling
@@ -325,6 +352,8 @@ After running `bun run seed`:
 | Versioning | ✅ Complete | Automatic version history |
 | Image Upload | ✅ Complete | Supabase Storage integration |
 | File Upload | ✅ Complete | Document & application file attachments |
+| File Viewing | ✅ Complete | PDF, images, text files with multi-page scrolling |
+| File Editing | ✅ Complete | In-app editing for text-based files |
 | Multi-team Support | ✅ Complete | Team-specific documents |
 | Documentation | ✅ Complete | Comprehensive guides |
 

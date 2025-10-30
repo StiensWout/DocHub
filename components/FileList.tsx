@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Download, Trash2, Loader2, Globe, Users, RefreshCw } from "lucide-react";
+import { Download, Trash2, Loader2, Globe, Users, RefreshCw, Eye, ChevronDown, ChevronUp } from "lucide-react";
 import { getAllFilesForDocument, deleteFileMetadata } from "@/lib/supabase/queries";
 import { supabase } from "@/lib/supabase/client";
 import type { DocumentFile, DocumentType } from "@/types";
+import FileViewer from "./FileViewer";
 
 interface FileListProps {
   documentId: string;
@@ -27,6 +28,8 @@ export default function FileList({
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [replacingId, setReplacingId] = useState<string | null>(null);
+  const [viewingFile, setViewingFile] = useState<DocumentFile | null>(null);
+  const [showApplicationFiles, setShowApplicationFiles] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -206,6 +209,7 @@ export default function FileList({
               onDelete={handleDelete}
               onReplace={handleReplace}
               onDownload={handleDownload}
+              onView={() => setViewingFile(file)}
               getFileIcon={getFileIcon}
               formatFileSize={formatFileSize}
             />
@@ -213,25 +217,51 @@ export default function FileList({
         </div>
       )}
 
-      {/* Application Files */}
+      {/* Application Files - Collapsible */}
       {applicationFiles.length > 0 && (
         <div>
-          <h4 className="text-xs text-gray-400 mb-2">Application Files</h4>
-          {applicationFiles.map((file) => (
-            <FileItem
-              key={file.id}
-              file={file}
-              deletingId={deletingId}
-              replacingId={replacingId}
-              onDelete={handleDelete}
-              onReplace={handleReplace}
-              onDownload={handleDownload}
-              getFileIcon={getFileIcon}
-              formatFileSize={formatFileSize}
-            />
-          ))}
+          <button
+            onClick={() => setShowApplicationFiles(!showApplicationFiles)}
+            className="
+              flex items-center gap-2 w-full text-xs text-gray-400 mb-2
+              hover:text-gray-300 transition-colors
+            "
+          >
+            {showApplicationFiles ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+            <span>Application Files ({applicationFiles.length})</span>
+          </button>
+          
+          {showApplicationFiles && (
+            <div className="space-y-2">
+              {applicationFiles.map((file) => (
+                <FileItem
+                  key={file.id}
+                  file={file}
+                  deletingId={deletingId}
+                  replacingId={replacingId}
+                  onDelete={handleDelete}
+                  onReplace={handleReplace}
+                  onDownload={handleDownload}
+                  onView={() => setViewingFile(file)}
+                  getFileIcon={getFileIcon}
+                  formatFileSize={formatFileSize}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
+
+      {/* File Viewer Modal */}
+      <FileViewer
+        file={viewingFile}
+        isOpen={viewingFile !== null}
+        onClose={() => setViewingFile(null)}
+      />
     </div>
   );
 }
@@ -243,6 +273,7 @@ function FileItem({
   onDelete,
   onReplace,
   onDownload,
+  onView,
   getFileIcon,
   formatFileSize,
 }: {
@@ -252,6 +283,7 @@ function FileItem({
   onDelete: (id: string) => void;
   onReplace: (id: string, file: File) => void;
   onDownload: (file: DocumentFile) => void;
+  onView: () => void;
   getFileIcon: (type: string) => string;
   formatFileSize: (bytes: number) => string;
 }) {
@@ -286,9 +318,12 @@ function FileItem({
         <span className="text-2xl">{getFileIcon(file.file_type)}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <div className="text-sm font-medium text-gray-200 truncate">
+            <button
+              onClick={onView}
+              className="text-sm font-medium text-gray-200 truncate hover:text-purple-400 transition-colors text-left"
+            >
               {file.file_name}
-            </div>
+            </button>
             {file.visibility && (
               <span className={`
                 flex items-center gap-1 px-1.5 py-0.5 rounded text-xs
@@ -326,6 +361,17 @@ function FileItem({
           accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.jpg,.jpeg,.png,.gif,.webp,.svg"
           disabled={isReplacing || isDeleting}
         />
+
+        <button
+          onClick={onView}
+          className="
+            p-2 rounded hover:bg-gray-700/50 transition-colors
+            text-gray-400 hover:text-purple-400
+          "
+          title="View file"
+        >
+          <Eye className="w-4 h-4" />
+        </button>
 
         <button
           onClick={handleReplaceClick}

@@ -21,13 +21,16 @@ This roadmap outlines planned features, enhancements, and improvements for DocHu
 - [x] Application-level file uploads with visibility controls
 
 #### In-App File Viewing
-- [ ] PDF viewer component (embedded PDF.js or similar) - *Future enhancement*
+- [x] PDF viewer component (embedded PDF.js with multi-page scrolling)
 - [ ] Word document viewer (DOCX to HTML conversion) - *Future enhancement*
 - [ ] Excel spreadsheet viewer (XLSX viewing) - *Future enhancement*
 - [ ] PowerPoint viewer (PPTX viewing) - *Future enhancement*
 - [x] Image viewer (via Supabase Storage URLs)
 - [x] Generic file download fallback
 - [x] File type detection and appropriate handling
+- [x] Clickable file names to open viewer
+- [x] In-app file editing for text files (code, config, etc.)
+- [x] Multi-page PDF viewing with scrollable interface
 
 #### File Management UI
 - [x] File upload button in document editor
@@ -36,7 +39,9 @@ This roadmap outlines planned features, enhancements, and improvements for DocHu
 - [x] Application files list component
 - [x] File download functionality
 - [x] File deletion with confirmation
-- [ ] File replacement/update option - *Future enhancement*
+- [x] File replacement/update option
+- [x] Clickable file names to open viewer by default
+- [x] In-app file editing for text-based files
 
 **See**: `docs/FEATURE_REQUESTS/file-upload-viewing-system.md` for detailed specification
 
@@ -212,6 +217,10 @@ These are ideas for future consideration, not currently prioritized:
 - ✅ Document CRUD operations
 - ✅ Multi-team support
 - ✅ Comprehensive documentation
+- ✅ File upload & viewing system
+- ✅ PDF viewer with multi-page scrolling
+- ✅ In-app file editing for text files
+- ✅ Clickable file names for quick viewing
 
 **See**: `docs/COMPLETED.md` for complete list of completed features
 
@@ -223,9 +232,9 @@ These are ideas for future consideration, not currently prioritized:
 
 ## 📅 Roadmap Updates
 
-- **Last Updated**: After comprehensive documentation overhaul
+- **Last Updated**: After implementing file viewing and editing features
 - **Review Frequency**: Monthly
-- **Next Review**: After file upload system implementation
+- **Next Review**: After implementing authentication system
 
 ## 🤝 Contributing
 
