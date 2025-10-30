@@ -38,24 +38,46 @@ RETURNS TRIGGER AS $$
 DECLARE
   next_version INTEGER;
   table_name TEXT;
+  doc_type TEXT;
+  latest_version_content TEXT;
+  latest_version_title TEXT;
+  latest_version_category TEXT;
 BEGIN
   -- Determine table name based on TG_TABLE_NAME
   table_name := TG_TABLE_NAME;
+  
+  -- Determine document type
+  doc_type := CASE 
+    WHEN table_name = 'base_documents' THEN 'base'
+    WHEN table_name = 'team_documents' THEN 'team'
+  END;
   
   -- Get the next version number
   SELECT COALESCE(MAX(version_number), 0) + 1
   INTO next_version
   FROM document_versions
   WHERE document_id = NEW.id
-    AND document_type = CASE 
-      WHEN table_name = 'base_documents' THEN 'base'
-      WHEN table_name = 'team_documents' THEN 'team'
-    END;
+    AND document_type = doc_type;
   
-  -- Only create version if content actually changed
-  IF OLD.content IS DISTINCT FROM NEW.content OR 
-     OLD.title IS DISTINCT FROM NEW.title OR
-     OLD.category IS DISTINCT FROM NEW.category THEN
+  -- Get the latest version's content to compare against
+  SELECT content, title, category
+  INTO latest_version_content, latest_version_title, latest_version_category
+  FROM document_versions
+  WHERE document_id = NEW.id
+    AND document_type = doc_type
+    AND version_number = next_version - 1;
+  
+  -- Only create version if:
+  -- 1. Content/title/category changed from NEW values
+  -- 2. AND the OLD values are different from the latest saved version
+  -- This prevents duplicates when the first update happens after creation
+  IF (OLD.content IS DISTINCT FROM NEW.content OR 
+      OLD.title IS DISTINCT FROM NEW.title OR
+      OLD.category IS DISTINCT FROM NEW.category) AND
+     (latest_version_content IS NULL OR -- No previous version exists
+      OLD.content IS DISTINCT FROM latest_version_content OR
+      OLD.title IS DISTINCT FROM latest_version_title OR
+      OLD.category IS DISTINCT FROM latest_version_category) THEN
     
     INSERT INTO document_versions (
       document_id,
@@ -67,10 +89,7 @@ BEGIN
       change_summary
     ) VALUES (
       NEW.id,
-      CASE 
-        WHEN table_name = 'base_documents' THEN 'base'
-        WHEN table_name = 'team_documents' THEN 'team'
-      END,
+      doc_type,
       next_version,
       OLD.content,
       OLD.title,
