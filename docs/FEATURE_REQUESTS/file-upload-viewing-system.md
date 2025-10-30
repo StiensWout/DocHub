@@ -519,7 +519,7 @@ function isValidFile(file: File): boolean {
 
 - [Supabase Storage Documentation](https://supabase.com/docs/guides/storage)
 - [react-pdf Documentation](https://react-pdf.org/)
-- [mammoth Documentation](https://github.com/mwilliamson/mammoth.js)
+- [docx-preview Documentation](https://github.com/VolodymyrBaydalka/docxjs)
 
 ---
 
