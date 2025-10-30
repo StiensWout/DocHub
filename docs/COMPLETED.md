@@ -25,7 +25,7 @@
 ### 3. UI Components
 - ✅ Beautiful dark mode interface
 - ✅ Responsive design (mobile, tablet, desktop)
-- ✅ Header with search bar (UI ready, functionality pending)
+- ✅ **Functional search bar** with real-time results
 - ✅ Team selector dropdown component
 - ✅ Application cards grid view
 - ✅ Recent documents list
@@ -88,6 +88,25 @@
   - Template selection when creating documents
   - Custom templates can be added to database
 
+### 10. Search Functionality
+- ✅ **Full-Text Search**
+  - Search across titles, categories, and content
+  - Case-insensitive matching
+  - Relevance scoring algorithm
+  - Real-time search with debouncing (300ms)
+- ✅ **Advanced Filtering**
+  - Filter by application
+  - Filter by category
+  - Filter by document type (Base/Team/All)
+  - Automatic team context filtering
+- ✅ **Search UI**
+  - Dropdown results panel
+  - Search result highlighting
+  - Result count display
+  - Loading indicators
+  - Click outside to close
+  - Content preview in results
+
 ### 7. Features
 - ✅ Multi-team support
 - ✅ Shared base documents per application
@@ -99,6 +118,9 @@
 - ✅ **Rich text editing** with formatting options
 - ✅ **Image support** with upload functionality
 - ✅ **Template-based document creation**
+- ✅ **Full-text search** across all documents
+- ✅ **Advanced filtering** (by application, category, document type)
+- ✅ **Relevance-based search results**
 
 ### 8. Developer Experience
 - ✅ Database seeding script (`bun run seed`)
@@ -162,6 +184,14 @@
 
 ## 🆕 Latest Additions
 
+### Search Functionality
+- Full-text search across all documents
+- Advanced filtering by application, category, and document type
+- Relevance-based ranking for search results
+- Real-time search with debouncing
+- Highlighted search matches in results
+- Beautiful dropdown UI with content previews
+
 ### Rich Text Editor
 - Full-featured editor powered by Tiptap
 - Support for images, links, formatting, lists, tables
@@ -182,4 +212,4 @@
 
 ---
 
-*Last Updated: Rich Text Editor & Template System Release*
+*Last Updated: Search Functionality Release*
