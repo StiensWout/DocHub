@@ -194,33 +194,270 @@ body {
 }
 
 /* Prose styles for document viewer */
-.prose {
+.prose,
+.prose-invert {
   color: #ededed;
+  max-width: none;
+  line-height: 1.75;
 }
 
-.prose h1 {
+.prose p,
+.prose-invert p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+.prose h1,
+.prose-invert h1 {
   color: white;
+  font-weight: 800;
+  font-size: 2.25em;
+  margin-top: 0;
+  margin-bottom: 0.8888889em;
+  line-height: 1.1111111;
 }
 
-.prose h2 {
+.prose h2,
+.prose-invert h2 {
   color: white;
+  font-weight: 700;
+  font-size: 1.5em;
+  margin-top: 2em;
+  margin-bottom: 1em;
+  line-height: 1.3333333;
 }
 
-.prose h3 {
+.prose h3,
+.prose-invert h3 {
   color: white;
+  font-weight: 600;
+  font-size: 1.25em;
+  margin-top: 1.6em;
+  margin-bottom: 0.6em;
+  line-height: 1.6;
 }
 
-.prose strong {
+.prose h4,
+.prose-invert h4 {
+  color: white;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+}
+
+.prose h5,
+.prose h6,
+.prose-invert h5,
+.prose-invert h6 {
+  color: white;
+  font-weight: 600;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+}
+
+.prose strong,
+.prose-invert strong,
+.prose b,
+.prose-invert b {
   color: white;
   font-weight: 600;
 }
 
-.prose a {
-  color: #60a5fa;
+.prose em,
+.prose-invert em,
+.prose i,
+.prose-invert i {
+  color: #ededed;
+  font-style: italic;
 }
 
-.prose img {
+.prose a,
+.prose-invert a {
+  color: #60a5fa;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.prose a:hover,
+.prose-invert a:hover {
+  color: #93c5fd;
+}
+
+.prose ul,
+.prose ol,
+.prose-invert ul,
+.prose-invert ol {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.625em;
+}
+
+.prose ul,
+.prose-invert ul {
+  list-style-type: disc;
+}
+
+.prose ol,
+.prose-invert ol {
+  list-style-type: decimal;
+}
+
+.prose li,
+.prose-invert li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose li > p,
+.prose-invert li > p {
+  margin-top: 0.75em;
+  margin-bottom: 0.75em;
+}
+
+.prose li > :first-child,
+.prose-invert li > :first-child {
+  margin-top: 0;
+}
+
+.prose li > :last-child,
+.prose-invert li > :last-child {
+  margin-bottom: 0;
+}
+
+.prose blockquote,
+.prose-invert blockquote {
+  font-weight: 500;
+  font-style: italic;
+  color: #ededed;
+  border-left: 4px solid rgba(255, 255, 255, 0.2);
+  quotes: "\201C""\201D""\2018""\2019";
+  margin-top: 1.6em;
+  margin-bottom: 1.6em;
+  padding-left: 1em;
+}
+
+.prose blockquote p:first-of-type::before,
+.prose-invert blockquote p:first-of-type::before {
+  content: open-quote;
+}
+
+.prose blockquote p:last-of-type::after,
+.prose-invert blockquote p:last-of-type::after {
+  content: close-quote;
+}
+
+.prose code,
+.prose-invert code {
+  color: #60a5fa;
+  font-weight: 400;
+  font-size: 0.875em;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+.prose pre,
+.prose-invert pre {
+  color: #ededed;
+  background-color: rgba(0, 0, 0, 0.5);
   border-radius: 0.5rem;
+  padding: 1em;
+  margin: 1.25em 0;
+  overflow-x: auto;
+  font-size: 0.875em;
+  line-height: 1.7142857;
+}
+
+.prose pre code,
+.prose-invert pre code {
+  background-color: transparent;
+  border-width: 0;
+  border-radius: 0;
+  padding: 0;
+  font-weight: 400;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  line-height: inherit;
+}
+
+.prose img,
+.prose-invert img {
+  margin-top: 2em;
+  margin-bottom: 2em;
+  border-radius: 0.5rem;
+  max-width: 100%;
+  height: auto;
+}
+
+.prose table,
+.prose-invert table {
+  width: 100%;
+  table-layout: auto;
+  text-align: left;
+  margin-top: 2em;
+  margin-bottom: 2em;
+  font-size: 0.875em;
+  line-height: 1.7142857;
+  border-collapse: collapse;
+}
+
+.prose thead,
+.prose-invert thead {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.prose thead th,
+.prose-invert thead th {
+  color: white;
+  font-weight: 600;
+  vertical-align: bottom;
+  padding-right: 0.5714286em;
+  padding-bottom: 0.5714286em;
+  padding-left: 0.5714286em;
+}
+
+.prose tbody tr,
+.prose-invert tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.prose tbody td,
+.prose-invert tbody td {
+  vertical-align: baseline;
+  padding-top: 0.5714286em;
+  padding-right: 0.5714286em;
+  padding-bottom: 0.5714286em;
+  padding-left: 0.5714286em;
+}
+
+.prose hr,
+.prose-invert hr {
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-width: 1px;
+  margin-top: 3em;
+  margin-bottom: 3em;
+}
+
+.prose mark,
+.prose-invert mark {
+  background-color: rgba(251, 191, 36, 0.2);
+  color: rgb(253, 224, 71);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.125rem;
+}
+
+.prose del,
+.prose-invert del {
+  text-decoration: line-through;
+}
+
+.prose ins,
+.prose-invert ins {
+  text-decoration: underline;
 }
 
 /* Search result highlight */
@@ -271,55 +508,280 @@ mark {
   nav,
   aside,
   button,
-  .no-print * {
+  .no-print *,
+  footer {
     display: none !important;
   }
 
   /* Page setup */
   @page {
-    margin: 1in;
+    margin: 0.75in;
+    size: letter;
   }
 
   /* Content styling */
   body {
     background: white !important;
     color: black !important;
+    font-size: 12pt;
+    line-height: 1.6;
   }
 
-  /* Document content */
+  /* Container styling */
+  .bg-background-tertiary,
+  .bg-background-secondary,
+  .bg-background {
+    background: white !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Document content - handle both prose and prose-invert */
   .prose,
-  .prose * {
+  .prose-invert,
+  .prose *,
+  .prose-invert * {
     color: black !important;
     background: white !important;
+    max-width: 100% !important;
   }
 
-  .prose h1,
-  .prose h2,
-  .prose h3,
-  .prose h4,
-  .prose h5,
-  .prose h6 {
-    color: black !important;
+  /* Print header */
+  .document-print-header {
+    display: block !important;
+    border-bottom: 2pt solid #000 !important;
+    padding-bottom: 8pt !important;
+    margin-bottom: 16pt !important;
     page-break-after: avoid;
   }
 
+  .document-print-header.hidden {
+    display: block !important;
+  }
+
+  .document-print-title {
+    font-size: 20pt !important;
+    font-weight: bold !important;
+    color: black !important;
+    margin: 0 0 4pt 0 !important;
+  }
+
+  .document-print-meta {
+    font-size: 10pt !important;
+    color: #666 !important;
+    margin: 0 !important;
+  }
+
+  /* Typography */
+  .prose h1,
+  .prose-invert h1 {
+    color: black !important;
+    font-size: 24pt !important;
+    font-weight: bold !important;
+    margin-top: 0 !important;
+    margin-bottom: 12pt !important;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  .prose h2,
+  .prose-invert h2 {
+    color: black !important;
+    font-size: 20pt !important;
+    font-weight: bold !important;
+    margin-top: 18pt !important;
+    margin-bottom: 10pt !important;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  .prose h3,
+  .prose-invert h3 {
+    color: black !important;
+    font-size: 16pt !important;
+    font-weight: bold !important;
+    margin-top: 14pt !important;
+    margin-bottom: 8pt !important;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  .prose h4,
+  .prose-invert h4,
+  .prose h5,
+  .prose-invert h5,
+  .prose h6,
+  .prose-invert h6 {
+    color: black !important;
+    font-weight: bold !important;
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
   .prose p,
-  .prose li {
+  .prose-invert p {
+    color: black !important;
+    margin-top: 0 !important;
+    margin-bottom: 10pt !important;
+    orphans: 3;
+    widows: 3;
+  }
+
+  .prose strong,
+  .prose-invert strong,
+  .prose b,
+  .prose-invert b {
+    color: black !important;
+    font-weight: bold !important;
+  }
+
+  .prose em,
+  .prose-invert em,
+  .prose i,
+  .prose-invert i {
+    color: black !important;
+    font-style: italic !important;
+  }
+
+  /* Lists */
+  .prose ul,
+  .prose-invert ul,
+  .prose ol,
+  .prose-invert ol {
+    color: black !important;
+    margin-top: 10pt !important;
+    margin-bottom: 10pt !important;
+    padding-left: 24pt !important;
     page-break-inside: avoid;
   }
 
-  .prose img {
-    max-width: 100% !important;
+  .prose li,
+  .prose-invert li {
+    color: black !important;
+    margin-top: 4pt !important;
+    margin-bottom: 4pt !important;
     page-break-inside: avoid;
   }
 
-  .prose table {
-    page-break-inside: avoid;
+  .prose li > p,
+  .prose-invert li > p {
+    margin-top: 4pt !important;
+    margin-bottom: 4pt !important;
   }
 
-  .prose blockquote {
-    border-left-color: #ccc !important;
+  /* Links */
+  .prose a,
+  .prose-invert a {
+    color: #0066cc !important;
+    text-decoration: underline !important;
+  }
+
+  .prose a[href]:after,
+  .prose-invert a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: #666;
+    word-break: break-all;
+  }
+
+  /* Blockquotes */
+  .prose blockquote,
+  .prose-invert blockquote {
+    border-left: 4pt solid #ccc !important;
     color: #333 !important;
+    background: #f9f9f9 !important;
+    padding: 12pt 16pt !important;
+    margin: 16pt 0 !important;
+    page-break-inside: avoid;
+  }
+
+  .prose blockquote p,
+  .prose-invert blockquote p {
+    margin-bottom: 8pt !important;
+    color: #333 !important;
+  }
+
+  /* Code blocks */
+  .prose code,
+  .prose-invert code {
+    background-color: #f5f5f5 !important;
+    color: #333 !important;
+    border: 1pt solid #ddd !important;
+    padding: 2pt 4pt !important;
+    font-size: 0.9em !important;
+    font-family: 'Courier New', Courier, monospace !important;
+  }
+
+  .prose pre,
+  .prose-invert pre {
+    background-color: #f5f5f5 !important;
+    color: #333 !important;
+    border: 1pt solid #ddd !important;
+    padding: 12pt !important;
+    margin: 12pt 0 !important;
+    overflow: visible !important;
+    page-break-inside: avoid;
+    font-size: 0.9em !important;
+    font-family: 'Courier New', Courier, monospace !important;
+  }
+
+  .prose pre code,
+  .prose-invert pre code {
+    background-color: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    color: #333 !important;
+  }
+
+  /* Images */
+  .prose img,
+  .prose-invert img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+    page-break-after: avoid;
+    display: block !important;
+    margin: 12pt auto !important;
+  }
+
+  /* Tables */
+  .prose table,
+  .prose-invert table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    margin: 16pt 0 !important;
+    page-break-inside: avoid;
+    border: 1pt solid #ddd !important;
+  }
+
+  .prose thead,
+  .prose-invert thead {
+    background-color: #f5f5f5 !important;
+  }
+
+  .prose th,
+  .prose-invert th,
+  .prose td,
+  .prose-invert td {
+    border: 1pt solid #ddd !important;
+    padding: 8pt !important;
+    color: black !important;
+    text-align: left !important;
+  }
+
+  .prose th,
+  .prose-invert th {
+    font-weight: bold !important;
+    background-color: #f5f5f5 !important;
+  }
+
+  /* Horizontal rules */
+  .prose hr,
+  .prose-invert hr {
+    border: none !important;
+    border-top: 1pt solid #ddd !important;
+    margin: 20pt 0 !important;
+    page-break-after: avoid;
   }
 
   /* Remove borders and backgrounds */
@@ -328,16 +790,12 @@ mark {
     text-shadow: none !important;
   }
 
-  /* Links */
-  .prose a {
-    color: #0066cc !important;
-    text-decoration: underline !important;
-  }
-
-  .prose a[href]:after {
-    content: " (" attr(href) ")";
-    font-size: 0.8em;
-    color: #666;
+  /* Remove rounded corners */
+  .rounded-xl,
+  .rounded-lg,
+  .rounded,
+  .rounded-md {
+    border-radius: 0 !important;
   }
 
   /* Page breaks */
@@ -345,7 +803,13 @@ mark {
     page-break-before: always;
   }
 
-  .no-page-break {
+  .no-break {
     page-break-inside: avoid;
+  }
+
+  /* Avoid breaking inside these elements */
+  .prose p:last-child,
+  .prose-invert p:last-child {
+    page-break-after: auto;
   }
 }

@@ -52,15 +52,108 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
         return;
       }
 
+      // Create a clone of the element
+      const clone = element.cloneNode(true) as HTMLElement;
+      
+      // Remove the prose-invert class and add print-friendly classes
+      clone.classList.remove('prose-invert');
+      clone.classList.add('prose');
+      
+      // Apply print-friendly base styles
+      clone.style.backgroundColor = 'white';
+      clone.style.color = 'black';
+      clone.style.padding = '40px';
+      clone.style.maxWidth = '8.5in';
+      clone.style.margin = '0 auto';
+      clone.style.fontSize = '16px';
+      clone.style.lineHeight = '1.6';
+      
+      // Create a style element with print-friendly CSS
+      const style = window.document.createElement('style');
+      style.textContent = `
+        .pdf-export * {
+          color: black !important;
+        }
+        .pdf-export h1,
+        .pdf-export h2,
+        .pdf-export h3,
+        .pdf-export h4,
+        .pdf-export h5,
+        .pdf-export h6 {
+          color: black !important;
+          font-weight: bold;
+        }
+        .pdf-export strong,
+        .pdf-export b {
+          color: black !important;
+          font-weight: bold;
+        }
+        .pdf-export code {
+          background-color: #f5f5f5 !important;
+          color: black !important;
+          border: 1px solid #e0e0e0 !important;
+        }
+        .pdf-export pre {
+          background-color: #f5f5f5 !important;
+          color: black !important;
+          border: 1px solid #e0e0e0 !important;
+        }
+        .pdf-export a {
+          color: #0066cc !important;
+        }
+        .pdf-export blockquote {
+          border-left-color: #ccc !important;
+          color: #666 !important;
+        }
+        .pdf-export table {
+          border-color: #e0e0e0 !important;
+        }
+        .pdf-export th,
+        .pdf-export td {
+          border-color: #e0e0e0 !important;
+          color: black !important;
+        }
+      `;
+      
+      // Add the PDF export class
+      clone.classList.add('pdf-export');
+      
+      // Create a temporary container
+      const tempContainer = window.document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.top = '0';
+      tempContainer.style.width = '8.5in';
+      tempContainer.style.backgroundColor = 'white';
+      tempContainer.style.padding = '0';
+      tempContainer.appendChild(style);
+      tempContainer.appendChild(clone);
+      window.document.body.appendChild(tempContainer);
+
+      // Wait a bit for styles to apply
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const opt = {
         margin: [0.5, 0.5, 0.5, 0.5],
         filename: `${document.title}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          windowWidth: 816, // 8.5in at 96 DPI
+          windowHeight: 1056, // 11in at 96 DPI
+        },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
 
-      await html2pdf().set(opt).from(element).save();
+      await html2pdf().set(opt).from(clone).save();
+      
+      // Clean up
+      window.document.body.removeChild(tempContainer);
+      
       toast.success("PDF exported successfully!");
     } catch (error) {
       console.error("Error exporting PDF:", error);
@@ -125,8 +218,10 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
 
   // Get share URL
   const getShareUrl = () => {
-    if (!document || !teamId || !appId) return "";
-    return `${window.location.origin}/documents/${teamId}/${appId}/${document.id}`;
+    if (!document || !appId) return "";
+    // For base documents, use "base" as teamId placeholder
+    const shareTeamId = document.type === "base" ? "base" : teamId || "base";
+    return `${window.location.origin}/documents/${shareTeamId}/${appId}/${document.id}`;
   };
 
   // Render HTML content safely
@@ -134,11 +229,21 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
     if (!content) return <p className="text-gray-400 italic">No content available</p>;
 
     return (
-      <div
-        id={`document-content-${document.id}`}
-        className="prose prose-invert max-w-none"
-        dangerouslySetInnerHTML={{ __html: content }}
-      />
+      <div className="print-content">
+        {/* Print-only header */}
+        <div className="document-print-header hidden print:block">
+          <h1 className="document-print-title">{document.title}</h1>
+          <div className="document-print-meta">
+            {appName} • {document.category} • {document.updated}
+          </div>
+        </div>
+        
+        <div
+          id={`document-content-${document.id}`}
+          className="prose prose-invert max-w-none"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      </div>
     );
   };
 

@@ -153,6 +153,102 @@ export async function getAllDocumentsForApp(
   return [...baseDocs, ...teamDocs];
 }
 
+// Get a single document by ID (checks both base and team documents)
+// Returns document and application name
+export async function getDocumentById(
+  documentId: string,
+  teamId?: string,
+  appId?: string
+): Promise<{ document: Document; appName: string } | null> {
+  console.log("getDocumentById called with:", { documentId, teamId, appId });
+  
+  // Try base documents first
+  const { data: baseDoc, error: baseError } = await supabase
+    .from("base_documents")
+    .select("*")
+    .eq("id", documentId)
+    .single();
+
+  console.log("Base document query:", { baseDoc, baseError });
+
+  if (!baseError && baseDoc) {
+    // Verify appId matches if provided
+    if (appId && baseDoc.application_id !== appId) {
+      console.log("Base doc appId mismatch, checking team documents");
+      // If appId doesn't match, continue to check team documents
+    } else {
+      // Base document found - return it (ignore teamId for base documents)
+      const { data: app } = await supabase
+        .from("applications")
+        .select("name")
+        .eq("id", baseDoc.application_id)
+        .single();
+
+      console.log("Returning base document:", { document: baseDoc, appName: app?.name });
+
+      return {
+        document: {
+          id: baseDoc.id,
+          title: baseDoc.title,
+          category: baseDoc.category,
+          type: "base" as const,
+          content: baseDoc.content || undefined,
+          updated: formatTimeAgo(baseDoc.updated_at),
+          appId: baseDoc.application_id,
+        },
+        appName: app?.name || "Unknown",
+      };
+    }
+  }
+
+  // Try team documents
+  const { data: teamDoc, error: teamError } = await supabase
+    .from("team_documents")
+    .select("*")
+    .eq("id", documentId)
+    .single();
+
+  console.log("Team document query:", { teamDoc, teamError });
+
+  if (!teamError && teamDoc) {
+    // Verify teamId and appId match if provided
+    // Allow "base" teamId to pass through (for compatibility with share URLs)
+    if (teamId && teamId !== "base" && teamDoc.team_id !== teamId) {
+      console.log("Team doc teamId mismatch:", { providedTeamId: teamId, docTeamId: teamDoc.team_id });
+      return null;
+    }
+    if (appId && teamDoc.application_id !== appId) {
+      console.log("Team doc appId mismatch:", { providedAppId: appId, docAppId: teamDoc.application_id });
+      return null;
+    }
+
+    // Get application name
+    const { data: app } = await supabase
+      .from("applications")
+      .select("name")
+      .eq("id", teamDoc.application_id)
+      .single();
+
+    console.log("Returning team document:", { document: teamDoc, appName: app?.name });
+
+    return {
+      document: {
+        id: teamDoc.id,
+        title: teamDoc.title,
+        category: teamDoc.category,
+        type: "team" as const,
+        content: teamDoc.content || undefined,
+        updated: formatTimeAgo(teamDoc.updated_at),
+        appId: teamDoc.application_id,
+      },
+      appName: app?.name || "Unknown",
+    };
+  }
+
+  console.log("No document found");
+  return null;
+}
+
 // Helper function to format timestamp as "time ago"
 function formatTimeAgo(timestamp: string): string {
   const now = new Date();

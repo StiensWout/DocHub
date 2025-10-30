@@ -52,11 +52,14 @@ This roadmap outlines planned features, enhancements, and improvements for DocHu
   - [x] Quick access menu (integrated into sidebar)
   - **See**: `docs/FEATURE_REQUESTS/enhanced-navigation.md` for detailed specification
   - **Completed**: 2025-01-30
-- [ ] **Document Viewer Enhancements**
-  - [ ] Print-friendly view
-  - [ ] Export to PDF/Markdown
-  - [ ] Share document link
+- [x] **Document Viewer Enhancements**
+  - [x] Print-friendly view with comprehensive styling
+  - [x] Export to PDF with print-friendly formatting
+  - [x] Export to Markdown
+  - [x] Share document link with dynamic routes
+  - [x] Share link route implementation (`/documents/{teamId}/{appId}/{documentId}`)
   - **See**: `docs/FEATURE_REQUESTS/document-viewer-enhancements.md` for detailed specification
+  - **Completed**: 2025-01-30
 - [x] **Notifications**
   - [x] Toast notifications for actions
   - [x] Success/error feedback

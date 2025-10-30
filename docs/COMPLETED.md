@@ -384,6 +384,27 @@ After running `bun run seed`:
   - Edit text files directly in the viewer
   - Support for code and configuration files
   - Save edited files back to storage
+- ✅ **Document Viewer Enhancements**
+  - Print-friendly view with comprehensive CSS styling
+  - Export to PDF with print-friendly formatting (html2pdf.js)
+  - Export to Markdown format (turndown)
+  - Shareable document links with dynamic routes
+  - Share link route (`/documents/{teamId}/{appId}/{documentId}`)
+  - Print header with document metadata
+  - Page break optimization for clean printing
+  - Dark theme to print-friendly color conversion
+  - Copy to clipboard functionality
+  - Error handling for missing documents
+- ✅ **Enhanced Navigation**
+  - Sidebar navigation with collapsible design
+  - Breadcrumb navigation
+  - Quick access menu (recent documents)
+  - Keyboard shortcuts (Ctrl/Cmd+B for sidebar, Ctrl/Cmd+N for new doc)
+- ✅ **Toast Notification System**
+  - Success, error, warning, and info notifications
+  - Auto-dismiss with configurable duration
+  - Smooth animations
+  - Integrated throughout the application
 - ✅ Document versioning system with history
 - ✅ Version comparison and restore
 - ✅ Improved seed script with error handling
@@ -412,10 +433,14 @@ After running `bun run seed`:
 | File Upload | ✅ Complete | Document & application file attachments |
 | File Viewing | ✅ Complete | PDF, images, text files with multi-page scrolling |
 | File Editing | ✅ Complete | In-app editing for text-based files |
+| Print & Export | ✅ Complete | Print view, PDF export, Markdown export |
+| Share Links | ✅ Complete | Shareable document links with routes |
+| Navigation | ✅ Complete | Sidebar, breadcrumbs, quick access |
+| Notifications | ✅ Complete | Toast notification system |
 | Multi-team Support | ✅ Complete | Team-specific documents |
 | Documentation | ✅ Complete | Comprehensive guides |
 
 ---
 
-**Last Updated**: After implementing file upload & viewing system  
+**Last Updated**: After implementing document viewer enhancements  
 **Next Review**: After implementing authentication system
