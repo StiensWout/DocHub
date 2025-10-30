@@ -22,7 +22,7 @@ This roadmap outlines planned features, enhancements, and improvements for DocHu
 
 #### In-App File Viewing
 - [x] PDF viewer component (embedded PDF.js with multi-page scrolling)
-- [ ] Word document viewer (DOCX to HTML conversion) - *Future enhancement*
+- [x] Word document viewer (DOCX rendering with docx-preview) - ✅ Complete
 - [ ] Excel spreadsheet viewer (XLSX viewing) - *Future enhancement*
 - [ ] PowerPoint viewer (PPTX viewing) - *Future enhancement*
 - [x] Image viewer (via Supabase Storage URLs)

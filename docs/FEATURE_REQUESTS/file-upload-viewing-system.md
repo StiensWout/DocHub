@@ -204,10 +204,11 @@ documents/
   - Download button
 
 #### DOCX Viewer
-- **Library:** `mammoth` (DOCX to HTML conversion)
+- **Library:** `docx-preview` (DOCX rendering with formatting preservation)
 - **Features:**
-  - Convert DOCX to HTML
-  - Render in styled container
+  - Render DOCX files directly in browser
+  - Preserves fonts, colors, images, layout, and formatting
+  - Better fidelity to original Word documents
   - Download original file
 
 #### XLSX Viewer
@@ -374,7 +375,7 @@ documents/
 4. Type detection and routing
 
 ### Phase 4: File Viewing - Advanced (Days 7-8)
-1. DOCX viewer (mammoth conversion)
+1. DOCX viewer (docx-preview for formatting preservation)
 2. XLSX viewer (table display)
 3. PPTX viewer (basic implementation)
 4. Generic download fallback
@@ -447,8 +448,8 @@ function isValidFile(file: File): boolean {
 ## Dependencies
 
 ### NPM Packages
-- `react-pdf` or `@react-pdf-viewer/core` - PDF viewing
-- `mammoth` - DOCX to HTML conversion
+- `react-pdf` - PDF viewing
+- `docx-preview` - DOCX rendering with formatting preservation
 - `xlsx` - Excel file parsing
 - `file-saver` - File download helper
 - `react-dropzone` - Drag & drop file upload (optional, currently using custom implementation)
@@ -573,12 +574,10 @@ function isValidFile(file: File): boolean {
 - ✅ Error handling and validation
 
 ### Future Enhancements
-- 🔄 PDF viewer component (embedded PDF.js)
-- 🔄 Word document viewer (DOCX to HTML conversion)
 - 🔄 Excel spreadsheet viewer (XLSX viewing)
 - 🔄 PowerPoint viewer (PPTX viewing)
-- 🔄 File replacement/update option
 - 🔄 File preview thumbnails
+- 🔄 Enhanced DOCX editing capabilities
 
 ### Files Created/Modified
 - `supabase/files_schema.sql` - File schema definition

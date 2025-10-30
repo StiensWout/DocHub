@@ -182,6 +182,7 @@ This document tracks all completed features and functionality in DocHub. Last up
   - PDF viewer with multi-page scrolling support
   - Image viewer with lightbox
   - Text file viewer with formatted display
+  - DOCX viewer with formatting preservation (docx-preview)
   - File viewer modal/overlay
   - File type detection and routing
   - Zoom controls for PDFs
@@ -321,6 +322,7 @@ After running `bun run seed`:
   - PDF viewer with multi-page scrolling
   - Image viewer with lightbox
   - Text file viewer
+  - DOCX viewer with formatting preservation
   - Clickable file names to open viewer
 - ✅ **In-App File Editing**
   - Edit text files directly in the viewer

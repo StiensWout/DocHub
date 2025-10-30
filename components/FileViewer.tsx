@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, Download, ZoomIn, ZoomOut, Maximize2, Loader2, Edit, Save } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
+import { renderAsync } from "docx-preview";
 import type { DocumentFile } from "@/types";
 import { supabase } from "@/lib/supabase/client";
 
@@ -26,18 +27,27 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [scale, setScale] = useState(1.0);
   const [textContent, setTextContent] = useState<string | null>(null);
+  const [docxRendered, setDocxRendered] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
+  const docxContainerRef = useRef<HTMLDivElement>(null);
+  const [docxArrayBuffer, setDocxArrayBuffer] = useState<ArrayBuffer | null>(null);
 
   useEffect(() => {
     if (!file || !isOpen) {
       setFileUrl(null);
       setTextContent(null);
+      setDocxRendered(false);
+      setDocxArrayBuffer(null);
       setScale(1.0);
       setIsEditing(false);
       setEditedContent("");
+      // Clear docx container
+      if (docxContainerRef.current) {
+        docxContainerRef.current.innerHTML = "";
+      }
       return;
     }
 
@@ -54,8 +64,25 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
         if (data?.publicUrl) {
           setFileUrl(data.publicUrl);
           
-          // Load text content if it's a text file
-          if (file.file_type.startsWith("text/") || 
+          // Check if it's a DOCX file
+          const isDocx = file.file_type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                       file.file_type === "application/msword" ||
+                       file.file_name.toLowerCase().endsWith(".docx") ||
+                       file.file_name.toLowerCase().endsWith(".doc");
+          
+          if (isDocx) {
+            // Load DOCX file and store arrayBuffer for rendering when container is ready
+            try {
+              const response = await fetch(data.publicUrl);
+              const arrayBuffer = await response.arrayBuffer();
+              setDocxArrayBuffer(arrayBuffer);
+              setLoading(false);
+            } catch (docxErr) {
+              console.error("Error loading DOCX:", docxErr);
+              setError(`Failed to load DOCX file: ${docxErr instanceof Error ? docxErr.message : "Unknown error"}`);
+              setLoading(false);
+            }
+          } else if (file.file_type.startsWith("text/") || 
               file.file_type === "application/json" ||
               file.file_type === "application/xml" ||
               file.file_type === "application/x-yaml" ||
@@ -83,6 +110,53 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
 
     loadFile();
   }, [file, isOpen]);
+
+  // Render DOCX when container ref is available
+  useEffect(() => {
+    if (docxArrayBuffer && docxContainerRef.current && !docxRendered) {
+      const renderDocx = async () => {
+        try {
+          docxContainerRef.current!.innerHTML = "";
+          
+          try {
+            await renderAsync(docxArrayBuffer, docxContainerRef.current!, null, {
+              className: "docx-wrapper",
+              inWrapper: true,
+              ignoreWidth: false,
+              ignoreHeight: false,
+              ignoreFonts: false,
+              breakPages: true,
+              ignoreLastRenderedPageBreak: true,
+              experimental: false,
+              trimXmlDeclaration: true,
+              useBase64URL: true,
+              useMathMLPolyfill: true,
+              showChanges: false,
+            });
+            
+            setDocxRendered(true);
+          } catch (renderErr) {
+            console.error("docx-preview render error:", renderErr);
+            // Fallback: try without wrapper
+            try {
+              await renderAsync(docxArrayBuffer, docxContainerRef.current!, null, {
+                inWrapper: false,
+              });
+              setDocxRendered(true);
+            } catch (fallbackErr) {
+              console.error("docx-preview fallback error:", fallbackErr);
+              setError(`Failed to render DOCX file: ${fallbackErr instanceof Error ? fallbackErr.message : "Unknown error"}`);
+            }
+          }
+        } catch (err) {
+          console.error("Error rendering DOCX:", err);
+          setError(`Failed to render DOCX file: ${err instanceof Error ? err.message : "Unknown error"}`);
+        }
+      };
+      
+      renderDocx();
+    }
+  }, [docxArrayBuffer, docxRendered]);
 
   useEffect(() => {
     // Handle escape key to close
@@ -152,6 +226,10 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
 
   const isPDF = file?.file_type === "application/pdf";
   const isImage = file?.file_type.startsWith("image/");
+  const isDocx = file?.file_type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+                file?.file_type === "application/msword" ||
+                file?.file_name.toLowerCase().endsWith(".docx") ||
+                file?.file_name.toLowerCase().endsWith(".doc");
   const isText = file?.file_type.startsWith("text/") || 
                  file?.file_type === "application/json" ||
                  file?.file_type === "application/xml" ||
@@ -390,6 +468,45 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
                 className="max-w-full max-h-full object-contain"
                 style={{ maxHeight: "calc(95vh - 120px)" }}
               />
+            </div>
+          ) : isDocx ? (
+            <div className="flex-1 overflow-auto bg-gray-50 p-4">
+              <style>{`
+                .docx-wrapper {
+                  background: white;
+                  padding: 2rem;
+                  margin: 0 auto;
+                  max-width: 8.5in;
+                  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                  min-height: 11in;
+                }
+              `}</style>
+              {loading ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+                    <span className="text-gray-400">Loading DOCX file...</span>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <p className="text-red-400 mb-4">{error}</p>
+                    <button
+                      onClick={handleDownload}
+                      className="
+                        px-4 py-2 rounded-lg bg-blue-500/20 text-blue-400
+                        border border-blue-500/30 hover:bg-blue-500/30
+                        transition-colors
+                      "
+                    >
+                      Download File Instead
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div ref={docxContainerRef} className="docx-wrapper" />
+              )}
             </div>
           ) : isText && textContent !== null ? (
             <div className="max-w-4xl mx-auto h-full flex flex-col">
