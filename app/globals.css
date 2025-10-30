@@ -262,3 +262,90 @@ mark {
     transform: translateX(0);
   }
 }
+
+/* Print styles */
+@media print {
+  /* Hide non-content elements */
+  .no-print,
+  header,
+  nav,
+  aside,
+  button,
+  .no-print * {
+    display: none !important;
+  }
+
+  /* Page setup */
+  @page {
+    margin: 1in;
+  }
+
+  /* Content styling */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Document content */
+  .prose,
+  .prose * {
+    color: black !important;
+    background: white !important;
+  }
+
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    color: black !important;
+    page-break-after: avoid;
+  }
+
+  .prose p,
+  .prose li {
+    page-break-inside: avoid;
+  }
+
+  .prose img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  .prose table {
+    page-break-inside: avoid;
+  }
+
+  .prose blockquote {
+    border-left-color: #ccc !important;
+    color: #333 !important;
+  }
+
+  /* Remove borders and backgrounds */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Links */
+  .prose a {
+    color: #0066cc !important;
+    text-decoration: underline !important;
+  }
+
+  .prose a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  /* Page breaks */
+  .page-break {
+    page-break-before: always;
+  }
+
+  .no-page-break {
+    page-break-inside: avoid;
+  }
+}
