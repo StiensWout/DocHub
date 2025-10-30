@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Search, X, Filter, Clock, FolderOpen, History, Layers, Box } from "lucide-react";
-import { searchDocuments, getCategories, getDocumentTitles, getCategorySuggestions, searchApplications, searchApplicationGroups, getApplicationSuggestions, getGroupSuggestions, type SearchFilters, type SearchResult, type ApplicationSearchResult, type GroupSearchResult } from "@/lib/supabase/search";
+import { searchDocuments, getCategories, getDocumentTitles, getCategorySuggestions, searchApplications, searchApplicationGroups, getApplicationSuggestions, getGroupSuggestions, type SearchFilters, type SearchResult, type ApplicationSearchResult, type GroupSearchResult, type DocumentSearchResult } from "@/lib/supabase/search";
 import { getApplications } from "@/lib/supabase/queries";
 import { useSearchHistory, type SearchHistoryItem } from "@/hooks/useSearchHistory";
 import type { Application } from "@/types";
@@ -203,6 +203,15 @@ export default function SearchBar({ onResultClick, teamId }: SearchBarProps) {
     }
   }, [isOpen, isFocused]);
 
+  // Build a flat array of all visible results for keyboard navigation
+  const getAllVisibleResults = (): SearchResult[] => {
+    const visible: SearchResult[] = [];
+    visible.push(...filteredApplicationResults);
+    visible.push(...filteredGroupResults);
+    visible.push(...filteredDocumentResults);
+    return visible;
+  };
+
   // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (suggestions.length > 0 && query.length >= 1 && query.length < 2) {
@@ -222,22 +231,25 @@ export default function SearchBar({ onResultClick, teamId }: SearchBarProps) {
         setIsFocused(false);
         setActiveSuggestionIndex(-1);
       }
-    } else if (results.length > 0 && query.length >= 2) {
+    } else if (totalResults > 0 && query.length >= 2) {
+      const visibleResults = getAllVisibleResults();
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setActiveSuggestionIndex((prev) => 
-          prev < results.length - 1 ? prev + 1 : prev
+          prev < visibleResults.length - 1 ? prev + 1 : prev
         );
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setActiveSuggestionIndex((prev) => prev > 0 ? prev - 1 : -1);
       } else if (e.key === 'Enter' && activeSuggestionIndex >= 0) {
         e.preventDefault();
-        saveSearch(query, results.length);
-        onResultClick(results[activeSuggestionIndex]);
-        setIsOpen(false);
-        setQuery("");
-        setActiveSuggestionIndex(-1);
+        if (activeSuggestionIndex < visibleResults.length) {
+          saveSearch(query, totalResults);
+          onResultClick(visibleResults[activeSuggestionIndex]);
+          setIsOpen(false);
+          setQuery("");
+          setActiveSuggestionIndex(-1);
+        }
       } else if (e.key === 'Escape') {
         setIsOpen(false);
         setIsFocused(false);
@@ -618,6 +630,8 @@ export default function SearchBar({ onResultClick, teamId }: SearchBarProps) {
                     {filteredApplicationResults.map((appResult, index) => {
                       const AppIcon = (LucideIcons[appResult.icon_name as keyof typeof LucideIcons] as any) || Box;
                       const colors = getColorValues(appResult.color);
+                      // Calculate the global index: applications come first, then groups, then documents
+                      const globalIndex = index;
                       return (
                         <button
                           key={`app-${appResult.id}`}
@@ -628,7 +642,9 @@ export default function SearchBar({ onResultClick, teamId }: SearchBarProps) {
                             setQuery("");
                             setActiveSuggestionIndex(-1);
                           }}
-                          className="w-full text-left p-4 hover:bg-white/5 transition-colors group"
+                          className={`w-full text-left p-4 hover:bg-white/5 transition-colors group ${
+                            globalIndex === activeSuggestionIndex ? "bg-white/5" : ""
+                          }`}
                         >
                           <div className="flex items-center gap-3">
                             <div
@@ -669,11 +685,13 @@ export default function SearchBar({ onResultClick, teamId }: SearchBarProps) {
                         Groups ({filteredGroupResults.length})
                       </div>
                     )}
-                    {filteredGroupResults.map((groupResult) => {
+                    {filteredGroupResults.map((groupResult, index) => {
                       const GroupIcon = groupResult.icon_name
                         ? ((LucideIcons[groupResult.icon_name as keyof typeof LucideIcons] as any) || Layers)
                         : Layers;
                       const colors = groupResult.color ? getColorValues(groupResult.color) : getColorValues('gray-500');
+                      // Calculate the global index: applications first, then groups
+                      const globalIndex = filteredApplicationResults.length + index;
                       return (
                         <button
                           key={`group-${groupResult.id}`}
@@ -684,7 +702,9 @@ export default function SearchBar({ onResultClick, teamId }: SearchBarProps) {
                             setQuery("");
                             setActiveSuggestionIndex(-1);
                           }}
-                          className="w-full text-left p-4 hover:bg-white/5 transition-colors group"
+                          className={`w-full text-left p-4 hover:bg-white/5 transition-colors group ${
+                            globalIndex === activeSuggestionIndex ? "bg-white/5" : ""
+                          }`}
                         >
                           <div className="flex items-center gap-3">
                             <div
@@ -722,6 +742,8 @@ export default function SearchBar({ onResultClick, teamId }: SearchBarProps) {
                     {filteredDocumentResults.map((result, index) => {
                       // Type assertion: filteredDocumentResults only contains DocumentSearchResult
                       const docResult = result as DocumentSearchResult;
+                      // Calculate the global index: applications first, then groups, then documents
+                      const globalIndex = filteredApplicationResults.length + filteredGroupResults.length + index;
                       return (
                         <button
                           key={`doc-${docResult.id}`}
@@ -733,7 +755,7 @@ export default function SearchBar({ onResultClick, teamId }: SearchBarProps) {
                             setActiveSuggestionIndex(-1);
                           }}
                           className={`w-full text-left p-4 hover:bg-white/5 transition-colors group ${
-                            index === activeSuggestionIndex ? "bg-white/5" : ""
+                            globalIndex === activeSuggestionIndex ? "bg-white/5" : ""
                           }`}
                         >
                           <div className="flex items-start justify-between gap-3">
