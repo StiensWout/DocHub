@@ -3,19 +3,22 @@
 import { X, Edit, Trash2, Clock } from "lucide-react";
 import { useState } from "react";
 import DocumentVersionHistory from "./DocumentVersionHistory";
+import FileList from "./FileList";
 import { supabase } from "@/lib/supabase/client";
 import type { Document } from "@/types";
 
 interface DocumentViewerProps {
   document: Document | null;
   appName: string;
+  appId?: string;
+  teamId?: string;
   onClose: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
   onVersionRestored?: () => void;
 }
 
-export default function DocumentViewer({ document, appName, onClose, onEdit, onDelete, onVersionRestored }: DocumentViewerProps) {
+export default function DocumentViewer({ document, appName, appId, teamId, onClose, onEdit, onDelete, onVersionRestored }: DocumentViewerProps) {
   const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   if (!document) return null;
@@ -94,6 +97,19 @@ export default function DocumentViewer({ document, appName, onClose, onEdit, onD
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {renderContent(document.content)}
+          
+          {/* File List */}
+          <div className="mt-8 pt-8 border-t border-white/10">
+            <FileList
+              documentId={document.id}
+              documentType={document.type}
+              applicationId={appId}
+              teamId={teamId}
+              onFileDeleted={() => {
+                // Reload page or refresh document if needed
+              }}
+            />
+          </div>
         </div>
       </div>
 

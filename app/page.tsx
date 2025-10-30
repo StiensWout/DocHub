@@ -8,6 +8,8 @@ import DocumentViewer from "@/components/DocumentViewer";
 import DocumentEditor from "@/components/DocumentEditor";
 import NewDocumentDialog from "@/components/NewDocumentDialog";
 import SearchBar from "@/components/SearchBar";
+import FileUploadButton from "@/components/FileUploadButton";
+import ApplicationFileList from "@/components/ApplicationFileList";
 import { supabase } from "@/lib/supabase/client";
 import type { ApplicationWithDocs, Team, Application, Document } from "@/types";
 import type { SearchResult } from "@/lib/supabase/search";
@@ -279,6 +281,8 @@ export default function Home() {
         <DocumentViewer
           document={selectedDocument}
           appName={selectedDocumentAppName}
+          appId={selectedDocumentAppId}
+          teamId={selectedTeamId}
           onClose={() => {
             setSelectedDocument(null);
             setSelectedDocumentAppName("");
@@ -382,6 +386,7 @@ function ApplicationDetails({
 }) {
   const [app, setApp] = useState<ApplicationWithDocs | null>(null);
   const [loading, setLoading] = useState(true);
+  const [filesKey, setFilesKey] = useState(0); // Force re-render of file list
 
   useEffect(() => {
     async function loadAppDetails() {
@@ -511,6 +516,38 @@ function ApplicationDetails({
           </div>
         </div>
       )}
+
+      {/* Application Files Section */}
+      <div className="mt-8 pt-8 border-t border-white/10">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-lg font-semibold flex items-center gap-2">
+            <FileText className="w-5 h-5 text-green-400" />
+            Application Files
+          </h4>
+        </div>
+        
+        {/* File Upload Dropzone */}
+        <div className="mb-4">
+          <FileUploadButton
+            applicationId={appId}
+            teamId={teamId}
+            variant="dropzone"
+            onUploadSuccess={() => {
+              setFilesKey((prev) => prev + 1); // Refresh file list
+            }}
+          />
+        </div>
+
+        {/* Application Files List */}
+        <ApplicationFileList
+          key={filesKey}
+          applicationId={appId}
+          teamId={teamId}
+          onFileDeleted={() => {
+            setFilesKey((prev) => prev + 1); // Refresh file list
+          }}
+        />
+      </div>
     </div>
   );
 }

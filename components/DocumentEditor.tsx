@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
+import FileUploadButton from "./FileUploadButton";
+import FileList from "./FileList";
 import type { Document } from "@/types";
 
 interface DocumentEditorProps {
@@ -35,6 +37,7 @@ export default function DocumentEditor({
 }: DocumentEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [filesKey, setFilesKey] = useState(0); // Force re-render of FileList
 
   const editor = useEditor({
     extensions: [
@@ -214,6 +217,17 @@ export default function DocumentEditor({
             </button>
           </div>
           <div className="flex items-center gap-2">
+            {document && (
+              <FileUploadButton
+                documentId={document.id}
+                documentType={document.type}
+                teamId={teamId}
+                applicationId={appId}
+                onUploadSuccess={() => {
+                  setFilesKey((prev) => prev + 1); // Refresh file list
+                }}
+              />
+            )}
             <button
               onClick={handleSave}
               disabled={isSaving}
@@ -232,8 +246,26 @@ export default function DocumentEditor({
         </div>
 
         {/* Editor Content */}
-        <div className="flex-1 overflow-y-auto bg-[#0a0a0a]">
-          <EditorContent editor={editor} />
+        <div className="flex-1 overflow-y-auto bg-[#0a0a0a] flex flex-col">
+          <div className="flex-1 p-4">
+            <EditorContent editor={editor} />
+          </div>
+          
+              {/* File List */}
+              {document && (
+                <div className="border-t border-white/10 p-4 bg-[#0f0f0f]">
+                  <FileList
+                    key={filesKey}
+                    documentId={document.id}
+                    documentType={document.type}
+                    applicationId={appId}
+                    teamId={teamId}
+                    onFileDeleted={() => {
+                      setFilesKey((prev) => prev + 1); // Refresh file list
+                    }}
+                  />
+                </div>
+              )}
         </div>
       </div>
     </div>

@@ -6,35 +6,37 @@ This roadmap outlines planned features, enhancements, and improvements for DocHu
 
 ### 🔥 Priority 1: File Upload & Viewing System
 
-**Status**: 📋 Planned  
+**Status**: ✅ Completed  
 **Priority**: High  
-**Estimated Effort**: 2-3 weeks
+**Completed**: 2025-01-30
 
 #### File Upload Support
-- [ ] Upload files (PDF, DOCX, XLSX, PPTX, images, etc.)
-- [ ] File storage in Supabase Storage
-- [ ] File metadata tracking (name, size, type, upload date)
-- [ ] Support for multiple file attachments per document
-- [ ] File validation and size limits
-- [ ] File preview thumbnails
-- [ ] File upload progress indicators
+- [x] Upload files (PDF, DOCX, XLSX, PPTX, images, etc.)
+- [x] File storage in Supabase Storage
+- [x] File metadata tracking (name, size, type, upload date)
+- [x] Support for multiple file attachments per document
+- [x] File validation and size limits (50MB max)
+- [x] File upload progress indicators
+- [x] Drag-and-drop file upload support
+- [x] Application-level file uploads with visibility controls
 
 #### In-App File Viewing
-- [ ] PDF viewer component (embedded PDF.js or similar)
-- [ ] Word document viewer (DOCX to HTML conversion)
-- [ ] Excel spreadsheet viewer (XLSX viewing)
-- [ ] PowerPoint viewer (PPTX viewing)
-- [ ] Image viewer (full-screen gallery)
-- [ ] Generic file download fallback
-- [ ] File type detection and appropriate viewer selection
+- [ ] PDF viewer component (embedded PDF.js or similar) - *Future enhancement*
+- [ ] Word document viewer (DOCX to HTML conversion) - *Future enhancement*
+- [ ] Excel spreadsheet viewer (XLSX viewing) - *Future enhancement*
+- [ ] PowerPoint viewer (PPTX viewing) - *Future enhancement*
+- [x] Image viewer (via Supabase Storage URLs)
+- [x] Generic file download fallback
+- [x] File type detection and appropriate handling
 
 #### File Management UI
-- [ ] File upload button in document editor
-- [ ] File list display in document viewer
-- [ ] File preview modal/overlay
-- [ ] File download functionality
-- [ ] File deletion with confirmation
-- [ ] File replacement/update option
+- [x] File upload button in document editor
+- [x] Application-level file upload dropzone
+- [x] File list display in document viewer
+- [x] Application files list component
+- [x] File download functionality
+- [x] File deletion with confirmation
+- [ ] File replacement/update option - *Future enhancement*
 
 **See**: `docs/FEATURE_REQUESTS/file-upload-viewing-system.md` for detailed specification
 

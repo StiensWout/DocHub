@@ -152,7 +152,44 @@ This document tracks all completed features and functionality in DocHub. Last up
   - Automatic triggers for version creation
   - Efficient version storage
 
-### 9. Developer Experience
+### 9. File Upload & Management System
+- ✅ **File Storage**
+  - Supabase Storage integration for file uploads
+  - `document_files` table for file metadata tracking
+  - Support for multiple file types (PDF, DOCX, XLSX, PPTX, images, etc.)
+  - File size validation (50MB limit)
+  - File type validation
+  - Unique file path constraints
+- ✅ **File Upload**
+  - Upload files to documents (`document_id` + `document_type`)
+  - Upload files to applications (`application_id`)
+  - File visibility settings (public/team)
+  - Drag-and-drop file upload support
+  - Upload progress indicators
+  - Error handling and validation
+- ✅ **File Management UI**
+  - File upload button in document editor
+  - Application-level file upload dropzone
+  - File list display in document viewer
+  - Application files list component
+  - File download functionality
+  - File deletion with confirmation
+  - File metadata display (name, size, type, visibility)
+  - File type icons
+- ✅ **Database Schema**
+  - `document_files` table with flexible relationships
+  - Support for document-level and application-level files
+  - Visibility control (public vs team-specific)
+  - File metadata tracking (name, size, type, storage path)
+  - Indexes for performance optimization
+  - RLS policies for file access control
+- ✅ **API Endpoints**
+  - `POST /api/files/upload` - File upload handler
+  - `DELETE /api/files/[fileId]` - File deletion handler
+  - Storage cleanup on deletion
+  - Error handling and validation
+
+### 10. Developer Experience
 - ✅ **Scripts**
   - `bun run seed` - Database seeding with sample data
   - `bun run validate` - Database validation and connection check
@@ -171,7 +208,7 @@ This document tracks all completed features and functionality in DocHub. Last up
   - Development guides
   - API documentation
 
-### 10. Database Schema
+### 11. Database Schema
 - ✅ UUID extension enabled
 - ✅ Foreign key relationships
 - ✅ Cascade delete policies
@@ -256,6 +293,12 @@ After running `bun run seed`:
 ## 🆕 Latest Additions
 
 ### Recent Features
+- ✅ **File Upload & Management System**
+  - Upload files to documents and applications
+  - Drag-and-drop file upload support
+  - Application-level files with visibility controls (public/team)
+  - File metadata tracking and management
+  - File download and deletion
 - ✅ Document versioning system with history
 - ✅ Version comparison and restore
 - ✅ Improved seed script with error handling
@@ -281,10 +324,11 @@ After running `bun run seed`:
 | Search | ✅ Complete | Full-text with filters |
 | Versioning | ✅ Complete | Automatic version history |
 | Image Upload | ✅ Complete | Supabase Storage integration |
+| File Upload | ✅ Complete | Document & application file attachments |
 | Multi-team Support | ✅ Complete | Team-specific documents |
 | Documentation | ✅ Complete | Comprehensive guides |
 
 ---
 
-**Last Updated**: After comprehensive documentation overhaul  
-**Next Review**: After implementing file upload system
+**Last Updated**: After implementing file upload & viewing system  
+**Next Review**: After implementing authentication system
