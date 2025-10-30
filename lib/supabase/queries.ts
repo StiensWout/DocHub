@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase/client";
 import { Globe, Database, Zap, Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { Document, Application, Team, DocumentFile } from "@/types";
+import * as LucideIcons from "lucide-react";
 
 export interface DatabaseApplication {
   id: string;
@@ -59,6 +60,68 @@ export async function getTeams(): Promise<Team[]> {
   }));
 }
 
+// Create a new application
+export async function createApplication(
+  id: string,
+  name: string,
+  iconName: string,
+  color: string
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from("applications")
+    .insert({
+      id,
+      name,
+      icon_name: iconName,
+      color,
+    });
+
+  if (error) {
+    console.error("Error creating application:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+// Update an existing application
+export async function updateApplication(
+  id: string,
+  updates: {
+    name?: string;
+    icon_name?: string;
+    color?: string;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from("applications")
+    .update(updates)
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating application:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+// Check if application ID already exists
+export async function checkApplicationIdExists(id: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("applications")
+    .select("id")
+    .eq("id", id)
+    .single();
+
+  if (error && error.code !== "PGRST116") { // PGRST116 = no rows returned
+    console.error("Error checking application ID:", error);
+    return false;
+  }
+
+  return !!data;
+}
+
 // Fetch all applications
 export async function getApplications(): Promise<Application[]> {
   const { data, error } = await supabase
@@ -71,18 +134,16 @@ export async function getApplications(): Promise<Application[]> {
     return [];
   }
 
-  // Map icon names to actual icon components
-  const iconMap: Record<string, LucideIcon> = {
-    Globe,
-    Database,
-    Zap,
-    Settings,
+  // Map icon names to actual icon components dynamically
+  const getIconComponent = (iconName: string): LucideIcon => {
+    const Icon = LucideIcons[iconName as keyof typeof LucideIcons] as LucideIcon;
+    return Icon || Globe; // Fallback to Globe if icon not found
   };
 
   return (data || []).map((app: DatabaseApplication) => ({
     id: app.id,
     name: app.name,
-    icon: iconMap[app.icon_name] || Globe,
+    icon: getIconComponent(app.icon_name),
     color: app.color,
     baseDocuments: [], // Will be populated separately
   }));

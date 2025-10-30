@@ -12,6 +12,7 @@ import FileUploadButton from "@/components/FileUploadButton";
 import ApplicationFileList from "@/components/ApplicationFileList";
 import Sidebar from "@/components/Sidebar";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ApplicationCreateDialog from "@/components/ApplicationCreateDialog";
 import { useRecentDocuments } from "@/hooks/useRecentDocuments";
 import { useToast } from "@/components/Toast";
 import { supabase } from "@/lib/supabase/client";
@@ -30,6 +31,7 @@ export default function Home() {
   const [selectedDocumentAppId, setSelectedDocumentAppId] = useState<string>("");
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
   const [showNewDocumentDialog, setShowNewDocumentDialog] = useState(false);
+  const [showCreateApplicationDialog, setShowCreateApplicationDialog] = useState(false);
   const [newDocumentAppId, setNewDocumentAppId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -336,6 +338,14 @@ export default function Home() {
                   <TeamSelector teams={teams} selectedTeamId={selectedTeamId} onTeamChange={setSelectedTeamId} />
                 )}
                 <button
+                  onClick={() => setShowCreateApplicationDialog(true)}
+                  className="px-4 py-2 bg-purple-500 hover:bg-purple-600 border border-purple-500 rounded-lg text-sm transition-all flex items-center gap-2"
+                  title="Create new application"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">New App</span>
+                </button>
+                <button
                   onClick={() => {
                     if (applications.length > 0) {
                       setNewDocumentAppId(applications[0].id);
@@ -536,6 +546,19 @@ export default function Home() {
           }}
           onCreated={async () => {
             await refreshDocuments();
+          }}
+        />
+      )}
+
+      {/* Create Application Dialog */}
+      {showCreateApplicationDialog && (
+        <ApplicationCreateDialog
+          isOpen={showCreateApplicationDialog}
+          onClose={() => setShowCreateApplicationDialog(false)}
+          onSuccess={async () => {
+            // Refresh applications list
+            const updatedApps = await getApplications();
+            setApplications(updatedApps);
           }}
         />
       )}
