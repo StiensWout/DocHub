@@ -24,3 +24,16 @@ CREATE POLICY "Allow public delete to base_documents" ON base_documents
 -- Allow delete for team_documents
 CREATE POLICY "Allow public delete to team_documents" ON team_documents
   FOR DELETE USING (true);
+
+-- Add INSERT, UPDATE, DELETE policies for applications
+-- Allow insert for applications (public access for now)
+CREATE POLICY "Allow public insert to applications" ON applications
+  FOR INSERT WITH CHECK (true);
+
+-- Allow update for applications
+CREATE POLICY "Allow public update to applications" ON applications
+  FOR UPDATE USING (true) WITH CHECK (true);
+
+-- Allow delete for applications
+CREATE POLICY "Allow public delete to applications" ON applications
+  FOR DELETE USING (true);

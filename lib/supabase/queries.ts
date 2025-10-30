@@ -67,21 +67,33 @@ export async function createApplication(
   iconName: string,
   color: string
 ): Promise<{ success: boolean; error?: string }> {
-  const { error } = await supabase
-    .from("applications")
-    .insert({
-      id,
-      name,
-      icon_name: iconName,
-      color,
-    });
+  try {
+    const { error } = await supabase
+      .from("applications")
+      .insert({
+        id,
+        name,
+        icon_name: iconName,
+        color,
+      });
 
-  if (error) {
-    console.error("Error creating application:", error);
-    return { success: false, error: error.message };
+    if (error) {
+      console.error("Error creating application:", error);
+      // Provide more helpful error messages
+      if (error.code === "23505") {
+        return { success: false, error: "An application with this ID already exists" };
+      }
+      if (error.code === "42501") {
+        return { success: false, error: "Permission denied. Please check RLS policies." };
+      }
+      return { success: false, error: error.message || "Failed to create application" };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Unexpected error creating application:", err);
+    return { success: false, error: "An unexpected error occurred" };
   }
-
-  return { success: true };
 }
 
 // Update an existing application
