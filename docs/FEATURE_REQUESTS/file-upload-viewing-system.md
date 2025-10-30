@@ -81,11 +81,108 @@ CREATE INDEX idx_document_files_uploaded_at ON document_files(uploaded_at DESC);
 #### Bucket: `documents`
 - **Public access:** Read-only for viewing
 - **Upload policy:** Authenticated users only (or public for now)
-- **File size limit:** 50MB per file
+- **File size limit:** 50MB per file (configurable per file type)
 - **Allowed file types:** 
-  - Documents: PDF, DOCX, DOC, XLSX, XLS, PPTX, PPT, TXT, MD
-  - Images: JPG, JPEG, PNG, GIF, WEBP, SVG
-  - Archives: ZIP, RAR (download only)
+
+  **Standard Documents:**
+  - PDF, DOCX, DOC, XLSX, XLS, PPTX, PPT
+  - TXT, MD (Markdown)
+  
+  **Code Files:**
+  - JavaScript/TypeScript: `.js`, `.jsx`, `.ts`, `.tsx`, `.mjs`, `.cjs`
+  - Python: `.py`, `.pyw`, `.pyc`, `.pyo`
+  - Java: `.java`, `.class`, `.jar`, `.war`
+  - C/C++: `.c`, `.cpp`, `.cc`, `.cxx`, `.h`, `.hpp`, `.hxx`
+  - C#: `.cs`, `.csx`
+  - Go: `.go`
+  - Rust: `.rs`
+  - Ruby: `.rb`, `.rbw`
+  - PHP: `.php`, `.phtml`
+  - Swift: `.swift`
+  - Kotlin: `.kt`, `.kts`
+  - Scala: `.scala`
+  - R: `.r`, `.R`
+  - Perl: `.pl`, `.pm`
+  - Lua: `.lua`
+  - Shell: `.sh`, `.bash`, `.zsh`, `.fish`
+  - PowerShell: `.ps1`, `.psm1`, `.psd1`
+  - Batch: `.bat`, `.cmd`
+  
+  **Configuration Files:**
+  - JSON: `.json`, `.jsonc`
+  - YAML: `.yaml`, `.yml`
+  - XML: `.xml`, `.xsd`, `.xsl`
+  - TOML: `.toml`
+  - INI: `.ini`, `.cfg`, `.conf`
+  - Environment: `.env`, `.env.local`, `.env.production`
+  - Properties: `.properties`
+  
+  **Infrastructure & DevOps:**
+  - Docker: `Dockerfile`, `.dockerignore`
+  - Docker Compose: `docker-compose.yml`, `docker-compose.yaml`
+  - Kubernetes: `.yaml`, `.yml` (manifests)
+  - Terraform: `.tf`, `.tfvars`, `.tfstate`
+  - Ansible: `.yaml`, `.yml` (playbooks)
+  - CloudFormation: `.json`, `.yaml`, `.yml`, `.template`
+  - Helm: `.yaml`, `.yml` (charts)
+  - Vagrant: `Vagrantfile`
+  - Packer: `.json`, `.hcl`
+  
+  **CI/CD:**
+  - GitHub Actions: `.yml`, `.yaml` (workflows)
+  - GitLab CI: `.gitlab-ci.yml`
+  - Jenkins: `Jenkinsfile`, `.xml`
+  - CircleCI: `.circleci/config.yml`
+  - Azure DevOps: `.yml` (pipelines)
+  
+  **Database:**
+  - SQL: `.sql`, `.psql`
+  - SQLite: `.sqlite`, `.sqlite3`, `.db`
+  - Database dumps: `.dump`, `.bak`
+  
+  **Data Formats:**
+  - CSV: `.csv`
+  - TSV: `.tsv`
+  - Excel: `.xlsx`, `.xls`, `.xlsm`
+  - Parquet: `.parquet`
+  
+  **Architecture & Design:**
+  - DrawIO: `.drawio`, `.xml` (draw.io format)
+  - PlantUML: `.puml`, `.plantuml`
+  - Mermaid: `.mmd`, `.mermaid`
+  - Graphviz: `.dot`, `.gv`
+  - Lucidchart: `.lucid`
+  
+  **Images:**
+  - Raster: JPG, JPEG, PNG, GIF, WEBP, BMP, TIFF, ICO
+  - Vector: SVG, EPS
+  - Diagrams: PNG, SVG (screenshots/diagrams)
+  
+  **Logs & Text:**
+  - Log files: `.log`, `.txt` (log content)
+  - README: `README.md`, `README.txt`
+  - License: `LICENSE`, `LICENSE.txt`
+  - Changelog: `CHANGELOG.md`, `CHANGELOG.txt`
+  
+  **Security & Certificates:**
+  - Certificates: `.pem`, `.crt`, `.cer`, `.der`, `.p12`, `.pfx`
+  - Keys: `.key`, `.pub`, `.pem`
+  - SSH: `id_rsa`, `id_ed25519`, `authorized_keys`
+  - OpenSSL: `.csr`, `.pem`
+  
+  **Special Formats:**
+  - WebAssembly: `.wasm`, `.wat`
+  - Fonts: `.ttf`, `.otf`, `.woff`, `.woff2`
+  - Icons: `.ico`, `.icns`
+  - Font Awesome: `.svg` (icons)
+  
+  **Documentation:**
+  - Markdown: `.md`, `.markdown`
+  - AsciiDoc: `.adoc`, `.asciidoc`
+  - ReStructuredText: `.rst`
+  - HTML: `.html`, `.htm`
+  
+  **Note:** Some file types may not have standard MIME types and will default to `application/octet-stream` or `text/plain`. The system should handle these gracefully.
 
 #### Storage Structure
 ```
@@ -210,9 +307,40 @@ documents/
 ### File Size Limits
 
 - **Default:** 50MB per file
-- **Images:** 10MB recommended
+- **Code files:** 10MB recommended (most code files are small)
+- **Configuration files:** 5MB recommended (typically very small)
 - **Documents:** 50MB
-- **Archives:** 100MB (for extraction)
+- **Images:** 10MB recommended
+- **Database dumps:** 100MB (may need adjustment based on database size)
+- **Log files:** 50MB (can be very large)
+
+### File Type Validation Strategy
+
+**Current Implementation:**
+- Uses MIME type validation (`file.type` in browser)
+- Some file types may not have standard MIME types
+- Browser detection may be inconsistent
+
+**Recommended Enhancement:**
+- Use file extension as fallback validation
+- Map file extensions to allowed types
+- Support both MIME type and extension validation
+- Allow `application/octet-stream` for unknown binary types with known extensions
+- Allow `text/plain` for known text-based file types (code, config, etc.)
+
+**Implementation Priority:**
+1. **Phase 1 (Current):** Basic document and image types ✅
+2. **Phase 2:** Add code file extensions (`.js`, `.py`, `.ts`, etc.)
+3. **Phase 3:** Add configuration file extensions (`.json`, `.yaml`, `.env`, etc.)
+4. **Phase 4:** Add infrastructure file extensions (`.tf`, `Dockerfile`, etc.)
+5. **Phase 5:** Add remaining IT-specific types
+
+**MIME Type Mapping:**
+- Text files: `text/plain` (common for code/config files)
+- Binary files: `application/octet-stream` (fallback for unknown types)
+- Code files: Often detected as `text/plain` or `application/octet-stream`
+- Configuration files: Often detected as `text/plain` or `application/json`
+- Infrastructure files: Often detected as `text/plain` or `application/x-yaml`
 
 ### Error Handling
 
@@ -267,6 +395,55 @@ documents/
 5. Update documentation
 6. Update roadmap
 
+### Implementation Notes
+
+**File Type Detection Challenges:**
+- Many IT file types don't have standard MIME types
+- Browsers may report `application/octet-stream` or `text/plain` for code/config files
+- File extension validation is more reliable for IT-specific files
+- Consider implementing extension-based validation as primary check with MIME type as secondary
+
+**Recommended File Validation Approach:**
+```typescript
+// Pseudo-code for improved validation
+const ALLOWED_EXTENSIONS = [
+  // Code files
+  '.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.go', '.rs',
+  // Config files
+  '.json', '.yaml', '.yml', '.xml', '.toml', '.ini', '.env', '.conf',
+  // Infrastructure
+  '.tf', '.tfvars', '.yaml', '.yml', // Terraform, Kubernetes, etc.
+  // Add more as needed...
+];
+
+function isValidFile(file: File): boolean {
+  // Check extension first
+  const ext = getFileExtension(file.name);
+  if (ALLOWED_EXTENSIONS.includes(ext)) {
+    return true;
+  }
+  
+  // Then check MIME type
+  if (ALLOWED_MIME_TYPES.includes(file.type)) {
+    return true;
+  }
+  
+  // Allow text/plain for known text-based file types
+  if (file.type === 'text/plain' && isTextBasedExtension(ext)) {
+    return true;
+  }
+  
+  return false;
+}
+```
+
+**Security Considerations:**
+- ⚠️ **Executable files:** Consider blocking `.exe`, `.dll`, `.deb`, `.rpm`, `.msi` unless explicitly needed
+- ⚠️ **Script files:** `.sh`, `.ps1`, `.bat` files may need special handling or warnings
+- ⚠️ **Certificate/Key files:** Should be stored securely, consider encryption
+- ⚠️ **Database dumps:** May contain sensitive data, consider access controls
+- ⚠️ **Environment files:** `.env` files often contain secrets, consider warnings or encryption
+
 ## Dependencies
 
 ### NPM Packages
@@ -274,7 +451,7 @@ documents/
 - `mammoth` - DOCX to HTML conversion
 - `xlsx` - Excel file parsing
 - `file-saver` - File download helper
-- `react-dropzone` - Drag & drop file upload (optional)
+- `react-dropzone` - Drag & drop file upload (optional, currently using custom implementation)
 
 ### Supabase
 - Storage bucket configured

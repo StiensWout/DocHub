@@ -197,12 +197,6 @@ export default function FileList({
           ))}
         </div>
       )}
-
-      {files.length === 0 && !loading && (
-        <div className="text-gray-400 text-sm text-center py-4">
-          No files attached
-        </div>
-      )}
     </div>
   );
 }

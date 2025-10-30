@@ -23,9 +23,6 @@ const ALLOWED_FILE_TYPES = [
   "image/gif",
   "image/webp",
   "image/svg+xml",
-  // Archives
-  "application/zip",
-  "application/x-rar-compressed",
 ];
 
 export async function POST(request: NextRequest) {
