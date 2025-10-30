@@ -201,13 +201,13 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
 
   // Handle share link
   const handleShare = () => {
-    if (!document || !teamId || !appId) {
+    const shareUrl = getShareUrl();
+    
+    if (!shareUrl) {
       toast.error("Cannot generate share link");
       return;
     }
 
-    const shareUrl = `${window.location.origin}/documents/${teamId}/${appId}/${document.id}`;
-    
     navigator.clipboard.writeText(shareUrl).then(() => {
       toast.success("Link copied to clipboard!");
       setShowShareDialog(false);
