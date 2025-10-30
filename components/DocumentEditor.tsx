@@ -69,8 +69,8 @@ export default function DocumentEditor({
   });
 
   const handleImageUpload = useCallback(async () => {
-    if (typeof document === "undefined") return;
-    const input = document.createElement("input");
+    if (typeof window === "undefined" || typeof window.document === "undefined") return;
+    const input = window.document.createElement("input");
     input.setAttribute("type", "file");
     input.setAttribute("accept", "image/*");
     input.click();
