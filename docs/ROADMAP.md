@@ -109,6 +109,7 @@ This roadmap outlines planned features, enhancements, and improvements for DocHu
   - [ ] Color picker component
   - [ ] Group manager component
   - [ ] Application settings page
+- **See**: `docs/FEATURE_REQUESTS/application-management.md` for detailed specification
 - **Priority**: High  
 **Estimated Effort**: 1-2 weeks
 
