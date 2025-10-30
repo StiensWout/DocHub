@@ -52,6 +52,7 @@ interface IconPickerProps {
   selectedIcon: string;
   onSelect: (iconName: string) => void;
   availableIcons?: string[];
+  disabled?: boolean;
 }
 
 // Icon map: name -> component
@@ -103,7 +104,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 // Available icon names
 const ICON_NAMES = Object.keys(ICON_MAP);
 
-export default function IconPicker({ selectedIcon, onSelect, availableIcons }: IconPickerProps) {
+export default function IconPicker({ selectedIcon, onSelect, availableIcons, disabled }: IconPickerProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Get all available icons
@@ -171,9 +172,11 @@ export default function IconPicker({ selectedIcon, onSelect, availableIcons }: I
                 <button
                   key={iconName}
                   onClick={() => handleIconSelect(iconName)}
+                  disabled={disabled}
                   className={`
                     p-2 rounded-lg border transition-all
                     flex items-center justify-center
+                    ${disabled ? "opacity-50 cursor-not-allowed" : ""}
                     ${isSelected
                       ? "bg-blue-500/20 border-blue-500/50 text-blue-400"
                       : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white hover:border-white/20"

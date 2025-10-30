@@ -13,11 +13,24 @@ export interface Document {
   appId: string;
 }
 
+export interface ApplicationGroup {
+  id: string;
+  name: string;
+  icon_name?: string;
+  icon?: LucideIcon; // Resolved icon component
+  color?: string;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Application {
   id: string;
   name: string;
   icon: LucideIcon;
+  icon_name: string; // Store the string name for database and dynamic loading
   color: string;
+  group_id?: string | null;
   baseDocuments: Document[];
 }
 

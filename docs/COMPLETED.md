@@ -384,6 +384,28 @@ After running `bun run seed`:
   - Edit text files directly in the viewer
   - Support for code and configuration files
   - Save edited files back to storage
+- ✅ **Application Management - Phase 1** (2025-01-30)
+  - Application creation dialog with full validation
+  - Icon picker component with search functionality
+  - Color picker component with Tailwind colors
+  - Auto ID generation from application name
+  - Success feedback and navigation to new application
+  - Group assignment dropdown in creation form
+- ✅ **Application Groups - Backend & Management** (2025-01-30)
+  - Database schema migration (`supabase/migration_application_groups.sql`)
+  - `application_groups` table with icon, color, display_order
+  - `group_id` field added to applications table
+  - RLS policies for application groups
+  - CRUD operations for groups (create, read, update, delete)
+  - ApplicationGroupManager component with full UI
+  - Group creation, editing, and deletion
+  - Group icons and colors support
+  - Group assignment in application creation form
+  - "Groups" button in header to open group manager
+  - **Remaining**: Sidebar display of grouped applications
+- ⚠️ **Application Editing** (Backend Ready, UI Pending)
+  - Backend update functions exist (`updateApplication`)
+  - UI components and edit dialog pending
 - ✅ **Document Viewer Enhancements**
   - Print-friendly view with comprehensive CSS styling
   - Export to PDF with print-friendly formatting (html2pdf.js)
@@ -447,6 +469,9 @@ After running `bun run seed`:
 | Rich Text Editor | ✅ Complete | Tiptap with images and formatting |
 | Template System | ✅ Complete | 6 templates, searchable |
 | Search | ✅ Complete | Full-text with filters, suggestions, history, fuzzy matching |
+| Application Management | ⚠️ In Progress | Phase 1 & 2 complete, groups backend done, sidebar/main page display pending |
+| Application Editing | ✅ Complete | Full edit dialog with change detection and validation |
+| Application Groups | ⚠️ Partial | Backend & management UI complete, sidebar/main page integration pending |
 | Search Enhancements | ✅ Complete | Autocomplete, history, fuzzy matching, typo tolerance |
 | Versioning | ✅ Complete | Automatic version history |
 | Image Upload | ✅ Complete | Supabase Storage integration |
@@ -462,5 +487,5 @@ After running `bun run seed`:
 
 ---
 
-**Last Updated**: After implementing search enhancements  
-**Next Review**: After implementing authentication system
+**Last Updated**: 2025-01-30 (Application Groups Implementation)  
+**Next Review**: After Sidebar Group Display Implementation

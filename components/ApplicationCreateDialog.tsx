@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { X, Loader2 } from "lucide-react";
-import { createApplication, checkApplicationIdExists } from "@/lib/supabase/queries";
+import { createApplication, checkApplicationIdExists, getApplicationGroups } from "@/lib/supabase/queries";
 import { useToast } from "./Toast";
 import IconPicker from "./IconPicker";
 import ColorPicker from "./ColorPicker";
+import type { ApplicationGroup } from "@/types";
 
 interface ApplicationCreateDialogProps {
   isOpen: boolean;
@@ -39,10 +40,28 @@ export default function ApplicationCreateDialog({
   const [id, setId] = useState("");
   const [icon, setIcon] = useState("Globe");
   const [color, setColor] = useState("blue-500");
+  const [groupId, setGroupId] = useState<string | null>(null);
+  const [groups, setGroups] = useState<ApplicationGroup[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isCheckingId, setIsCheckingId] = useState(false);
   const toast = useToast();
+
+  // Load groups when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      loadGroups();
+    }
+  }, [isOpen]);
+
+  const loadGroups = async () => {
+    try {
+      const groupsData = await getApplicationGroups();
+      setGroups(groupsData);
+    } catch (error) {
+      console.error("Error loading groups:", error);
+    }
+  };
 
   // Auto-generate ID from name when name changes
   useEffect(() => {
@@ -59,6 +78,7 @@ export default function ApplicationCreateDialog({
       setId("");
       setIcon("Globe");
       setColor("blue-500");
+      setGroupId(null);
       setErrors({});
       setIsCreating(false);
     }
@@ -117,7 +137,7 @@ export default function ApplicationCreateDialog({
     setIsCreating(true);
 
     try {
-      const result = await createApplication(id, name.trim(), icon, color);
+      const result = await createApplication(id, name.trim(), icon, color, groupId);
 
       if (!result.success) {
         toast.error(result.error || "Failed to create application");
@@ -251,6 +271,29 @@ export default function ApplicationCreateDialog({
             {errors.color && (
               <p className="mt-1 text-sm text-error">{errors.color}</p>
             )}
+          </div>
+
+          {/* Group Selection */}
+          <div>
+            <label className="block text-sm font-medium text-foreground-secondary mb-2">
+              Application Group <span className="text-gray-500">(Optional)</span>
+            </label>
+            <select
+              value={groupId || ""}
+              onChange={(e) => setGroupId(e.target.value || null)}
+              className="w-full px-4 py-2.5 bg-background border border-border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+              disabled={isCreating}
+            >
+              <option value="">No Group</option>
+              {groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-foreground-muted">
+              Assign this application to a group for better organization
+            </p>
           </div>
 
           {/* Actions */}

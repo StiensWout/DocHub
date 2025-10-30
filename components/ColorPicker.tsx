@@ -7,6 +7,7 @@ interface ColorPickerProps {
   selectedColor: string;
   onSelect: (color: string) => void;
   colors?: string[];
+  disabled?: boolean;
 }
 
 // Predefined Tailwind color palette
@@ -53,7 +54,7 @@ const DEFAULT_COLORS = [
   { name: "Cyan-400", value: "cyan-400", hex: "#22d3ee" },
 ];
 
-export default function ColorPicker({ selectedColor, onSelect, colors }: ColorPickerProps) {
+export default function ColorPicker({ selectedColor, onSelect, colors, disabled }: ColorPickerProps) {
   const colorPalette = colors 
     ? colors.map(color => {
         const found = DEFAULT_COLORS.find(c => c.value === color);
@@ -80,8 +81,10 @@ export default function ColorPicker({ selectedColor, onSelect, colors }: ColorPi
             <button
               key={color.value}
               onClick={() => handleColorSelect(color.value)}
+              disabled={disabled}
               className={`
                 relative aspect-square rounded-lg border-2 transition-all
+                ${disabled ? "opacity-50 cursor-not-allowed" : ""}
                 ${isSelected
                   ? "border-white scale-110 shadow-lg shadow-blue-500/50"
                   : "border-white/20 hover:border-white/40 hover:scale-105"
