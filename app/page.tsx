@@ -27,6 +27,51 @@ export default function Home() {
   const [newDocumentAppId, setNewDocumentAppId] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
+  // Function to refresh documents without page reload
+  const refreshDocuments = async () => {
+    if (!selectedTeamId || applications.length === 0) return;
+
+    const appsWithDocs = await Promise.all(
+      applications.map(async (app) => {
+        const allDocs = await getAllDocumentsForApp(selectedTeamId, app.id);
+        const teamDocs = allDocs.filter((d) => d.type === "team");
+        const baseDocs = allDocs.filter((d) => d.type === "base");
+        
+        // Get most recent update
+        const sortedDocs = [...allDocs].sort((a, b) => {
+          const timeA = parseTimeAgo(a.updated);
+          const timeB = parseTimeAgo(b.updated);
+          return timeA - timeB;
+        });
+        
+        return {
+          ...app,
+          baseDocuments: baseDocs,
+          teamDocuments: teamDocs,
+          totalDocuments: allDocs.length,
+          lastUpdated: sortedDocs[0]?.updated || "Never",
+        };
+      })
+    );
+
+    setApplicationsWithDocs(appsWithDocs);
+
+    // Get recent documents across all apps
+    const allRecentDocs = appsWithDocs
+      .flatMap((app) => {
+        const allDocs = [...app.baseDocuments, ...app.teamDocuments];
+        return allDocs.map((doc) => ({ ...doc, appName: app.name }));
+      })
+      .sort((a, b) => {
+        const timeA = parseTimeAgo(a.updated);
+        const timeB = parseTimeAgo(b.updated);
+        return timeA - timeB;
+      })
+      .slice(0, 6);
+
+    setRecentDocs(allRecentDocs);
+  };
+
   // Load initial data
   useEffect(() => {
     async function loadData() {
@@ -52,50 +97,7 @@ export default function Home() {
   // Update applications with docs when team or apps change
   useEffect(() => {
     if (!selectedTeamId || applications.length === 0) return;
-
-    async function loadDocs() {
-      const appsWithDocs = await Promise.all(
-        applications.map(async (app) => {
-          const allDocs = await getAllDocumentsForApp(selectedTeamId, app.id);
-          const teamDocs = allDocs.filter((d) => d.type === "team");
-          const baseDocs = allDocs.filter((d) => d.type === "base");
-          
-          // Get most recent update
-          const sortedDocs = [...allDocs].sort((a, b) => {
-            const timeA = parseTimeAgo(a.updated);
-            const timeB = parseTimeAgo(b.updated);
-            return timeA - timeB;
-          });
-          
-          return {
-            ...app,
-            baseDocuments: baseDocs,
-            teamDocuments: teamDocs,
-            totalDocuments: allDocs.length,
-            lastUpdated: sortedDocs[0]?.updated || "Never",
-          };
-        })
-      );
-
-      setApplicationsWithDocs(appsWithDocs);
-
-      // Get recent documents across all apps
-      const allRecentDocs = appsWithDocs
-        .flatMap((app) => {
-          const allDocs = [...app.baseDocuments, ...app.teamDocuments];
-          return allDocs.map((doc) => ({ ...doc, appName: app.name }));
-        })
-        .sort((a, b) => {
-          const timeA = parseTimeAgo(a.updated);
-          const timeB = parseTimeAgo(b.updated);
-          return timeA - timeB;
-        })
-        .slice(0, 6);
-
-      setRecentDocs(allRecentDocs);
-    }
-
-    loadDocs();
+    refreshDocuments();
   }, [selectedTeamId, applications]);
 
   return (
@@ -305,8 +307,19 @@ export default function Home() {
             setSelectedDocumentAppName("");
             setSelectedDocumentAppId("");
             
-            // Reload data
-            window.location.reload();
+            // Refresh documents without page reload
+            await refreshDocuments();
+          }}
+          onVersionRestored={async () => {
+            await refreshDocuments();
+            // Update selected document if it was restored
+            if (selectedDocument) {
+              const allDocs = await getAllDocumentsForApp(selectedTeamId, selectedDocumentAppId);
+              const updatedDoc = allDocs.find((d) => d.id === selectedDocument.id);
+              if (updatedDoc) {
+                setSelectedDocument(updatedDoc);
+              }
+            }
           }}
         />
       )}
@@ -317,8 +330,17 @@ export default function Home() {
           document={editingDocument}
           appId={selectedDocumentAppId || ""}
           teamId={selectedTeamId}
-          onSave={() => {
-            window.location.reload();
+          onSave={async () => {
+            await refreshDocuments();
+            // Update selected document if it was the one being edited
+            if (editingDocument) {
+              const allDocs = await getAllDocumentsForApp(selectedTeamId, selectedDocumentAppId);
+              const updatedDoc = allDocs.find((d) => d.id === editingDocument.id);
+              if (updatedDoc) {
+                setSelectedDocument(updatedDoc);
+              }
+            }
+            setEditingDocument(null);
           }}
           onClose={() => {
             setEditingDocument(null);
@@ -336,8 +358,8 @@ export default function Home() {
             setShowNewDocumentDialog(false);
             setNewDocumentAppId("");
           }}
-          onCreated={() => {
-            window.location.reload();
+          onCreated={async () => {
+            await refreshDocuments();
           }}
         />
       )}

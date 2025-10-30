@@ -47,6 +47,7 @@ Run the SQL schemas in your Supabase SQL Editor (in order):
 - `supabase/schema.sql` - Main database schema
 - `supabase/templates_schema.sql` - Template table schema
 - `supabase/rls_policies.sql` - Row Level Security policies for CRUD operations
+- `supabase/versioning_schema.sql` - Document versioning system
 
 4. **Set up Supabase Storage:**
 

@@ -1,6 +1,9 @@
 "use client";
 
-import { X, Edit, Trash2 } from "lucide-react";
+import { X, Edit, Trash2, Clock } from "lucide-react";
+import { useState } from "react";
+import DocumentVersionHistory from "./DocumentVersionHistory";
+import { supabase } from "@/lib/supabase/client";
 import type { Document } from "@/types";
 
 interface DocumentViewerProps {
@@ -9,9 +12,12 @@ interface DocumentViewerProps {
   onClose: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onVersionRestored?: () => void;
 }
 
-export default function DocumentViewer({ document, appName, onClose, onEdit, onDelete }: DocumentViewerProps) {
+export default function DocumentViewer({ document, appName, onClose, onEdit, onDelete, onVersionRestored }: DocumentViewerProps) {
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+
   if (!document) return null;
 
   // Render HTML content safely
@@ -51,6 +57,13 @@ export default function DocumentViewer({ document, appName, onClose, onEdit, onD
             </div>
           </div>
           <div className="flex items-center gap-2 ml-4">
+            <button
+              onClick={() => setShowVersionHistory(true)}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              title="View version history"
+            >
+              <Clock className="w-5 h-5 text-gray-400" />
+            </button>
             {onEdit && (
               <button
                 onClick={onEdit}
@@ -83,6 +96,37 @@ export default function DocumentViewer({ document, appName, onClose, onEdit, onD
           {renderContent(document.content)}
         </div>
       </div>
+
+      {/* Version History Modal */}
+      {showVersionHistory && (
+        <DocumentVersionHistory
+          document={document}
+          onClose={() => setShowVersionHistory(false)}
+          onRestoreVersion={async (version) => {
+            // Restore version by updating document with version content
+            const tableName = document.type === "base" ? "base_documents" : "team_documents";
+            const { error } = await supabase
+              .from(tableName)
+              .update({
+                content: version.content,
+                title: version.title,
+                category: version.category,
+              })
+              .eq("id", document.id);
+
+            if (error) {
+              console.error("Error restoring version:", error);
+              alert("Failed to restore version");
+              return;
+            }
+
+            alert("Version restored successfully!");
+            if (onVersionRestored) {
+              onVersionRestored();
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
