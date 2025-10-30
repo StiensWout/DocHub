@@ -414,9 +414,21 @@ After running `bun run seed`:
   - Empty groups are automatically hidden
   - Default state: all groups expanded on first load
   - Fallback: flat list when sidebar is collapsed
-- ⚠️ **Application Editing** (Backend Ready, UI Pending)
-  - Backend update functions exist (`updateApplication`)
-  - UI components and edit dialog pending
+- ✅ **Application & Group Search Integration** (2025-01-30)
+  - Application search functionality with name matching
+  - Group search functionality with name matching
+  - Search results display with application icons and colors
+  - Search results display with group icons and colors
+  - Result type filtering (tabs: All, Apps, Groups, Docs)
+  - Search suggestions include applications and groups
+  - Navigation to applications from search results
+  - Navigation to groups from search results (basic implementation)
+  - Document count shown for applications in search results
+  - Application count shown for groups in search results
+  - Visual styling with dynamic color application
+  - Search history integration works with all result types
+  - Type-safe SearchResult union type for all result types
+  - Performance: parallel fetching of documents, applications, and groups
 - ✅ **Document Viewer Enhancements**
   - Print-friendly view with comprehensive CSS styling
   - Export to PDF with print-friendly formatting (html2pdf.js)
@@ -480,9 +492,10 @@ After running `bun run seed`:
 | Rich Text Editor | ✅ Complete | Tiptap with images and formatting |
 | Template System | ✅ Complete | 6 templates, searchable |
 | Search | ✅ Complete | Full-text with filters, suggestions, history, fuzzy matching |
-| Application Management | ⚠️ In Progress | Phase 1, 2, 3, 4 complete, Phase 8 (search integration) pending |
+| Application Management | ⚠️ In Progress | Phase 1, 2, 3, 4, 8 complete, main page overview pending (separate feature) |
 | Application Editing | ✅ Complete | Full edit dialog with change detection and validation |
 | Application Groups | ⚠️ Partial | Backend, management UI, and sidebar display complete, main page overview pending (separate feature) |
+| Application & Group Search | ✅ Complete | Full search integration with filtering, suggestions, and navigation |
 | Search Enhancements | ✅ Complete | Autocomplete, history, fuzzy matching, typo tolerance |
 | Versioning | ✅ Complete | Automatic version history |
 | Image Upload | ✅ Complete | Supabase Storage integration |
@@ -498,5 +511,5 @@ After running `bun run seed`:
 
 ---
 
-**Last Updated**: 2025-01-30 (Sidebar Group Display Implementation)  
-**Next Review**: After Search Integration or Main Page Group Overview
+**Last Updated**: 2025-01-30 (Application & Group Search Integration)  
+**Next Review**: After Main Page Group Overview
