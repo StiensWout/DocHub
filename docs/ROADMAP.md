@@ -56,6 +56,7 @@ This roadmap outlines planned features, enhancements, and improvements for DocHu
   - [ ] Print-friendly view
   - [ ] Export to PDF/Markdown
   - [ ] Share document link
+  - **See**: `docs/FEATURE_REQUESTS/document-viewer-enhancements.md` for detailed specification
 - [x] **Notifications**
   - [x] Toast notifications for actions
   - [x] Success/error feedback
