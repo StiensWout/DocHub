@@ -35,7 +35,7 @@ export default function FileUploadButton({
   // Validate that we have either documentId or applicationId
   const isValidConfig = documentId || applicationId;
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = useCallback(async (file: File) => {
     if (!isValidConfig) {
       setError("Missing document or application ID");
       return;
@@ -109,7 +109,7 @@ export default function FileUploadButton({
       setUploadProgress(0);
       setIsDragging(false);
     }
-  };
+  }, [documentId, documentType, applicationId, teamId, visibility, onUploadSuccess]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -142,7 +142,7 @@ export default function FileUploadButton({
     if (file) {
       await uploadFile(file);
     }
-  }, [isUploading, visibility]);
+  }, [isUploading, uploadFile]);
 
   const handleClick = () => {
     fileInputRef.current?.click();

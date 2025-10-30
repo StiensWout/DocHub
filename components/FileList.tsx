@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Download, Trash2, Loader2, Globe, Users } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Download, Trash2, Loader2, Globe, Users, RefreshCw } from "lucide-react";
 import { getAllFilesForDocument, deleteFileMetadata } from "@/lib/supabase/queries";
 import { supabase } from "@/lib/supabase/client";
 import type { DocumentFile, DocumentType } from "@/types";
@@ -26,6 +26,7 @@ export default function FileList({
   const [files, setFiles] = useState<DocumentFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [replacingId, setReplacingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -87,6 +88,36 @@ export default function FileList({
       alert(err instanceof Error ? err.message : "Failed to delete file");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleReplace = async (fileId: string, newFile: File) => {
+    setReplacingId(fileId);
+    try {
+      const formData = new FormData();
+      formData.append("file", newFile);
+
+      const response = await fetch(`/api/files/${fileId}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Replace failed");
+      }
+
+      // Reload files to get updated metadata
+      await loadFiles();
+      
+      if (onFileDeleted) {
+        onFileDeleted();
+      }
+    } catch (err) {
+      console.error("Error replacing file:", err);
+      alert(err instanceof Error ? err.message : "Failed to replace file");
+    } finally {
+      setReplacingId(null);
     }
   };
 
@@ -171,7 +202,9 @@ export default function FileList({
               key={file.id}
               file={file}
               deletingId={deletingId}
+              replacingId={replacingId}
               onDelete={handleDelete}
+              onReplace={handleReplace}
               onDownload={handleDownload}
               getFileIcon={getFileIcon}
               formatFileSize={formatFileSize}
@@ -189,7 +222,9 @@ export default function FileList({
               key={file.id}
               file={file}
               deletingId={deletingId}
+              replacingId={replacingId}
               onDelete={handleDelete}
+              onReplace={handleReplace}
               onDownload={handleDownload}
               getFileIcon={getFileIcon}
               formatFileSize={formatFileSize}
@@ -204,18 +239,41 @@ export default function FileList({
 function FileItem({
   file,
   deletingId,
+  replacingId,
   onDelete,
+  onReplace,
   onDownload,
   getFileIcon,
   formatFileSize,
 }: {
   file: DocumentFile;
   deletingId: string | null;
+  replacingId: string | null;
   onDelete: (id: string) => void;
+  onReplace: (id: string, file: File) => void;
   onDownload: (file: DocumentFile) => void;
   getFileIcon: (type: string) => string;
   formatFileSize: (bytes: number) => string;
 }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const isReplacing = replacingId === file.id;
+  const isDeleting = deletingId === file.id;
+
+  const handleReplaceClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+      onReplace(file.id, selectedFile);
+    }
+    // Reset input so same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div
       className="
@@ -260,6 +318,32 @@ function FileItem({
       </div>
 
       <div className="flex items-center gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          onChange={handleFileSelect}
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.jpg,.jpeg,.png,.gif,.webp,.svg"
+          disabled={isReplacing || isDeleting}
+        />
+
+        <button
+          onClick={handleReplaceClick}
+          disabled={isReplacing || isDeleting}
+          className="
+            p-2 rounded hover:bg-gray-700/50 transition-colors
+            text-gray-400 hover:text-green-400
+            disabled:opacity-50 disabled:cursor-not-allowed
+          "
+          title="Replace file"
+        >
+          {isReplacing ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <RefreshCw className="w-4 h-4" />
+          )}
+        </button>
+
         <button
           onClick={() => onDownload(file)}
           className="
@@ -273,7 +357,7 @@ function FileItem({
 
         <button
           onClick={() => onDelete(file.id)}
-          disabled={deletingId === file.id}
+          disabled={isDeleting || isReplacing}
           className="
             p-2 rounded hover:bg-gray-700/50 transition-colors
             text-gray-400 hover:text-red-400
@@ -281,7 +365,7 @@ function FileItem({
           "
           title="Delete file"
         >
-          {deletingId === file.id ? (
+          {isDeleting ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <Trash2 className="w-4 h-4" />

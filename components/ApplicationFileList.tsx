@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Download, Trash2, Loader2, Globe, Users } from "lucide-react";
+import { Download, Trash2, Loader2, Globe, Users, RefreshCw } from "lucide-react";
 import { getApplicationFiles } from "@/lib/supabase/queries";
 import { supabase } from "@/lib/supabase/client";
 import type { DocumentFile } from "@/types";
@@ -22,6 +22,7 @@ export default function ApplicationFileList({
   const [files, setFiles] = useState<DocumentFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [replacingId, setReplacingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -68,6 +69,36 @@ export default function ApplicationFileList({
       alert(err instanceof Error ? err.message : "Failed to delete file");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleReplace = async (fileId: string, newFile: File) => {
+    setReplacingId(fileId);
+    try {
+      const formData = new FormData();
+      formData.append("file", newFile);
+
+      const response = await fetch(`/api/files/${fileId}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Replace failed");
+      }
+
+      // Reload files to get updated metadata
+      await loadFiles();
+      
+      if (onFileDeleted) {
+        onFileDeleted();
+      }
+    } catch (err) {
+      console.error("Error replacing file:", err);
+      alert(err instanceof Error ? err.message : "Failed to replace file");
+    } finally {
+      setReplacingId(null);
     }
   };
 
@@ -178,6 +209,41 @@ export default function ApplicationFileList({
           </div>
 
           <div className="flex items-center gap-2">
+            <input
+              type="file"
+              className="hidden"
+              id={`replace-${file.id}`}
+              onChange={(e) => {
+                const selectedFile = e.target.files?.[0];
+                if (selectedFile) {
+                  handleReplace(file.id, selectedFile);
+                }
+                // Reset input
+                e.target.value = "";
+              }}
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.jpg,.jpeg,.png,.gif,.webp,.svg"
+              disabled={replacingId === file.id || deletingId === file.id}
+            />
+
+            <button
+              onClick={() => {
+                document.getElementById(`replace-${file.id}`)?.click();
+              }}
+              disabled={replacingId === file.id || deletingId === file.id}
+              className="
+                p-2 rounded hover:bg-gray-700/50 transition-colors
+                text-gray-400 hover:text-green-400
+                disabled:opacity-50 disabled:cursor-not-allowed
+              "
+              title="Replace file"
+            >
+              {replacingId === file.id ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4" />
+              )}
+            </button>
+
             <button
               onClick={() => handleDownload(file)}
               className="
@@ -191,7 +257,7 @@ export default function ApplicationFileList({
 
             <button
               onClick={() => handleDelete(file.id)}
-              disabled={deletingId === file.id}
+              disabled={deletingId === file.id || replacingId === file.id}
               className="
                 p-2 rounded hover:bg-gray-700/50 transition-colors
                 text-gray-400 hover:text-red-400
