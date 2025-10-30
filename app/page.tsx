@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { FileText, Search, BookOpen, Code, ChevronRight, Layers, Plus } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { FileText, Search, BookOpen, ChevronRight, Layers, Plus } from "lucide-react";
 import { getTeams, getApplications, getAllDocumentsForApp } from "@/lib/supabase/queries";
 import TeamSelector from "@/components/TeamSelector";
 import DocumentViewer from "@/components/DocumentViewer";
@@ -10,8 +10,12 @@ import NewDocumentDialog from "@/components/NewDocumentDialog";
 import SearchBar from "@/components/SearchBar";
 import FileUploadButton from "@/components/FileUploadButton";
 import ApplicationFileList from "@/components/ApplicationFileList";
+import Sidebar from "@/components/Sidebar";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import { useRecentDocuments } from "@/hooks/useRecentDocuments";
+import { useToast } from "@/components/Toast";
 import { supabase } from "@/lib/supabase/client";
-import type { ApplicationWithDocs, Team, Application, Document } from "@/types";
+import type { ApplicationWithDocs, Team, Application, Document, BreadcrumbItem } from "@/types";
 import type { SearchResult } from "@/lib/supabase/search";
 
 export default function Home() {
@@ -28,6 +32,13 @@ export default function Home() {
   const [showNewDocumentDialog, setShowNewDocumentDialog] = useState(false);
   const [newDocumentAppId, setNewDocumentAppId] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
+  // Recent documents hook
+  const { recentDocuments, addRecentDocument } = useRecentDocuments();
+  
+  // Toast notifications
+  const toast = useToast();
 
   // Function to refresh documents without page reload
   const refreshDocuments = async () => {
@@ -102,110 +113,261 @@ export default function Home() {
     refreshDocuments();
   }, [selectedTeamId, applications]);
 
+  // Track document views for recent documents
+  useEffect(() => {
+    if (selectedDocument && selectedDocumentAppName) {
+      addRecentDocument(selectedDocument, selectedDocumentAppName);
+    }
+  }, [selectedDocument?.id, selectedDocumentAppName, addRecentDocument]);
+
+  // Scroll to top only when document first opens (not on every render)
+  useEffect(() => {
+    if (selectedDocument) {
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+  }, [selectedDocument?.id]);
+
+  // Scroll to top only when editor first opens
+  useEffect(() => {
+    if (editingDocument) {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+  }, [editingDocument?.id]);
+
+  // Generate breadcrumbs based on current state
+  const getBreadcrumbs = useCallback((): BreadcrumbItem[] => {
+    const items: BreadcrumbItem[] = [
+      {
+        label: "Home",
+        onClick: () => {
+          setSelectedApp(null);
+          setSelectedDocument(null);
+          setSelectedDocumentAppName("");
+          setSelectedDocumentAppId("");
+        },
+      },
+    ];
+
+    if (selectedTeamId) {
+      const team = teams.find((t) => t.id === selectedTeamId);
+      if (team) {
+        items.push({
+          label: team.name,
+          onClick: () => {
+            setSelectedApp(null);
+            setSelectedDocument(null);
+            setSelectedDocumentAppName("");
+            setSelectedDocumentAppId("");
+          },
+        });
+      }
+    }
+
+    if (selectedApp) {
+      const app = applications.find((a) => a.id === selectedApp);
+      if (app) {
+        const AppIcon = app.icon;
+        items.push({
+          label: app.name,
+          icon: <AppIcon className="w-4 h-4" />,
+          onClick: () => {
+            setSelectedApp(null);
+            setSelectedDocument(null);
+            setSelectedDocumentAppName("");
+            setSelectedDocumentAppId("");
+          },
+        });
+      }
+    }
+
+    if (selectedDocument) {
+      items.push({
+        label: selectedDocument.title,
+        onClick: undefined, // Current page, not clickable
+      });
+    }
+
+    return items;
+  }, [selectedTeamId, selectedApp, selectedDocument, teams, applications]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + B to toggle sidebar
+      if ((e.ctrlKey || e.metaKey) && e.key === "b") {
+        e.preventDefault();
+        setSidebarCollapsed((prev) => !prev);
+      }
+
+      // Ctrl/Cmd + N to create new document
+      if ((e.ctrlKey || e.metaKey) && e.key === "n") {
+        e.preventDefault();
+        if (applications.length > 0) {
+          setNewDocumentAppId(applications[0].id);
+          setShowNewDocumentDialog(true);
+        }
+      }
+
+      // Escape to close modals/sidebar on mobile
+      if (e.key === "Escape") {
+        if (window.innerWidth < 1024) {
+          setSidebarCollapsed(true);
+        }
+        if (selectedDocument && !editingDocument) {
+          setSelectedDocument(null);
+          setSelectedDocumentAppName("");
+          setSelectedDocumentAppId("");
+        }
+        if (showNewDocumentDialog) {
+          setShowNewDocumentDialog(false);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [applications, selectedDocument, editingDocument, showNewDocumentDialog]);
+
+  // Handle document selection from sidebar
+  const handleDocumentSelect = useCallback((documentId: string) => {
+    // Find document in recent documents
+    const doc = recentDocuments.find((d) => d.id === documentId);
+    if (doc) {
+      setSelectedDocument(doc);
+      setSelectedDocumentAppName(doc.appName);
+      const app = applications.find((a) => a.name === doc.appName);
+      if (app) {
+        setSelectedDocumentAppId(app.id);
+        setSelectedApp(app.id);
+      }
+    }
+  }, [recentDocuments, applications]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a]">
-      {/* Header */}
-      <header className="border-b border-white/5 bg-black/40 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-                <BookOpen className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  DocHub
-                </h1>
-                <p className="text-xs text-gray-400">Documentation Manager</p>
-              </div>
-            </div>
-            <div className="relative flex-1 max-w-md mx-8">
-              <SearchBar
-                onResultClick={(result) => {
-                  setSelectedDocument(result);
-                  setSelectedDocumentAppName(result.appName);
-                  setSelectedDocumentAppId(result.appId);
-                }}
-                teamId={selectedTeamId}
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              {teams.length > 0 && (
-                <TeamSelector teams={teams} selectedTeamId={selectedTeamId} onTeamChange={setSelectedTeamId} />
-              )}
-              <button
-                onClick={() => {
-                  if (applications.length > 0) {
-                    setNewDocumentAppId(applications[0].id);
-                    setShowNewDocumentDialog(true);
-                  }
-                }}
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 border border-blue-500 rounded-lg text-sm transition-all flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                New Doc
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] flex">
+      {/* Sidebar */}
+      <Sidebar
+        teams={teams}
+        applications={applications}
+        selectedTeamId={selectedTeamId}
+        selectedAppId={selectedApp}
+        selectedDocumentId={selectedDocument?.id || null}
+        onTeamSelect={setSelectedTeamId}
+        onAppSelect={(appId) => {
+          setSelectedApp(appId === selectedApp ? null : appId);
+          setSelectedDocument(null);
+          setSelectedDocumentAppName("");
+          setSelectedDocumentAppId("");
+        }}
+        onDocumentSelect={handleDocumentSelect}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
+        recentDocuments={recentDocuments}
+        onCreateDocument={() => {
+          if (applications.length > 0) {
+            setNewDocumentAppId(applications[0].id);
+            setShowNewDocumentDialog(true);
+          }
+        }}
+        onUploadFile={() => {
+          // Could open a file upload dialog, or scroll to an upload area
+          // For now, we'll just focus the first application if available
+          if (selectedApp) {
+            // File upload is available in ApplicationDetails
+            // This could trigger a scroll or show a modal
+          }
+        }}
+        onHomeClick={() => {
+          setSelectedApp(null);
+          setSelectedDocument(null);
+          setSelectedDocumentAppName("");
+          setSelectedDocumentAppId("");
+        }}
+      />
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Welcome Section */}
-        <div className="mb-12">
-          <h2 className="text-4xl font-bold mb-3">Welcome back!</h2>
-          <p className="text-gray-400 text-lg">
-            Manage and access all your team's documentation in one place.
-          </p>
-        </div>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <header className="border-b border-white/5 bg-black/40 backdrop-blur-sm sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            {/* Breadcrumbs */}
+            <div className="mb-3">
+              <Breadcrumbs items={getBreadcrumbs()} />
+            </div>
 
-        {/* Applications Grid */}
-        <div className="mb-12">
-          <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
-            <Code className="w-5 h-5" />
-            Applications
-          </h3>
-          {loading ? (
-            <div className="text-center py-12 text-gray-400">Loading applications...</div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {applicationsWithDocs.map((app) => {
-              const Icon = app.icon;
-              const baseDocsCount = app.baseDocuments.length;
-              const teamDocsCount = app.teamDocuments.length;
-              
-              return (
-                <div
-                  key={app.id}
-                  onClick={() => setSelectedApp(selectedApp === app.id ? null : app.id)}
-                  className="group relative p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative z-10">
-                    <div className={`inline-flex p-3 rounded-lg mb-4 ${app.color} border`}>
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <h4 className="text-lg font-semibold mb-1">{app.name}</h4>
-                    <div className="flex items-center gap-3 mb-3 text-sm text-gray-400">
-                      <span>{app.totalDocuments} docs</span>
-                      <span className="text-gray-600">•</span>
-                      <span className="text-xs">
-                        {baseDocsCount} base, {teamDocsCount} team
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <span>Updated {app.lastUpdated}</span>
-                    </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="lg:hidden">
+                  {/* Logo hidden on mobile since sidebar button is there */}
+                </div>
+                <div className="hidden lg:flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
+                    <BookOpen className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                      DocHub
+                    </h1>
+                    <p className="text-xs text-gray-400">Documentation Manager</p>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+              <div className="relative flex-1 max-w-md mx-8">
+                <SearchBar
+                  onResultClick={(result) => {
+                    setSelectedDocument(result);
+                    setSelectedDocumentAppName(result.appName);
+                    setSelectedDocumentAppId(result.appId);
+                    const app = applications.find((a) => a.name === result.appName);
+                    if (app) {
+                      setSelectedApp(app.id);
+                    }
+                  }}
+                  teamId={selectedTeamId}
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                {teams.length > 0 && (
+                  <TeamSelector teams={teams} selectedTeamId={selectedTeamId} onTeamChange={setSelectedTeamId} />
+                )}
+                <button
+                  onClick={() => {
+                    if (applications.length > 0) {
+                      setNewDocumentAppId(applications[0].id);
+                      setShowNewDocumentDialog(true);
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 border border-blue-500 rounded-lg text-sm transition-all flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">New Doc</span>
+                </button>
+              </div>
             </div>
-          )}
-        </div>
+          </div>
+        </header>
+
+        <main className={`flex-1 max-w-7xl mx-auto px-6 py-8 w-full ${sidebarCollapsed ? "lg:ml-0" : "lg:ml-0"}`}>
+        {/* Welcome Section */}
+        {!selectedApp && !selectedDocument && (
+          <div className="mb-12">
+            <h2 className="text-4xl font-bold mb-3">Welcome back!</h2>
+            <p className="text-gray-400 text-lg mb-6">
+              Manage and access all your team's documentation in one place.
+            </p>
+            <p className="text-gray-500 text-sm">
+              Use the sidebar to navigate between teams and applications, or search for documents using the search bar above.
+            </p>
+          </div>
+        )}
 
         {/* Application Details */}
-        {selectedApp && (
+        {selectedApp && !selectedDocument && (
           <div className="mb-12">
             <ApplicationDetails
               appId={selectedApp}
@@ -220,8 +382,92 @@ export default function Home() {
           </div>
         )}
 
+        {/* Document Viewer - Integrated */}
+        {selectedDocument && !editingDocument && (
+          <div className="mb-12">
+            <DocumentViewer
+              document={selectedDocument}
+              appName={selectedDocumentAppName}
+              appId={selectedDocumentAppId}
+              teamId={selectedTeamId}
+              breadcrumbs={getBreadcrumbs()}
+              onClose={() => {
+                setSelectedDocument(null);
+                setSelectedDocumentAppName("");
+                setSelectedDocumentAppId("");
+              }}
+              onEdit={() => {
+                setEditingDocument(selectedDocument);
+              }}
+              onDelete={async () => {
+                if (!confirm("Are you sure you want to delete this document?")) return;
+                
+                const tableName = selectedDocument.type === "base" ? "base_documents" : "team_documents";
+                const { error } = await supabase
+                  .from(tableName)
+                  .delete()
+                  .eq("id", selectedDocument.id);
+
+                if (error) {
+                  console.error("Error deleting document:", error);
+                  toast.error("Failed to delete document");
+                  return;
+                }
+
+                toast.success("Document deleted successfully");
+                setSelectedDocument(null);
+                setSelectedDocumentAppName("");
+                setSelectedDocumentAppId("");
+                
+                // Refresh documents without page reload
+                await refreshDocuments();
+              }}
+              onVersionRestored={async () => {
+                await refreshDocuments();
+                // Update selected document if it was restored
+                if (selectedDocument) {
+                  const allDocs = await getAllDocumentsForApp(selectedTeamId, selectedDocumentAppId);
+                  const updatedDoc = allDocs.find((d) => d.id === selectedDocument.id);
+                  if (updatedDoc) {
+                    setSelectedDocument(updatedDoc);
+                  }
+                }
+              }}
+            />
+          </div>
+        )}
+
+        {/* Document Editor - Integrated */}
+        {editingDocument && (
+          <div className="mb-12">
+            <DocumentEditor
+              document={editingDocument}
+              appId={selectedDocumentAppId || ""}
+              teamId={selectedTeamId}
+              breadcrumbs={getBreadcrumbs()}
+              onSave={async () => {
+                await refreshDocuments();
+                // Update selected document if it was the one being edited
+                if (editingDocument) {
+                  const allDocs = await getAllDocumentsForApp(selectedTeamId, selectedDocumentAppId);
+                  const updatedDoc = allDocs.find((d) => d.id === editingDocument.id);
+                  if (updatedDoc) {
+                    setSelectedDocument(updatedDoc);
+                  }
+                }
+                setEditingDocument(null);
+              }}
+              onClose={() => {
+                setEditingDocument(null);
+                setSelectedDocumentAppId("");
+              }}
+            />
+          </div>
+        )}
+
         {/* Recent Documents */}
-        <div>
+        {!selectedDocument && !selectedApp && (
+          <div>
           <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
             <FileText className="w-5 h-5" />
             Recent Documents
@@ -273,85 +519,11 @@ export default function Home() {
               ))}
             </div>
           )}
-        </div>
+          </div>
+        )}
       </main>
-
-      {/* Document Viewer Modal */}
-      {selectedDocument && !editingDocument && (
-        <DocumentViewer
-          document={selectedDocument}
-          appName={selectedDocumentAppName}
-          appId={selectedDocumentAppId}
-          teamId={selectedTeamId}
-          onClose={() => {
-            setSelectedDocument(null);
-            setSelectedDocumentAppName("");
-            setSelectedDocumentAppId("");
-          }}
-          onEdit={() => {
-            setEditingDocument(selectedDocument);
-            setSelectedDocument(null);
-          }}
-          onDelete={async () => {
-            if (!confirm("Are you sure you want to delete this document?")) return;
-            
-            const tableName = selectedDocument.type === "base" ? "base_documents" : "team_documents";
-            const { error } = await supabase
-              .from(tableName)
-              .delete()
-              .eq("id", selectedDocument.id);
-
-            if (error) {
-              console.error("Error deleting document:", error);
-              alert("Failed to delete document");
-              return;
-            }
-
-            setSelectedDocument(null);
-            setSelectedDocumentAppName("");
-            setSelectedDocumentAppId("");
-            
-            // Refresh documents without page reload
-            await refreshDocuments();
-          }}
-          onVersionRestored={async () => {
-            await refreshDocuments();
-            // Update selected document if it was restored
-            if (selectedDocument) {
-              const allDocs = await getAllDocumentsForApp(selectedTeamId, selectedDocumentAppId);
-              const updatedDoc = allDocs.find((d) => d.id === selectedDocument.id);
-              if (updatedDoc) {
-                setSelectedDocument(updatedDoc);
-              }
-            }
-          }}
-        />
-      )}
-
-      {/* Document Editor */}
-      {editingDocument && (
-        <DocumentEditor
-          document={editingDocument}
-          appId={selectedDocumentAppId || ""}
-          teamId={selectedTeamId}
-          onSave={async () => {
-            await refreshDocuments();
-            // Update selected document if it was the one being edited
-            if (editingDocument) {
-              const allDocs = await getAllDocumentsForApp(selectedTeamId, selectedDocumentAppId);
-              const updatedDoc = allDocs.find((d) => d.id === editingDocument.id);
-              if (updatedDoc) {
-                setSelectedDocument(updatedDoc);
-              }
-            }
-            setEditingDocument(null);
-          }}
-          onClose={() => {
-            setEditingDocument(null);
-            setSelectedDocumentAppId("");
-          }}
-        />
-      )}
+      </div>
+      {/* End Main Content */}
 
       {/* New Document Dialog */}
       {showNewDocumentDialog && (

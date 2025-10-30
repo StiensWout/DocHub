@@ -1,4 +1,5 @@
 import { LucideIcon } from "lucide-react";
+import type React from "react";
 
 export type DocumentType = "base" | "team";
 
@@ -61,4 +62,17 @@ export interface FileUploadParams {
   teamId?: string;
   file: File;
   visibility?: 'public' | 'team';
+}
+
+// Navigation types
+export interface BreadcrumbItem {
+  label: string;
+  href?: string;
+  icon?: React.ReactNode;
+  onClick?: () => void;
+}
+
+export interface RecentDocument extends Document {
+  appName: string;
+  viewedAt: number; // timestamp
 }
