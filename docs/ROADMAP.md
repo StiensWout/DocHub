@@ -1,78 +1,62 @@
-# DocHub - Roadmap
+# DocHub - Product Roadmap
 
-## 🚀 Short Term (Next 1-2 Weeks) - PRIORITY 1
+This roadmap outlines planned features, enhancements, and improvements for DocHub. Features are organized by priority and timeline.
 
-### Core Functionality
-- [x] **Search Functionality**
-  - [x] Implement full-text search across documents
-  - [x] Search by title, category, content
-  - [x] Filter by application and team
-  - [x] Search results with relevance scoring
-  - [x] Real-time search with debouncing
-  - [x] Search result highlighting
-  - [ ] Search suggestions/autocomplete (enhancement planned)
+## 🚀 Short Term (Next 1-2 Weeks) - HIGH PRIORITY
 
-- [x] **Document Viewing**
-  - [x] Document detail page/view
-  - [x] HTML rendering for document content
-  - [x] Document metadata display
-  - [x] Document preview
+### 🔥 Priority 1: File Upload & Viewing System
 
-- [x] **Document Creation**
-  - [x] Create new team documents
-  - [x] Rich text editor
-  - [x] Document templates
-  - [x] Template selection UI
+**Status**: 📋 Planned  
+**Priority**: High  
+**Estimated Effort**: 2-3 weeks
 
-- [x] **Document Management**
-  - [x] Edit existing documents
-  - [x] Delete documents
-  - [x] Document metadata (tags, category, etc.)
-  - [x] Document versioning/history (implemented)
+#### File Upload Support
+- [ ] Upload files (PDF, DOCX, XLSX, PPTX, images, etc.)
+- [ ] File storage in Supabase Storage
+- [ ] File metadata tracking (name, size, type, upload date)
+- [ ] Support for multiple file attachments per document
+- [ ] File validation and size limits
+- [ ] File preview thumbnails
+- [ ] File upload progress indicators
 
-### 🔥 PRIORITY 1: File Upload & Viewing System
-- [ ] **File Upload Support**
-  - [ ] Upload files (PDF, DOCX, XLSX, PPTX, images, etc.)
-  - [ ] File storage in Supabase Storage
-  - [ ] File metadata tracking (name, size, type, upload date)
-  - [ ] Support for multiple file attachments per document
-  - [ ] File validation and size limits
-  - [ ] File preview thumbnails
+#### In-App File Viewing
+- [ ] PDF viewer component (embedded PDF.js or similar)
+- [ ] Word document viewer (DOCX to HTML conversion)
+- [ ] Excel spreadsheet viewer (XLSX viewing)
+- [ ] PowerPoint viewer (PPTX viewing)
+- [ ] Image viewer (full-screen gallery)
+- [ ] Generic file download fallback
+- [ ] File type detection and appropriate viewer selection
 
-- [ ] **In-App File Viewing**
-  - [ ] PDF viewer component (embedded PDF.js or similar)
-  - [ ] Word document viewer (DOCX to HTML conversion)
-  - [ ] Excel spreadsheet viewer (XLSX viewing)
-  - [ ] PowerPoint viewer (PPTX viewing)
-  - [ ] Image viewer (full-screen gallery)
-  - [ ] Generic file download fallback
-  - [ ] File type detection and appropriate viewer selection
+#### File Management UI
+- [ ] File upload button in document editor
+- [ ] File list display in document viewer
+- [ ] File preview modal/overlay
+- [ ] File download functionality
+- [ ] File deletion with confirmation
+- [ ] File replacement/update option
 
-- [ ] **File Management UI**
-  - [ ] File upload button in document editor
-  - [ ] File list display in document viewer
-  - [ ] File preview modal/overlay
-  - [ ] File download functionality
-  - [ ] File deletion with confirmation
-  - [ ] File replacement/update option
+**See**: `docs/FEATURE_REQUESTS/file-upload-viewing-system.md` for detailed specification
 
 ### UI Improvements
 - [ ] **Enhanced Navigation**
   - [ ] Sidebar navigation
   - [ ] Breadcrumbs
   - [ ] Quick access menu
-  
-- [x] **Document Viewer**
-  - [x] Full-screen document view
-  - [x] HTML content rendering
-  - [x] Edit and delete actions
+- [ ] **Document Viewer Enhancements**
   - [ ] Print-friendly view
   - [ ] Export to PDF/Markdown
-
+  - [ ] Share document link
 - [ ] **Notifications**
   - [ ] Toast notifications for actions
   - [ ] Success/error feedback
-  - [ ] Loading indicators
+  - [ ] Loading indicators (improved)
+
+### Search Enhancements
+- [ ] Search suggestions/autocomplete
+- [ ] Search history
+- [ ] Recent searches
+- [ ] Advanced search filters UI
 
 ## 🎯 Medium Term (Next 1-2 Months)
 
@@ -82,13 +66,12 @@
   - [ ] Login/signup pages
   - [ ] Email/password authentication
   - [ ] OAuth providers (Google, GitHub)
-
+  - [ ] Password reset flow
 - [ ] **Role-Based Access Control**
   - [ ] Team membership management
   - [ ] Permission system (read/write/admin)
   - [ ] Team admin capabilities
-  - [ ] User roles
-
+  - [ ] User roles and permissions
 - [ ] **User Profiles**
   - [ ] User profile pages
   - [ ] Avatar uploads
@@ -101,13 +84,12 @@
   - [ ] Document comments
   - [ ] Mentions (@username)
   - [ ] Change tracking
-
+  - [ ] Collaborative cursors
 - [ ] **Team Management**
   - [ ] Create/edit teams
   - [ ] Invite team members
   - [ ] Team settings
   - [ ] Team activity feed
-
 - [ ] **Notifications System**
   - [ ] In-app notifications
   - [ ] Email notifications
@@ -119,14 +101,12 @@
   - [ ] Folders/collections
   - [ ] Document tags
   - [ ] Favorite/bookmark documents
-  - [ ] Document templates library
-
+  - [ ] Document templates library expansion
 - [ ] **Search & Discovery**
-  - [ ] Advanced search filters
+  - [ ] Advanced search filters UI
   - [ ] Saved searches
   - [ ] Related documents suggestions
   - [ ] Search analytics
-
 - [ ] **Analytics**
   - [ ] Document views tracking
   - [ ] Most accessed documents
@@ -141,13 +121,11 @@
   - [ ] Document-level permissions
   - [ ] Custom roles
   - [ ] Audit logs
-
 - [ ] **Integrations**
   - [ ] Slack integration
   - [ ] GitHub integration
   - [ ] API for third-party integrations
   - [ ] Webhook support
-
 - [ ] **Migration & Import**
   - [ ] Import from Confluence/Notion
   - [ ] Bulk document import
@@ -159,13 +137,11 @@
   - [ ] Redis caching layer
   - [ ] CDN for static assets
   - [ ] Optimistic updates
-
 - [ ] **Performance Optimization**
   - [ ] Image optimization
-  - [ ] Lazy loading
-  - [ ] Code splitting
+  - [ ] Lazy loading improvements
+  - [ ] Code splitting optimization
   - [ ] Performance monitoring
-
 - [ ] **Scalability**
   - [ ] Database query optimization
   - [ ] Pagination for large datasets
@@ -177,15 +153,13 @@
   - [ ] Electron wrapper
   - [ ] Offline support
   - [ ] Native notifications
-
 - [ ] **Mobile App**
   - [ ] React Native mobile app
   - [ ] Mobile-optimized UI
   - [ ] Push notifications
-
 - [ ] **Accessibility**
   - [ ] WCAG 2.1 AA compliance
-  - [ ] Keyboard navigation
+  - [ ] Keyboard navigation improvements
   - [ ] Screen reader support
   - [ ] High contrast mode
 
@@ -195,13 +169,11 @@
   - [ ] Smart document suggestions
   - [ ] Auto-tagging
   - [ ] Content generation assistance
-
 - [ ] **Workflow Automation**
   - [ ] Document approval workflows
   - [ ] Automated notifications
   - [ ] Scheduled publishing
   - [ ] Workflow templates
-
 - [ ] **Advanced Search**
   - [ ] Semantic search
   - [ ] Vector search for content similarity
@@ -209,35 +181,61 @@
 
 ## 🔮 Future Ideas
 
+These are ideas for future consideration, not currently prioritized:
+
 - [ ] **Documentation Generator**
   - [ ] API documentation from code
   - [ ] Auto-generate from OpenAPI specs
   - [ ] Code comments to docs
-
 - [ ] **Knowledge Base Features**
   - [ ] FAQ system
   - [ ] Knowledge base articles
   - [ ] Community contributions
-
 - [ ] **Version Control**
   - [ ] Git-like versioning for documents
   - [ ] Branching and merging
   - [ ] Review process
-
 - [ ] **Multi-language Support**
   - [ ] i18n support
   - [ ] Document translations
   - [ ] Language detection
 
----
+## 📊 Completed Features
+
+### Recently Completed ✅
+- ✅ Full-text search with relevance scoring
+- ✅ Document versioning system
+- ✅ Rich text editor with images
+- ✅ Template system
+- ✅ Document CRUD operations
+- ✅ Multi-team support
+- ✅ Comprehensive documentation
+
+**See**: `docs/COMPLETED.md` for complete list of completed features
 
 ## 🎯 Priority Legend
 
-- **High Priority**: Core functionality, essential features
-- **Medium Priority**: Important improvements, nice-to-have
-- **Low Priority**: Future enhancements, experimental features
+- **🔥 High Priority**: Core functionality, essential features, blocking issues
+- **⚡ Medium Priority**: Important improvements, nice-to-have features
+- **💡 Low Priority**: Future enhancements, experimental features
+
+## 📅 Roadmap Updates
+
+- **Last Updated**: After comprehensive documentation overhaul
+- **Review Frequency**: Monthly
+- **Next Review**: After file upload system implementation
+
+## 🤝 Contributing
+
+Want to work on a roadmap item?
+
+1. Check if it's already in progress
+2. Create an issue to discuss approach
+3. Create a feature branch
+4. Submit pull request when ready
+
+See `docs/DEVELOPMENT.md` for development guidelines.
 
 ---
 
-*Last Updated: Search Functionality Completed*
-*Review and update quarterly*
+**Questions?** Check `docs/README.md` for documentation or create an issue.
