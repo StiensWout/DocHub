@@ -43,6 +43,12 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 3. **Set up the database:**
 
+You have two options:
+
+**Option A: Complete Schema Reset (Recommended for fresh setup)**
+- Run `supabase/complete_schema.sql` - This will clean and recreate the entire database schema
+
+**Option B: Incremental Setup (If you already have data)**
 Run the SQL schemas in your Supabase SQL Editor (in order):
 - `supabase/schema.sql` - Main database schema
 - `supabase/templates_schema.sql` - Template table schema

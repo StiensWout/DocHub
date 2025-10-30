@@ -23,7 +23,7 @@ export async function seedDatabase() {
   console.log("🌱 Starting database seed...\n");
   
   // First, verify tables exist
-  const tableNames = ['teams', 'applications', 'base_documents', 'team_documents'];
+  const tableNames = ['teams', 'applications', 'base_documents', 'team_documents', 'document_templates', 'document_versions'];
   console.log("🔍 Checking if tables exist...");
   
   for (const tableName of tableNames) {
@@ -43,31 +43,19 @@ export async function seedDatabase() {
   
   console.log("✅ All tables exist!\n");
 
-  // Insert applications
+  // Insert applications (test applications)
   const applications = [
     {
-      id: "frontend",
-      name: "Frontend App",
+      id: "test-app-1",
+      name: "Customer Portal",
       icon_name: "Globe",
       color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
     },
     {
-      id: "backend",
-      name: "Backend API",
+      id: "test-app-2",
+      name: "Admin Dashboard",
       icon_name: "Database",
       color: "bg-green-500/20 text-green-400 border-green-500/30",
-    },
-    {
-      id: "mobile",
-      name: "Mobile App",
-      icon_name: "Zap",
-      color: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-    },
-    {
-      id: "devops",
-      name: "DevOps",
-      icon_name: "Settings",
-      color: "bg-orange-500/20 text-orange-400 border-orange-500/30",
     },
   ];
 
@@ -84,235 +72,170 @@ export async function seedDatabase() {
     }
   }
 
-  // Insert base documents
+  // Insert base documents for test applications
   const baseDocuments = [
+    // Customer Portal base documents
     {
-      application_id: "frontend",
+      application_id: "test-app-1",
       title: "Server & Container Info",
       category: "Infrastructure",
-      content: `# Server & Container Information
+      content: `<h1>Server & Container Information</h1>
 
-## Production Servers
-- **Primary Server**: \`app-frontend-prod-01\`
-- **Container Registry**: \`registry.company.com/frontend\`
-- **Docker Image**: \`frontend:latest\`
-- **Port**: 3000
+<h2>Production Servers</h2>
+<ul>
+  <li><strong>Primary Server:</strong> <code>customer-portal-prod-01</code></li>
+  <li><strong>Container Registry:</strong> <code>registry.company.com/customer-portal</code></li>
+  <li><strong>Docker Image:</strong> <code>customer-portal:latest</code></li>
+  <li><strong>Port:</strong> 3000</li>
+</ul>
 
-## Container Details
-- **Base Image**: \`node:18-alpine\`
-- **Memory Limit**: 512MB
-- **CPU Limit**: 0.5 cores`,
+<h2>Container Details</h2>
+<ul>
+  <li><strong>Base Image:</strong> <code>node:18-alpine</code></li>
+  <li><strong>Memory Limit:</strong> 1GB</li>
+  <li><strong>CPU Limit:</strong> 1 core</li>
+</ul>
+
+<h2>Environment Variables</h2>
+<ul>
+  <li><code>NODE_ENV=production</code></li>
+  <li><code>API_URL=https://api.company.com</code></li>
+</ul>`,
     },
     {
-      application_id: "frontend",
+      application_id: "test-app-1",
       title: "Support & Contact Info",
       category: "Support",
-      content: `# Support & Contact Information
+      content: `<h1>Support & Contact Information</h1>
 
-## Primary Contacts
-- **Team Lead**: team-lead@company.com
-- **DevOps**: devops@company.com
-- **On-Call**: +1 (555) 123-4567
+<h2>Primary Contacts</h2>
+<ul>
+  <li><strong>Team Lead:</strong> application-team@company.com</li>
+  <li><strong>DevOps:</strong> systems-team@company.com</li>
+  <li><strong>On-Call:</strong> +1 (555) 100-0001</li>
+</ul>
 
-## Support Channels
-- **Slack**: #frontend-support
-- **Email**: frontend-support@company.com
-- **Emergency**: pager-duty-frontend
+<h2>Support Channels</h2>
+<ul>
+  <li><strong>Slack:</strong> #customer-portal-support</li>
+  <li><strong>Email:</strong> support@company.com</li>
+  <li><strong>Emergency:</strong> pager-duty-portal</li>
+</ul>
 
-## Common Issues
-- See troubleshooting guide
-- Check logs in CloudWatch
-- Review recent deployments`,
+<h2>Common Issues</h2>
+<ul>
+  <li>Login authentication failures</li>
+  <li>Payment processing errors</li>
+  <li>Session timeout issues</li>
+</ul>`,
     },
     {
-      application_id: "frontend",
+      application_id: "test-app-1",
       title: "Application Overview",
       category: "General",
-      content: `# Frontend Application Overview
+      content: `<h1>Customer Portal Overview</h1>
 
-## Description
-Main customer-facing web application built with React and Next.js.
+<h2>Description</h2>
+<p>Customer-facing web application for managing accounts, orders, and support tickets.</p>
 
-## Key Features
-- Server-side rendering
-- Progressive Web App support
-- Real-time updates
+<h2>Key Features</h2>
+<ul>
+  <li>User authentication and authorization</li>
+  <li>Order management</li>
+  <li>Support ticket system</li>
+  <li>Payment processing integration</li>
+</ul>
 
-## Tech Stack
-- React 18
-- Next.js 14
-- TypeScript
-- Tailwind CSS`,
+<h2>Tech Stack</h2>
+<ul>
+  <li>Next.js 14</li>
+  <li>React 18</li>
+  <li>TypeScript</li>
+  <li>Tailwind CSS</li>
+  <li>PostgreSQL</li>
+</ul>`,
     },
+    // Admin Dashboard base documents
     {
-      application_id: "backend",
+      application_id: "test-app-2",
       title: "Server & Container Info",
       category: "Infrastructure",
-      content: `# Server & Container Information
+      content: `<h1>Server & Container Information</h1>
 
-## Production Servers
-- **Primary Server**: \`api-backend-prod-01\`
-- **Container Registry**: \`registry.company.com/backend\`
-- **Docker Image**: \`backend:latest\`
-- **Port**: 8000
+<h2>Production Servers</h2>
+<ul>
+  <li><strong>Primary Server:</strong> <code>admin-dashboard-prod-01</code></li>
+  <li><strong>Container Registry:</strong> <code>registry.company.com/admin-dashboard</code></li>
+  <li><strong>Docker Image:</strong> <code>admin-dashboard:latest</code></li>
+  <li><strong>Port:</strong> 3001</li>
+</ul>
 
-## Container Details
-- **Base Image**: \`python:3.11-slim\`
-- **Memory Limit**: 1GB
-- **CPU Limit**: 1 core`,
+<h2>Container Details</h2>
+<ul>
+  <li><strong>Base Image:</strong> <code>node:18-alpine</code></li>
+  <li><strong>Memory Limit:</strong> 2GB</li>
+  <li><strong>CPU Limit:</strong> 2 cores</li>
+</ul>
+
+<h2>Database</h2>
+<ul>
+  <li><strong>PostgreSQL:</strong> admin-db-prod.cluster.company.com</li>
+  <li><strong>Redis:</strong> admin-redis-prod.cluster.company.com</li>
+</ul>`,
     },
     {
-      application_id: "backend",
+      application_id: "test-app-2",
       title: "Support & Contact Info",
       category: "Support",
-      content: `# Support & Contact Information
+      content: `<h1>Support & Contact Information</h1>
 
-## Primary Contacts
-- **Team Lead**: backend-lead@company.com
-- **DevOps**: devops@company.com
-- **On-Call**: +1 (555) 234-5678
+<h2>Primary Contacts</h2>
+<ul>
+  <li><strong>Team Lead:</strong> application-team@company.com</li>
+  <li><strong>Systems Admin:</strong> systems-team@company.com</li>
+  <li><strong>On-Call:</strong> +1 (555) 100-0002</li>
+</ul>
 
-## Support Channels
-- **Slack**: #backend-support
-- **Email**: backend-support@company.com
-- **Emergency**: pager-duty-backend
+<h2>Support Channels</h2>
+<ul>
+  <li><strong>Slack:</strong> #admin-dashboard-support</li>
+  <li><strong>Email:</strong> admin-support@company.com</li>
+  <li><strong>Emergency:</strong> pager-duty-admin</li>
+</ul>
 
-## Common Issues
-- Database connection issues
-- API rate limiting
-- Authentication failures`,
+<h2>Common Issues</h2>
+<ul>
+  <li>Database connection timeouts</li>
+  <li>Permission access denied</li>
+  <li>Report generation failures</li>
+</ul>`,
     },
     {
-      application_id: "backend",
+      application_id: "test-app-2",
       title: "Application Overview",
       category: "General",
-      content: `# Backend API Overview
+      content: `<h1>Admin Dashboard Overview</h1>
 
-## Description
-RESTful API service handling business logic and data processing.
+<h2>Description</h2>
+<p>Internal administrative dashboard for managing users, content, and system settings.</p>
 
-## Key Features
-- RESTful endpoints
-- GraphQL support
-- WebSocket connections
+<h2>Key Features</h2>
+<ul>
+  <li>User management</li>
+  <li>Analytics and reporting</li>
+  <li>Content management</li>
+  <li>System configuration</li>
+</ul>
 
-## Tech Stack
-- Python 3.11
-- FastAPI
-- PostgreSQL
-- Redis`,
-    },
-    {
-      application_id: "mobile",
-      title: "Server & Container Info",
-      category: "Infrastructure",
-      content: `# Server & Container Information
-
-## Build Servers
-- **CI/CD Server**: \`mobile-build-01\`
-- **Container Registry**: \`registry.company.com/mobile\`
-- **Build Image**: \`mobile-builder:latest\`
-
-## Container Details
-- **Base Image**: \`react-native:latest\`
-- **Build Tools**: Xcode, Android SDK
-- **Memory Limit**: 2GB`,
-    },
-    {
-      application_id: "mobile",
-      title: "Support & Contact Info",
-      category: "Support",
-      content: `# Support & Contact Information
-
-## Primary Contacts
-- **Team Lead**: mobile-lead@company.com
-- **DevOps**: devops@company.com
-- **On-Call**: +1 (555) 345-6789
-
-## Support Channels
-- **Slack**: #mobile-support
-- **Email**: mobile-support@company.com
-- **Emergency**: pager-duty-mobile
-
-## Common Issues
-- Build failures
-- App Store rejections
-- Push notification issues`,
-    },
-    {
-      application_id: "mobile",
-      title: "Application Overview",
-      category: "General",
-      content: `# Mobile Application Overview
-
-## Description
-Cross-platform mobile application for iOS and Android.
-
-## Key Features
-- Native performance
-- Offline support
-- Push notifications
-
-## Tech Stack
-- React Native
-- TypeScript
-- Redux`,
-    },
-    {
-      application_id: "devops",
-      title: "Server & Container Info",
-      category: "Infrastructure",
-      content: `# Server & Container Information
-
-## Infrastructure
-- **Kubernetes Cluster**: \`k8s-prod-cluster\`
-- **Container Registry**: \`registry.company.com\`
-- **Monitoring**: Prometheus + Grafana
-
-## Container Details
-- **Orchestration**: Kubernetes
-- **CI/CD**: Jenkins + GitHub Actions
-- **IaC**: Terraform`,
-    },
-    {
-      application_id: "devops",
-      title: "Support & Contact Info",
-      category: "Support",
-      content: `# Support & Contact Information
-
-## Primary Contacts
-- **Team Lead**: devops-lead@company.com
-- **On-Call**: +1 (555) 456-7890
-
-## Support Channels
-- **Slack**: #devops-support
-- **Email**: devops@company.com
-- **Emergency**: pager-duty-devops
-
-## Common Issues
-- Deployment failures
-- Infrastructure scaling
-- Monitoring alerts`,
-    },
-    {
-      application_id: "devops",
-      title: "Application Overview",
-      category: "General",
-      content: `# DevOps Overview
-
-## Description
-Infrastructure and deployment automation.
-
-## Key Features
-- CI/CD pipelines
-- Infrastructure as Code
-- Monitoring and alerting
-
-## Tech Stack
-- Kubernetes
-- Docker
-- Terraform
-- Ansible`,
+<h2>Tech Stack</h2>
+<ul>
+  <li>Next.js 14</li>
+  <li>React 18</li>
+  <li>TypeScript</li>
+  <li>Ant Design</li>
+  <li>PostgreSQL</li>
+  <li>Redis</li>
+</ul>`,
     },
   ];
 
@@ -331,9 +254,9 @@ Infrastructure and deployment automation.
 
   // Insert teams (check if they exist first to avoid duplicates)
   const teams = [
-    { name: "Team Alpha" },
-    { name: "Team Beta" },
-    { name: "Team Gamma" },
+    { name: "Application" },
+    { name: "Systems" },
+    { name: "Support" },
   ];
 
   console.log("\n👥 Inserting teams...");
@@ -372,67 +295,164 @@ Infrastructure and deployment automation.
   // Insert team documents
   const teamDocuments = [
     {
-      team_id: teamIds[0], // Team Alpha
-      application_id: "frontend",
-      title: "Custom Features Implementation",
+      team_id: teamIds[0], // Application team
+      application_id: "test-app-1",
+      title: "Feature Development Guide",
       category: "Development",
-      content: "Team Alpha specific frontend features...",
+      content: `<h1>Feature Development Guide</h1>
+
+<h2>Development Process</h2>
+<p>Our team follows agile development practices with 2-week sprints.</p>
+
+<h2>Code Standards</h2>
+<ul>
+  <li>ESLint configuration must be followed</li>
+  <li>All components must have TypeScript types</li>
+  <li>Unit tests required for new features</li>
+</ul>
+
+<h2>Pull Request Process</h2>
+<ol>
+  <li>Create feature branch from main</li>
+  <li>Implement changes with tests</li>
+  <li>Create PR with description</li>
+  <li>Wait for code review approval</li>
+  <li>Merge after CI passes</li>
+</ol>`,
     },
     {
-      team_id: teamIds[0],
-      application_id: "backend",
-      title: "Custom API Endpoints",
-      category: "API",
-      content: "Team Alpha specific backend endpoints...",
+      team_id: teamIds[0], // Application team
+      application_id: "test-app-2",
+      title: "Admin Dashboard Customizations",
+      category: "Customization",
+      content: `<h1>Admin Dashboard Customizations</h1>
+
+<h2>Available Customizations</h2>
+<ul>
+  <li>Custom user roles and permissions</li>
+  <li>Dashboard widget configuration</li>
+  <li>Report template customization</li>
+</ul>
+
+<h2>Configuration Files</h2>
+<ul>
+  <li><code>config/roles.json</code> - User role definitions</li>
+  <li><code>config/widgets.json</code> - Dashboard widgets</li>
+  <li><code>config/reports.json</code> - Report templates</li>
+</ul>`,
     },
     {
-      team_id: teamIds[0],
-      application_id: "mobile",
-      title: "Mobile App Configuration",
-      category: "Configuration",
-      content: "Team Alpha mobile app settings...",
+      team_id: teamIds[1], // Systems team
+      application_id: "test-app-1",
+      title: "Deployment Runbook",
+      category: "Operations",
+      content: `<h1>Deployment Runbook</h1>
+
+<h2>Pre-Deployment Checklist</h2>
+<ul>
+  <li>Review all changes in staging</li>
+  <li>Verify database migrations</li>
+  <li>Check environment variables</li>
+  <li>Confirm backup completion</li>
+</ul>
+
+<h2>Deployment Steps</h2>
+<ol>
+  <li>Tag release in Git</li>
+  <li>Build Docker image</li>
+  <li>Push to registry</li>
+  <li>Update Kubernetes deployment</li>
+  <li>Monitor rollout status</li>
+</ol>
+
+<h2>Rollback Procedure</h2>
+<p>If issues occur, immediately rollback to previous version:</p>
+<pre><code>kubectl rollout undo deployment/customer-portal</code></pre>`,
     },
     {
-      team_id: teamIds[1], // Team Beta
-      application_id: "frontend",
-      title: "Shared Component Library",
-      category: "Components",
-      content: "Team Beta component library documentation...",
+      team_id: teamIds[1], // Systems team
+      application_id: "test-app-2",
+      title: "Monitoring & Alerts",
+      category: "Operations",
+      content: `<h1>Monitoring & Alerts</h1>
+
+<h2>Monitoring Tools</h2>
+<ul>
+  <li><strong>Prometheus:</strong> Metrics collection</li>
+  <li><strong>Grafana:</strong> Visualization dashboards</li>
+  <li><strong>AlertManager:</strong> Alert routing</li>
+</ul>
+
+<h2>Key Metrics</h2>
+<ul>
+  <li>Response time (p95, p99)</li>
+  <li>Error rate</li>
+  <li>Request throughput</li>
+  <li>Database connection pool usage</li>
+</ul>
+
+<h2>Alert Thresholds</h2>
+<ul>
+  <li>Error rate > 5% for 5 minutes</li>
+  <li>Response time > 2s for 10 minutes</li>
+  <li>CPU usage > 80% for 15 minutes</li>
+</ul>`,
     },
     {
-      team_id: teamIds[1],
-      application_id: "backend",
-      title: "Third-party Integrations",
-      category: "Integration",
-      content: "Team Beta third-party service integrations...",
+      team_id: teamIds[2], // Support team
+      application_id: "test-app-1",
+      title: "Common Support Issues",
+      category: "Support",
+      content: `<h1>Common Support Issues</h1>
+
+<h2>Account Access Issues</h2>
+<ul>
+  <li><strong>Forgot Password:</strong> Use password reset link</li>
+  <li><strong>Account Locked:</strong> Wait 15 minutes or contact support</li>
+  <li><strong>2FA Issues:</strong> Reset via security settings</li>
+</ul>
+
+<h2>Payment Issues</h2>
+<ul>
+  <li>Verify payment method is valid</li>
+  <li>Check for sufficient funds</li>
+  <li>Review transaction history</li>
+</ul>
+
+<h2>Escalation Path</h2>
+<ol>
+  <li>Level 1: Support team (email/chat)</li>
+  <li>Level 2: Application team (technical issues)</li>
+  <li>Level 3: Systems team (infrastructure issues)</li>
+</ol>`,
     },
     {
-      team_id: teamIds[1],
-      application_id: "devops",
-      title: "Deployment Procedures",
-      category: "Deployment",
-      content: "Team Beta specific deployment steps...",
-    },
-    {
-      team_id: teamIds[2], // Team Gamma
-      application_id: "frontend",
-      title: "Testing Strategy",
-      category: "Testing",
-      content: "Team Gamma testing approach...",
-    },
-    {
-      team_id: teamIds[2],
-      application_id: "backend",
-      title: "Performance Optimization",
-      category: "Performance",
-      content: "Team Gamma backend optimizations...",
-    },
-    {
-      team_id: teamIds[2],
-      application_id: "mobile",
-      title: "Analytics Setup",
-      category: "Analytics",
-      content: "Team Gamma mobile analytics configuration...",
+      team_id: teamIds[2], // Support team
+      application_id: "test-app-2",
+      title: "Admin User Training Guide",
+      category: "Training",
+      content: `<h1>Admin User Training Guide</h1>
+
+<h2>Getting Started</h2>
+<ul>
+  <li>Login with admin credentials</li>
+  <li>Review dashboard overview</li>
+  <li>Navigate main sections</li>
+</ul>
+
+<h2>Key Features</h2>
+<ul>
+  <li><strong>User Management:</strong> Create, edit, and manage users</li>
+  <li><strong>Reports:</strong> Generate and export reports</li>
+  <li><strong>Settings:</strong> Configure system settings</li>
+</ul>
+
+<h2>Best Practices</h2>
+<ul>
+  <li>Always verify before making bulk changes</li>
+  <li>Use filters to narrow down searches</li>
+  <li>Export reports before major operations</li>
+</ul>`,
     },
   ];
 
@@ -449,10 +469,209 @@ Infrastructure and deployment automation.
   }
   console.log(`  ✅ Inserted ${teamDocCount}/${teamDocuments.length} team documents`);
 
+  // Insert document templates
+  const templates = [
+    {
+      name: "Meeting Notes",
+      description: "Template for recording meeting minutes",
+      category: "General",
+      content: `<h1>Meeting Notes</h1>
+<p><strong>Date:</strong> </p>
+<p><strong>Attendees:</strong> </p>
+<h2>Agenda</h2>
+<ul>
+  <li></li>
+</ul>
+<h2>Discussion Points</h2>
+<ul>
+  <li></li>
+</ul>
+<h2>Action Items</h2>
+<ul>
+  <li></li>
+</ul>
+<h2>Next Steps</h2>
+<p></p>`,
+    },
+    {
+      name: "Project Plan",
+      description: "Template for project planning and documentation",
+      category: "Planning",
+      content: `<h1>Project Plan</h1>
+<h2>Overview</h2>
+<p></p>
+<h2>Objectives</h2>
+<ul>
+  <li></li>
+</ul>
+<h2>Timeline</h2>
+<p><strong>Start Date:</strong> </p>
+<p><strong>End Date:</strong> </p>
+<h2>Resources</h2>
+<ul>
+  <li></li>
+</ul>
+<h2>Milestones</h2>
+<ul>
+  <li></li>
+</ul>
+<h2>Risks & Mitigation</h2>
+<ul>
+  <li></li>
+</ul>`,
+    },
+    {
+      name: "API Documentation",
+      description: "Template for API endpoint documentation",
+      category: "Development",
+      content: `<h1>API Endpoint</h1>
+<h2>Overview</h2>
+<p></p>
+<h2>Endpoint</h2>
+<p><code>GET /api/endpoint</code></p>
+<h2>Description</h2>
+<p></p>
+<h2>Parameters</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+<h2>Response</h2>
+<pre><code>{
+  "status": "success",
+  "data": {}
+}</code></pre>
+<h2>Example</h2>
+<pre><code></code></pre>`,
+    },
+    {
+      name: "Bug Report",
+      description: "Template for documenting bugs and issues",
+      category: "Support",
+      content: `<h1>Bug Report</h1>
+<h2>Summary</h2>
+<p></p>
+<h2>Steps to Reproduce</h2>
+<ol>
+  <li></li>
+</ol>
+<h2>Expected Behavior</h2>
+<p></p>
+<h2>Actual Behavior</h2>
+<p></p>
+<h2>Environment</h2>
+<ul>
+  <li><strong>OS:</strong> </li>
+  <li><strong>Browser:</strong> </li>
+  <li><strong>Version:</strong> </li>
+</ul>
+<h2>Additional Information</h2>
+<p></p>
+<h2>Severity</h2>
+<p></p>`,
+    },
+    {
+      name: "Runbook",
+      description: "Template for operational runbooks and procedures",
+      category: "Operations",
+      content: `<h1>Runbook: [Procedure Name]</h1>
+<h2>Purpose</h2>
+<p></p>
+<h2>Prerequisites</h2>
+<ul>
+  <li></li>
+</ul>
+<h2>Steps</h2>
+<ol>
+  <li>
+    <h3>Step 1</h3>
+    <p></p>
+  </li>
+</ol>
+<h2>Verification</h2>
+<p></p>
+<h2>Troubleshooting</h2>
+<h3>Common Issues</h3>
+<ul>
+  <li></li>
+</ul>
+<h2>Rollback</h2>
+<p></p>
+<h2>Contact</h2>
+<p><strong>On-Call:</strong> </p>
+<p><strong>Escalation:</strong> </p>`,
+    },
+    {
+      name: "Architecture Document",
+      description: "Template for system architecture documentation",
+      category: "Architecture",
+      content: `<h1>System Architecture</h1>
+<h2>Overview</h2>
+<p></p>
+<h2>System Components</h2>
+<ul>
+  <li></li>
+</ul>
+<h2>Data Flow</h2>
+<p></p>
+<h2>Technology Stack</h2>
+<ul>
+  <li></li>
+</ul>
+<h2>Scalability</h2>
+<p></p>
+<h2>Security</h2>
+<p></p>
+<h2>Deployment</h2>
+<p></p>`,
+    },
+  ];
+
+  console.log("\n📋 Inserting document templates...");
+  let templateCount = 0;
+  for (const template of templates) {
+    // Check if template already exists
+    const { data: existing } = await supabaseAdmin
+      .from("document_templates")
+      .select("id")
+      .eq("name", template.name)
+      .maybeSingle();
+
+    if (existing) {
+      console.log(`  ✓ Template "${template.name}" already exists (skipping)`);
+      templateCount++;
+    } else {
+      const { error } = await supabaseAdmin.from("document_templates").insert(template);
+
+      if (error) {
+        console.error(`  ❌ Error inserting template "${template.name}":`, error.message);
+      } else {
+        templateCount++;
+        console.log(`  ✅ Created "${template.name}"`);
+      }
+    }
+  }
+  console.log(`  ✅ Inserted ${templateCount}/${templates.length} templates`);
+
   console.log("\n🎉 Database seeded successfully!");
   console.log(`\n📊 Summary:`);
   console.log(`   • ${applications.length} applications`);
   console.log(`   • ${baseDocCount} base documents`);
   console.log(`   • ${teamIds.length} teams`);
   console.log(`   • ${teamDocCount} team documents`);
+  console.log(`   • ${templateCount} document templates`);
 }
