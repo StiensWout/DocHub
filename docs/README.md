@@ -116,7 +116,6 @@ Testing and validation documentation:
 
 #### [FEATURE_REQUESTS/file-upload-viewing-system.md](./FEATURE_REQUESTS/file-upload-viewing-system.md) 📎
 Detailed specification for file upload and viewing system:
-
 - Requirements
 - Technical specifications
 - Implementation plan
@@ -126,6 +125,16 @@ Detailed specification for file upload and viewing system:
 **Use this when**: Implementing the file upload feature or understanding requirements.
 
 ---
+
+#### [FEATURE_REQUESTS/enhanced-navigation.md](./FEATURE_REQUESTS/enhanced-navigation.md) 🧭
+Detailed specification for enhanced navigation system:
+- Sidebar navigation
+- Breadcrumbs
+- Quick access menu
+- Keyboard shortcuts
+- Implementation plan
+
+**Use this when**: Implementing enhanced navigation features or understanding requirements.
 
 ## 🚀 Quick Navigation
 

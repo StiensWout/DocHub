@@ -50,6 +50,7 @@ This roadmap outlines planned features, enhancements, and improvements for DocHu
   - [ ] Sidebar navigation
   - [ ] Breadcrumbs
   - [ ] Quick access menu
+  - **See**: `docs/FEATURE_REQUESTS/enhanced-navigation.md` for detailed specification
 - [ ] **Document Viewer Enhancements**
   - [ ] Print-friendly view
   - [ ] Export to PDF/Markdown
