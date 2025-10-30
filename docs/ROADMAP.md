@@ -66,11 +66,51 @@ This roadmap outlines planned features, enhancements, and improvements for DocHu
   - [x] Loading indicators (improved)
   - **Completed**: 2025-01-30
 
-### Search Enhancements
-- [ ] Search suggestions/autocomplete
-- [ ] Search history
-- [ ] Recent searches
-- [ ] Advanced search filters UI
+### Search Enhancements ✅ COMPLETED
+- [x] Search suggestions/autocomplete
+- [x] Search history
+- [x] Recent searches
+- [x] Advanced search filters UI (core functionality)
+- [x] Fuzzy matching/typo tolerance (bonus)
+- [x] Keyboard navigation
+- **See**: `docs/FEATURE_REQUESTS/search-enhancements.md` for detailed specification
+- **Completed**: 2025-01-30
+
+### Application Management
+- [ ] **Create New Applications**
+  - [ ] Application creation dialog/form
+  - [ ] Application name input with validation
+  - [ ] Icon selection from available icons (Lucide icons)
+  - [ ] Color theme selection
+  - [ ] Application ID generation or custom ID input
+  - [ ] Success feedback and navigation to new application
+- [ ] **Edit Existing Applications**
+  - [ ] Edit application name
+  - [ ] Change application icon
+  - [ ] Update color theme
+  - [ ] Application settings page/dialog
+  - [ ] Update validation and error handling
+- [ ] **Application Grouping**
+  - [ ] Create application groups/categories
+  - [ ] Assign applications to groups
+  - [ ] Group display in sidebar and main view
+  - [ ] Collapsible/expandable groups
+  - [ ] Drag-and-drop to reorganize groups
+  - [ ] Group icons and colors
+  - [ ] Group management (create, edit, delete groups)
+- [ ] **Database Schema Updates**
+  - [ ] Add optional `group_id` field to applications table
+  - [ ] Create `application_groups` table (if needed)
+  - [ ] Update RLS policies for application management
+- [ ] **UI Components**
+  - [ ] Application creation dialog component
+  - [ ] Application editor component
+  - [ ] Icon picker component
+  - [ ] Color picker component
+  - [ ] Group manager component
+  - [ ] Application settings page
+- **Priority**: High  
+**Estimated Effort**: 1-2 weeks
 
 ## 🎯 Medium Term (Next 1-2 Months)
 
@@ -117,7 +157,6 @@ This roadmap outlines planned features, enhancements, and improvements for DocHu
   - [ ] Favorite/bookmark documents
   - [ ] Document templates library expansion
 - [ ] **Search & Discovery**
-  - [ ] Advanced search filters UI
   - [ ] Saved searches
   - [ ] Related documents suggestions
   - [ ] Search analytics
