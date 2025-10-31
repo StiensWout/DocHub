@@ -4,7 +4,32 @@ All notable changes and completed features in DocHub.
 
 ## [Current] - 2025-01-30
 
+### 🐛 Bug Fixes
+
+#### URL Navigation Consistency
+- ✅ Fixed inconsistent navigation behavior between grouped and ungrouped applications
+- ✅ All application clicks now use `router.push()` to update URL parameters
+- ✅ Ungrouped applications now support browser history, direct linking, and bookmarking
+- ✅ Consistent navigation experience across all application types
+- **Impact**: Users can now bookmark, share, and use browser back/forward with all applications
+
 ### ✨ Completed Features
+
+#### Main Page Group Overview
+- ✅ Replaced recent documents with application groups overview on main page
+- ✅ Group cards with headers showing group name, icon, and color
+- ✅ Responsive grid layout for applications (1-4 columns based on screen size)
+- ✅ Application cards with icons, names, and navigation
+- ✅ Ungrouped applications section ("Other Applications")
+- ✅ Group detail view with full group information
+- ✅ Click navigation to applications from main page
+- ✅ Click navigation to group detail view from groups overview
+- ✅ Search integration - clicking groups from search navigates to group view
+- ✅ URL query parameter support (`?group=groupId` and `?app=appId`)
+- ✅ Breadcrumb navigation including groups
+- ✅ Visual organization with group and application colors
+- ✅ Empty states for groups with no applications
+- ✅ Loading states for group data
 
 #### Application & Group Search Integration
 - ✅ Integrated applications and groups into search functionality

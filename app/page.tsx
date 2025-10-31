@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FileText, Search, BookOpen, ChevronRight, Layers, Plus, FolderKanban, Settings } from "lucide-react";
-import { getTeams, getApplications, getAllDocumentsForApp } from "@/lib/supabase/queries";
+import { getTeams, getApplications, getAllDocumentsForApp, getApplicationGroups } from "@/lib/supabase/queries";
 import TeamSelector from "@/components/TeamSelector";
 import DocumentViewer from "@/components/DocumentViewer";
 import DocumentEditor from "@/components/DocumentEditor";
@@ -15,19 +16,25 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import ApplicationCreateDialog from "@/components/ApplicationCreateDialog";
 import ApplicationGroupManager from "@/components/ApplicationGroupManager";
 import ApplicationEditDialog from "@/components/ApplicationEditDialog";
+import GroupSection from "@/components/GroupSection";
+import ApplicationCard from "@/components/ApplicationCard";
 import { useRecentDocuments } from "@/hooks/useRecentDocuments";
 import { useToast } from "@/components/Toast";
 import { supabase } from "@/lib/supabase/client";
-import type { ApplicationWithDocs, Team, Application, Document, BreadcrumbItem } from "@/types";
+import type { ApplicationWithDocs, Team, Application, Document, BreadcrumbItem, ApplicationGroup } from "@/types";
 import type { SearchResult, DocumentSearchResult } from "@/lib/supabase/search";
 
 export default function Home() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [teams, setTeams] = useState<Team[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [groups, setGroups] = useState<ApplicationGroup[]>([]);
   const [applicationsWithDocs, setApplicationsWithDocs] = useState<ApplicationWithDocs[]>([]);
   const [recentDocs, setRecentDocs] = useState<any[]>([]);
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const [selectedDocumentAppName, setSelectedDocumentAppName] = useState<string>("");
   const [selectedDocumentAppId, setSelectedDocumentAppId] = useState<string>("");
@@ -96,13 +103,15 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const [teamsData, appsData] = await Promise.all([
+      const [teamsData, appsData, groupsData] = await Promise.all([
         getTeams(),
         getApplications(),
+        getApplicationGroups(),
       ]);
       
       setTeams(teamsData);
       setApplications(appsData);
+      setGroups(groupsData);
       
       if (teamsData.length > 0 && !selectedTeamId) {
         setSelectedTeamId(teamsData[0].id);
@@ -113,6 +122,34 @@ export default function Home() {
     
     loadData();
   }, []);
+
+  // Handle app and group query parameters from URL
+  useEffect(() => {
+    const appParam = searchParams.get('app');
+    const groupParam = searchParams.get('group');
+    
+    if (appParam && applications.length > 0) {
+      const appExists = applications.some((a) => a.id === appParam);
+      if (appExists) {
+        setSelectedApp(appParam);
+        setSelectedGroup(null);
+        setSelectedDocument(null);
+        setSelectedDocumentAppName("");
+        setSelectedDocumentAppId("");
+      }
+    }
+    
+    if (groupParam && groups.length > 0) {
+      const groupExists = groups.some((g) => g.id === groupParam);
+      if (groupExists) {
+        setSelectedGroup(groupParam);
+        setSelectedApp(null);
+        setSelectedDocument(null);
+        setSelectedDocumentAppName("");
+        setSelectedDocumentAppId("");
+      }
+    }
+  }, [searchParams, applications, groups]);
 
   // Update applications with docs when team or apps change
   useEffect(() => {
@@ -153,9 +190,11 @@ export default function Home() {
         label: "Home",
         onClick: () => {
           setSelectedApp(null);
+          setSelectedGroup(null);
           setSelectedDocument(null);
           setSelectedDocumentAppName("");
           setSelectedDocumentAppId("");
+          router.push("/");
         },
       },
     ];
@@ -167,6 +206,23 @@ export default function Home() {
           label: team.name,
           onClick: () => {
             setSelectedApp(null);
+            setSelectedDocument(null);
+            setSelectedDocumentAppName("");
+            setSelectedDocumentAppId("");
+          },
+        });
+      }
+    }
+
+    if (selectedGroup) {
+      const group = groups.find((g) => g.id === selectedGroup);
+      if (group) {
+        const GroupIcon = group.icon || Layers;
+        items.push({
+          label: group.name,
+          icon: <GroupIcon className="w-4 h-4" />,
+          onClick: () => {
+            setSelectedGroup(null);
             setSelectedDocument(null);
             setSelectedDocumentAppName("");
             setSelectedDocumentAppId("");
@@ -200,7 +256,7 @@ export default function Home() {
     }
 
     return items;
-  }, [selectedTeamId, selectedApp, selectedDocument, teams, applications]);
+  }, [selectedTeamId, selectedApp, selectedGroup, selectedDocument, teams, applications, groups, router]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -286,6 +342,7 @@ export default function Home() {
             recentDocuments={recentDocuments}
             onHomeClick={() => {
               setSelectedApp(null);
+              setSelectedGroup(null);
               setSelectedDocument(null);
               setSelectedDocumentAppName("");
               setSelectedDocumentAppId("");
@@ -330,14 +387,13 @@ export default function Home() {
                       setSelectedDocumentAppName("");
                       setSelectedDocumentAppId("");
                     } else if (result.type === 'group') {
-                      // For groups, we'll expand it in the sidebar and navigate to it
-                      // TODO: Implement group expansion in sidebar (requires Sidebar component changes)
-                      // For now, just clear document/app selection to show home view
+                      // Navigate to group overview in main page with URL param
+                      setSelectedGroup(result.id);
                       setSelectedApp(null);
                       setSelectedDocument(null);
                       setSelectedDocumentAppName("");
                       setSelectedDocumentAppId("");
-                      // In the future: expandGroupInSidebar(result.id);
+                      router.push(`/?group=${result.id}`);
                     } else {
                       // Document result (existing behavior)
                       const docResult = result as DocumentSearchResult;
@@ -502,60 +558,183 @@ export default function Home() {
           </div>
         )}
 
-        {/* Recent Documents */}
-        {!selectedDocument && !selectedApp && (
-          <div>
-          <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            Recent Documents
-          </h3>
-          {loading ? (
-            <div className="text-center py-12 text-gray-400">Loading...</div>
-          ) : recentDocs.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">No documents found</div>
-          ) : (
-            <div className="space-y-3">
-              {recentDocs.map((doc) => (
-                <div
-                  key={doc.id}
-                  onClick={() => {
-                    setSelectedDocument(doc);
-                    setSelectedDocumentAppName(doc.appName);
-                    const app = applications.find((a) => a.name === doc.appName);
-                    if (app) setSelectedDocumentAppId(app.id);
-                  }}
-                  className="group p-5 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold group-hover:text-blue-400 transition-colors">
-                          {doc.title}
-                        </h4>
-                        {doc.type === "base" && (
-                          <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded text-xs">
-                            Shared
-                          </span>
-                        )}
+        {/* Group Detail View */}
+        {selectedGroup && !selectedDocument && !selectedApp && (() => {
+          const group = groups.find((g) => g.id === selectedGroup);
+          if (!group) return null;
+          
+          const groupApps = applications.filter((app) => app.group_id === selectedGroup);
+          
+          return (
+            <div>
+              {/* Group Header */}
+              <div className="mb-8">
+                <div className="flex items-center gap-4 mb-4">
+                  {(() => {
+                    const GroupIcon = group.icon || Layers;
+                    
+                    // Helper function to get color values
+                    function getColorValues(colorString: string) {
+                      const [colorName, shade] = (colorString || 'gray-500').split('-');
+                      const shadeNum = shade || '500';
+                      const colorMap: Record<string, Record<string, string>> = {
+                        blue: { '400': '#60a5fa', '500': '#3b82f6', '600': '#2563eb' },
+                        purple: { '400': '#c084fc', '500': '#a855f7', '600': '#9333ea' },
+                        green: { '400': '#4ade80', '500': '#22c55e', '600': '#16a34a' },
+                        red: { '400': '#f87171', '500': '#ef4444', '600': '#dc2626' },
+                        orange: { '400': '#fb923c', '500': '#f97316', '600': '#ea580c' },
+                        yellow: { '400': '#facc15', '500': '#eab308', '600': '#ca8a04' },
+                        indigo: { '400': '#818cf8', '500': '#6366f1', '600': '#4f46e5' },
+                        pink: { '400': '#f472b6', '500': '#ec4899', '600': '#db2777' },
+                        teal: { '400': '#2dd4bf', '500': '#14b8a6', '600': '#0d9488' },
+                        cyan: { '400': '#22d3ee', '500': '#06b6d4', '600': '#0891b2' },
+                        gray: { '400': '#9ca3af', '500': '#6b7280', '600': '#4b5563' },
+                      };
+                      const baseColor = colorMap[colorName]?.[shadeNum] || colorMap.gray['500'];
+                      return {
+                        icon: baseColor,
+                        bg: `${baseColor}20`,
+                        border: `${baseColor}40`,
+                      };
+                    }
+                    
+                    const groupColors = group.color ? getColorValues(group.color) : getColorValues('gray-500');
+                    
+                    return (
+                      <div
+                        className="p-4 rounded-lg border border-white/20"
+                        style={{
+                          backgroundColor: groupColors.bg,
+                          borderColor: groupColors.border,
+                        }}
+                      >
+                        <GroupIcon className="w-8 h-8" style={{ color: groupColors.icon }} />
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-400">
-                        <span>{doc.appName}</span>
-                        <span className="text-gray-600">•</span>
-                        <span className="px-2 py-0.5 bg-white/5 rounded text-xs">
-                          {doc.category}
-                        </span>
-                        <span className="text-gray-600">•</span>
-                        <span>{doc.updated}</span>
-                      </div>
-                    </div>
-                    <button className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-400 hover:text-blue-300">
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
+                    );
+                  })()}
+                  <div>
+                    <h1 className="text-4xl font-bold mb-2">{group.name}</h1>
+                    <p className="text-gray-400">
+                      {groupApps.length} {groupApps.length === 1 ? 'application' : 'applications'}
+                    </p>
                   </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Applications Grid */}
+              {groupApps.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  <Layers className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>This group has no applications yet.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {groupApps.map((app) => (
+                    <ApplicationCard
+                      key={app.id}
+                      application={app}
+                      onClick={() => {
+                        router.push(`/?app=${app.id}`);
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          );
+        })()}
+
+        {/* Application Groups Overview */}
+        {!selectedDocument && !selectedApp && !selectedGroup && (
+          <div>
+            {loading ? (
+              <div className="text-center py-12 text-gray-400">Loading...</div>
+            ) : (
+              <>
+                {(() => {
+                  // Group applications by group_id
+                  const groupedApps: Record<string, Application[]> = {};
+                  const ungroupedApps: Application[] = [];
+
+                  applications.forEach((app) => {
+                    if (app.group_id) {
+                      if (!groupedApps[app.group_id]) {
+                        groupedApps[app.group_id] = [];
+                      }
+                      groupedApps[app.group_id].push(app);
+                    } else {
+                      ungroupedApps.push(app);
+                    }
+                  });
+
+                  // Sort groups by display_order, then by name
+                  const sortedGroups = [...groups].sort((a, b) => {
+                    if (a.display_order !== b.display_order) {
+                      return a.display_order - b.display_order;
+                    }
+                    return a.name.localeCompare(b.name);
+                  });
+
+                  // Filter groups to only show those with applications
+                  const groupsWithApps = sortedGroups.filter((group) => groupedApps[group.id]?.length > 0);
+
+                  return (
+                    <>
+                      {/* Grouped Applications */}
+                      {groupsWithApps.map((group) => (
+                        <div key={group.id} className="mb-8">
+                          <GroupSection
+                            group={group}
+                            applications={groupedApps[group.id] || []}
+                            onAppClick={(appId) => {
+                              router.push(`/?app=${appId}`);
+                            }}
+                            onGroupClick={() => router.push(`/?group=${group.id}`)}
+                          />
+                        </div>
+                      ))}
+
+                      {/* Ungrouped Applications */}
+                      {ungroupedApps.length > 0 && (
+                        <div className="mb-8">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 rounded-lg border border-white/20 bg-white/5">
+                              <Layers className="w-5 h-5 text-gray-400" />
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-semibold">Other Applications</h3>
+                              <p className="text-sm text-gray-400">
+                                {ungroupedApps.length} {ungroupedApps.length === 1 ? 'application' : 'applications'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            {ungroupedApps.map((app) => (
+                              <ApplicationCard
+                                key={app.id}
+                                application={app}
+                                onClick={() => {
+                                  router.push(`/?app=${app.id}`);
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Empty State */}
+                      {groupsWithApps.length === 0 && ungroupedApps.length === 0 && (
+                        <div className="text-center py-12 text-gray-400">
+                          <Layers className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                          <p>No applications found. Create an application to get started.</p>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </>
+            )}
           </div>
         )}
       </main>
@@ -596,9 +775,13 @@ export default function Home() {
           isOpen={showGroupManagerDialog}
           onClose={() => setShowGroupManagerDialog(false)}
           onGroupCreated={async () => {
-            // Refresh applications to get updated group assignments
-            const updatedApps = await getApplications();
+            // Refresh applications and groups to get updated group assignments
+            const [updatedApps, updatedGroups] = await Promise.all([
+              getApplications(),
+              getApplicationGroups(),
+            ]);
             setApplications(updatedApps);
+            setGroups(updatedGroups);
           }}
         />
       )}
