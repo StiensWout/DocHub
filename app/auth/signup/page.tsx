@@ -12,11 +12,14 @@ export default function SignUpPage() {
   const [lastName, setLastName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailVerificationRequired, setEmailVerificationRequired] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setEmailVerificationRequired(false);
 
     try {
       const response = await fetch("/api/auth/signup", {
@@ -33,7 +36,14 @@ export default function SignUpPage() {
         throw new Error(data.error || "Failed to create account");
       }
 
-      // Redirect to home page on success
+      // Check if email verification is required
+      if (data.requiresEmailVerification) {
+        setEmailVerificationRequired(true);
+        setUserEmail(data.email || email);
+        return;
+      }
+
+      // Redirect to home page on success (if no verification needed)
       router.push("/");
       router.refresh();
     } catch (err: any) {
@@ -59,13 +69,37 @@ export default function SignUpPage() {
 
           <h2 className="text-xl font-semibold mb-6 text-center">Create Account</h2>
 
-          {error && (
-            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
-              {error}
+          {emailVerificationRequired ? (
+            <div className="mb-6 p-6 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Mail className="w-6 h-6 text-blue-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-blue-400 mb-2">Check Your Email</h3>
+                  <p className="text-gray-300 text-sm mb-4">
+                    We've sent a verification email to <strong>{userEmail}</strong>. 
+                    Please click the link in the email to verify your account before signing in.
+                  </p>
+                  <p className="text-gray-400 text-xs">
+                    Didn't receive the email? Check your spam folder or try signing up again.
+                  </p>
+                  <button
+                    onClick={() => router.push("/auth/signin")}
+                    className="mt-4 text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                  >
+                    Go to Sign In →
+                  </button>
+                </div>
+              </div>
             </div>
-          )}
+          ) : (
+            <>
+              {error && (
+                <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium mb-2 text-gray-300">
