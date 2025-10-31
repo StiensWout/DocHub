@@ -1,132 +1,91 @@
 # DocHub Documentation
 
-Welcome to the DocHub documentation! This directory contains comprehensive guides for getting started, development, architecture, and features.
+Welcome to the DocHub documentation. This index helps you navigate all available documentation.
+
+## 📍 Quick Start
+
+1. **Getting Started**: [Installation Guide](GETTING_STARTED/INSTALLATION.md) | [Configuration Guide](GETTING_STARTED/CONFIGURATION.md)
+2. **Current Status**: [Status Overview](STATUS.md) - **Start here to understand what's been done**
+3. **Roadmap**: [Product Roadmap](ROADMAP.md) - What's planned and completed
 
 ## 📚 Documentation Structure
 
-### 🚀 Getting Started
-**Start here if you're new to DocHub**
+### Status & Overview
+- **[STATUS.md](STATUS.md)** ⭐ - Current state of the project, what's done, what's next
+- **[ROADMAP.md](ROADMAP.md)** - Feature roadmap and completed items
+- **[CHANGELOG.md](CHANGELOG.md)** - Detailed change history
 
-- **[Installation Guide](GETTING_STARTED/INSTALLATION.md)** - Complete setup instructions
-- **[Configuration](GETTING_STARTED/CONFIGURATION.md)** - Environment and storage configuration
+### Getting Started
+- **[Installation](GETTING_STARTED/INSTALLATION.md)** - How to set up DocHub locally
+- **[Configuration](GETTING_STARTED/CONFIGURATION.md)** - Environment variables and settings
+- **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 
-### 🏗️ Architecture
-**Understand how DocHub is built**
+### Architecture
+- **[Overview](ARCHITECTURE/OVERVIEW.md)** - High-level system architecture
+- **[Components](ARCHITECTURE/COMPONENTS.md)** - Component structure and organization
+- **[Database](ARCHITECTURE/DATABASE.md)** - Database schema and design
 
-- **[Overview](ARCHITECTURE/OVERVIEW.md)** - High-level architecture and tech stack
-- **[Database](ARCHITECTURE/DATABASE.md)** - Database schema and relationships
-- **[Components](ARCHITECTURE/COMPONENTS.md)** - Component structure and patterns
+### Features
 
-### 💻 Development
-**Developer guides and workflows**
+#### Completed Features
+- **[User Profile & Organization Display](FEATURES/completed/user-profile-and-org-display.md)** - User profiles and org display
+- **[Auto Team Creation from Organizations](FEATURES/completed/auto-team-creation-from-organizations.md)** - Automatic team sync
+- **[WorkOS Organization Memberships](FEATURES/completed/workos-organization-memberships-groups.md)** - Groups from WorkOS
+- **[User Groups & Access Control](FEATURES/completed/user-groups-access-control.md)** - Access control system
+- **[Main Page Group Overview](FEATURES/completed/main-page-group-overview.md)** - Application groups
+- **[Search Enhancements](FEATURES/completed/search-enhancements.md)** - Search functionality
+- **[File Upload System](FEATURES/completed/file-upload-viewing-system.md)** - File handling
+- **[Document Viewer](FEATURES/completed/document-viewer-enhancements.md)** - Document display
+- **[Enhanced Navigation](FEATURES/completed/enhanced-navigation.md)** - Navigation system
 
-- **[Development Guide](DEVELOPMENT/GUIDE.md)** - Development workflow and best practices
-- **[Testing](DEVELOPMENT/TESTING.md)** - Testing procedures and validation
+#### Pending Features
+- **[WorkOS AuthKit Integration](FEATURES/pending/workos-authkit-integration.md)** - AuthKit features (MFA, Magic Link, etc.)
+- **[WorkOS Setup Guide](FEATURES/pending/workos-setup-guide.md)** - Setting up WorkOS
+- **[Application Management](FEATURES/pending/application-management.md)** - Advanced app management
+- **[Auth Provider Switching](FEATURES/pending/auth-provider-switching.md)** - Switching SSO providers
 
-### ✨ Features
-**Feature documentation and specifications**
+#### Guides
+- **[Rich Text Editor Guide](FEATURES/guides/rich-text-editor.md)** - Using the editor
 
-- **[Feature Guides](FEATURES/guides/)** - How to use specific features
-  - [Rich Text Editor](FEATURES/guides/rich-text-editor.md)
-- **[Completed Features](FEATURES/completed/)** - Completed feature specifications
-- **[Pending Features](FEATURES/pending/)** - Planned feature specifications
+### Development
+- **[Development Guide](DEVELOPMENT/GUIDE.md)** - How to contribute and develop
+- **[Testing Guide](DEVELOPMENT/TESTING.md)** - Testing strategies
+- **[WorkOS SSO Docs](DEVELOPMENT/workossso.md)** - WorkOS SSO implementation details
 
-### 📋 Planning & History
-**Project planning and changelog**
+## 🎯 Current Status
 
-- **[Roadmap](ROADMAP.md)** - Planned features and timeline
-- **[Changelog](CHANGELOG.md)** - History of completed features and changes
+**For the most up-to-date status, see [STATUS.md](STATUS.md)**
 
----
+### What's Working Now ✅
+- ✅ WorkOS SSO Authentication
+- ✅ WorkOS Organization Memberships (groups from organizations)
+- ✅ Automatic team creation from organizations
+- ✅ User profile pages
+- ✅ Organization/team display in UI
+- ✅ Team filtering and access control
+- ✅ Document management
+- ✅ File upload/viewing
+- ✅ Application groups
 
-## 🎯 Quick Navigation
+### What's Next 🚧
+- Advanced WorkOS AuthKit features (MFA, Magic Link)
+- Enhanced collaboration features
+- Performance optimizations
 
-### I want to...
+## 📖 How to Use This Documentation
 
-**...set up DocHub for the first time:**
-1. Read [Installation Guide](GETTING_STARTED/INSTALLATION.md)
-2. Follow [Configuration](GETTING_STARTED/CONFIGURATION.md)
+1. **New to DocHub?** Start with [STATUS.md](STATUS.md) and [Getting Started](GETTING_STARTED/INSTALLATION.md)
+2. **Setting up authentication?** See [WorkOS Setup Guide](FEATURES/pending/workos-setup-guide.md)
+3. **Understanding architecture?** Read [Architecture Overview](ARCHITECTURE/OVERVIEW.md)
+4. **Want to contribute?** Check [Development Guide](DEVELOPMENT/GUIDE.md)
+5. **Looking for features?** Browse [Completed Features](FEATURES/completed/) and [Roadmap](ROADMAP.md)
 
-**...start developing:**
-1. Read [Development Guide](DEVELOPMENT/GUIDE.md)
-2. Check [Architecture Overview](ARCHITECTURE/OVERVIEW.md)
+## 🤝 Need Help?
 
-**...understand the database:**
-1. Read [Database Architecture](ARCHITECTURE/DATABASE.md)
-
-**...work with features:**
-1. Check [Feature Guides](FEATURES/guides/)
-2. Review [Completed Features](FEATURES/completed/) for specs
-
-**...see what's planned:**
-1. Check [Roadmap](ROADMAP.md)
-2. Review [Pending Features](FEATURES/pending/)
-
-**...see what changed:**
-1. Read [Changelog](CHANGELOG.md)
-
----
-
-## 📂 File Structure
-
-```
-docs/
-├── README.md                    # This file - documentation index
-├── ROADMAP.md                   # Product roadmap
-├── CHANGELOG.md                 # Feature history and changes
-│
-├── GETTING_STARTED/             # Setup guides
-│   ├── INSTALLATION.md          # Complete installation guide
-│   └── CONFIGURATION.md         # Environment & storage config
-│
-├── ARCHITECTURE/                # Technical documentation
-│   ├── OVERVIEW.md              # Architecture overview
-│   ├── DATABASE.md              # Database schema
-│   └── COMPONENTS.md            # Component structure
-│
-├── DEVELOPMENT/                 # Development guides
-│   ├── GUIDE.md                 # Development workflow
-│   └── TESTING.md               # Testing procedures
-│
-└── FEATURES/                    # Feature documentation
-    ├── guides/                  # Feature usage guides
-    │   └── rich-text-editor.md
-    ├── completed/               # Completed feature specs
-    └── pending/                # Planned feature specs
-```
+- Check [Troubleshooting](TROUBLESHOOTING.md) for common issues
+- Review [Status](STATUS.md) for current state
+- See [Development Guide](DEVELOPMENT/GUIDE.md) for contribution guidelines
 
 ---
 
-## 🔄 Documentation Guidelines
-
-### When Adding Documentation
-
-1. **Feature documentation** → `FEATURES/guides/` or `FEATURES/completed/`
-2. **Setup instructions** → `GETTING_STARTED/`
-3. **Architecture changes** → `ARCHITECTURE/`
-4. **Development info** → `DEVELOPMENT/`
-5. **Completed features** → Update `CHANGELOG.md`
-6. **Planned features** → Update `ROADMAP.md`
-
-### Documentation Standards
-
-- Use clear headings and structure
-- Include code examples where relevant
-- Add troubleshooting sections for setup guides
-- Cross-reference related documentation
-- Keep content up-to-date with codebase
-
----
-
-## 🔗 External Resources
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Supabase Documentation](https://supabase.com/docs)
-- [Tiptap Documentation](https://tiptap.dev/docs)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-
----
-
-**Last Updated**: 2025-01-30  
-**Maintainer**: Development Team
+**Last Updated**: 2025-01-30
