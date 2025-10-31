@@ -100,7 +100,7 @@ export default function SignUpPage() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium mb-2 text-gray-300">
                   First Name
@@ -189,18 +189,22 @@ export default function SignUpPage() {
               ) : (
                 "Create Account"
               )}
-            </button>
-          </form>
+                </button>
+              </form>
+            </>
+          )}
 
-          <p className="mt-6 text-center text-sm text-gray-400">
-            Already have an account?{" "}
-            <a
-              href="/auth/signin"
-              className="text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              Sign in
-            </a>
-          </p>
+          {!emailVerificationRequired && (
+            <p className="mt-6 text-center text-sm text-gray-400">
+              Already have an account?{" "}
+              <a
+                href="/auth/signin"
+                className="text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                Sign in
+              </a>
+            </p>
+          )}
         </div>
       </div>
     </div>
