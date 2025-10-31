@@ -161,14 +161,31 @@ export async function syncTeamsFromUserOrganizations(userId: string, cachedMembe
 export async function isUserInAdminOrganization(userId: string, cachedMemberships?: any[]): Promise<boolean> {
   try {
     const adminOrgName = process.env.WORKOS_ADMIN_ORGANIZATION_NAME || 'admin';
+    console.log(`[isUserInAdminOrganization] Checking admin status for user ${userId}`);
+    console.log(`[isUserInAdminOrganization] Looking for organization name: "${adminOrgName}" (case-insensitive)`);
+    
     // Use cached memberships if provided, otherwise fetch (will use cache)
     const memberships = cachedMemberships || await getUserOrganizationMemberships(userId, true);
+    console.log(`[isUserInAdminOrganization] Found ${memberships.length} organization memberships:`, 
+      memberships.map(m => m.organizationName));
     
-    return memberships.some(m => 
+    const isAdmin = memberships.some(m => 
       m.organizationName.toLowerCase() === adminOrgName.toLowerCase()
     );
+    
+    if (isAdmin) {
+      const matchingOrg = memberships.find(m => 
+        m.organizationName.toLowerCase() === adminOrgName.toLowerCase()
+      );
+      console.log(`[isUserInAdminOrganization] ✅ User IS in admin organization: "${matchingOrg?.organizationName}"`);
+    } else {
+      console.log(`[isUserInAdminOrganization] ❌ User is NOT in admin organization. Expected: "${adminOrgName}"`);
+      console.log(`[isUserInAdminOrganization] User's organizations:`, memberships.map(m => m.organizationName));
+    }
+    
+    return isAdmin;
   } catch (error: any) {
-    console.error('Error checking admin organization membership:', error);
+    console.error('[isUserInAdminOrganization] Error checking admin organization membership:', error);
     return false;
   }
 }

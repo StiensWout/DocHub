@@ -178,13 +178,16 @@ export async function isAdmin(userId?: string): Promise<boolean> {
     // If using WorkOS Organizations, check admin organization membership
     if (useWorkOSGroups) {
       try {
+        console.log(`[isAdmin] Checking WorkOS admin organization for user: ${targetUserId}`);
         const isInAdminOrg = await isUserInAdminOrganization(targetUserId);
         if (isInAdminOrg) {
+          console.log(`[isAdmin] ✅ User ${targetUserId} is admin via WorkOS organization`);
           return true;
         }
+        console.log(`[isAdmin] User ${targetUserId} is NOT in admin organization, checking database fallback`);
         // Fall through to database check as backup
       } catch (error: any) {
-        console.warn('Error checking WorkOS admin organization, falling back to database:', error.message);
+        console.warn('[isAdmin] Error checking WorkOS admin organization, falling back to database:', error.message);
         // Fall through to database check
       }
     }
