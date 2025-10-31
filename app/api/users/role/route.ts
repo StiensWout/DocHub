@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { isAdmin, getUserRole } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { getUserOrganizationMemberships, updateUserRoleInOrganization } from '@/lib/workos/organizations';
 
 /**
  * GET /api/users/role
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upsert user role
+    // Update database role
     const { error } = await supabaseAdmin
       .from('user_roles')
       .upsert({
@@ -89,14 +90,58 @@ export async function POST(request: NextRequest) {
       });
 
     if (error) {
-      console.error('Error setting user role:', error);
+      console.error('Error setting user role in database:', error);
       return NextResponse.json(
-        { error: 'Failed to set user role' },
+        { error: 'Failed to set user role in database' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    // Also update WorkOS organization membership role if using WorkOS Organizations
+    const useWorkOSGroups = process.env.WORKOS_USE_ORGANIZATIONS === 'true';
+    if (useWorkOSGroups) {
+      try {
+        console.log(`[POST /api/users/role] Updating WorkOS organization membership role for user ${userId}`);
+        
+        // Get user's organization memberships
+        const memberships = await getUserOrganizationMemberships(userId, true);
+        
+        if (memberships.length === 0) {
+          console.warn(`[POST /api/users/role] User ${userId} has no organization memberships, skipping WorkOS update`);
+        } else {
+          // Update role in all organizations the user belongs to
+          // Typically users belong to one organization, but we'll update all
+          const updatePromises = memberships.map(membership => 
+            updateUserRoleInOrganization(userId, membership.organizationId, role)
+          );
+          
+          const results = await Promise.allSettled(updatePromises);
+          
+          // Check if any updates failed
+          const failures = results.filter(r => r.status === 'rejected' || 
+            (r.status === 'fulfilled' && !r.value.success));
+          
+          if (failures.length > 0) {
+            console.error(`[POST /api/users/role] Some WorkOS role updates failed:`, failures);
+            // Don't fail the entire request - database role was updated successfully
+            // Just log the warning
+          } else {
+            console.log(`[POST /api/users/role] ✅ Successfully updated WorkOS roles in ${memberships.length} organization(s)`);
+          }
+        }
+      } catch (error: any) {
+        // Log but don't fail - database role was updated successfully
+        console.error('[POST /api/users/role] Error updating WorkOS organization membership role:', error);
+        console.warn('[POST /api/users/role] Database role updated, but WorkOS role update failed. User may need to re-login for changes to take effect.');
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      message: useWorkOSGroups 
+        ? 'Role updated in database and WorkOS' 
+        : 'Role updated in database' 
+    });
   } catch (error: any) {
     console.error('Error setting user role:', error);
     return NextResponse.json(

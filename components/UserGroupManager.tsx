@@ -6,8 +6,15 @@ import { X, Users, Shield, Save, Loader2 } from "lucide-react";
 interface User {
   userId: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
   role: 'admin' | 'user';
   groups: string[];
+  organizations?: Array<{
+    id: string;
+    name: string;
+    role: string;
+  }>;
 }
 
 interface UserGroupManagerProps {
@@ -93,20 +100,29 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
 
   const handleSetRole = async (userId: string, role: 'admin' | 'user') => {
     try {
+      setSaving(true);
       const response = await fetch('/api/users/role', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, role }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to set user role');
+        throw new Error(data.error || 'Failed to set user role');
       }
 
+      // Show success message
+      alert(`Role updated successfully! ${data.message || ''}`);
+      
+      // Refresh users to get updated data
       await loadUsers();
     } catch (error: any) {
       console.error('Error setting role:', error);
       alert('Failed to set role: ' + error.message);
+    } finally {
+      setSaving(false);
     }
   };
 

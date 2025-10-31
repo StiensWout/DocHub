@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { isAdmin, getAllUsers } from '@/lib/auth/user-groups';
 import { workos } from '@/lib/workos/server';
+import { getUserOrganizationMemberships } from '@/lib/workos/organizations';
 
 /**
  * GET /api/users/all
  * Get all users in the organization (admin only)
+ * Enriched with WorkOS profile data and organization memberships
  */
 export async function GET(request: NextRequest) {
   try {
@@ -19,23 +21,49 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
     }
 
-    // Get users from WorkOS (SSO profiles)
-    // Note: This requires WorkOS Directory Sync or manual tracking
-    // For now, we'll use the database user_roles and user_groups tables
-    
+    // Get users from database
     const users = await getAllUsers();
 
-    // Optionally enrich with WorkOS profile data
+    // Enrich with WorkOS profile data and organization memberships
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
         try {
-          // Try to get profile from WorkOS
-          // Note: This may require different API depending on how users are stored
+          // Get user profile from WorkOS
+          let userProfile = null;
+          try {
+            const workosUser = await workos.userManagement.getUser(user.userId);
+            userProfile = {
+              email: workosUser.email,
+              firstName: workosUser.firstName,
+              lastName: workosUser.lastName,
+              emailVerified: workosUser.emailVerified,
+            };
+          } catch (error: any) {
+            // User might be SSO user, not User Management user
+            console.warn(`Could not fetch WorkOS user ${user.userId}:`, error.message);
+          }
+
+          // Get organization memberships
+          let memberships: any[] = [];
+          try {
+            memberships = await getUserOrganizationMemberships(user.userId, true);
+          } catch (error: any) {
+            console.warn(`Could not fetch memberships for user ${user.userId}:`, error.message);
+          }
+
           return {
             ...user,
-            // Profile data can be added here if available from WorkOS
+            email: userProfile?.email || user.email,
+            firstName: userProfile?.firstName,
+            lastName: userProfile?.lastName,
+            emailVerified: userProfile?.emailVerified || false,
+            organizations: memberships.map(m => ({
+              id: m.organizationId,
+              name: m.organizationName,
+              role: typeof m.role === 'string' ? m.role : (m.role as any)?.slug || (m.role as any)?.name || '',
+            })),
           };
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Error enriching user ${user.userId}:`, error);
           return user;
         }

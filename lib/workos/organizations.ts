@@ -312,3 +312,51 @@ export async function removeUserFromOrganization(userId: string, organizationId:
   }
 }
 
+/**
+ * Update user's role in an organization
+ * Requires admin privileges or appropriate permissions
+ */
+export async function updateUserRoleInOrganization(
+  userId: string, 
+  organizationId: string, 
+  newRole: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log(`[updateUserRoleInOrganization] Updating role for user ${userId} in org ${organizationId} to "${newRole}"`);
+    
+    // Get the user's organization memberships
+    const { data: memberships, error: listError } = await workos.userManagement.listOrganizationMemberships({
+      userId: userId,
+    });
+
+    if (listError) {
+      console.error('[updateUserRoleInOrganization] Error listing memberships:', listError);
+      return { success: false, error: `Failed to get user memberships: ${listError.message}` };
+    }
+
+    // Find the membership for this organization
+    const membership = memberships?.find(m => m.organizationId === organizationId);
+    
+    if (!membership || !membership.id) {
+      console.log(`[updateUserRoleInOrganization] User is not a member of organization ${organizationId}`);
+      return { success: false, error: 'User is not a member of this organization' };
+    }
+
+    // Update the membership role
+    const { error: updateError } = await workos.userManagement.updateOrganizationMembership(membership.id, {
+      role: newRole,
+    });
+
+    if (updateError) {
+      console.error('[updateUserRoleInOrganization] Error updating membership:', updateError);
+      return { success: false, error: `Failed to update role: ${updateError.message}` };
+    }
+
+    console.log(`[updateUserRoleInOrganization] ✅ Successfully updated role to "${newRole}"`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('[updateUserRoleInOrganization] Exception updating role:', error);
+    return { success: false, error: error.message || 'Failed to update user role' };
+  }
+}
+
