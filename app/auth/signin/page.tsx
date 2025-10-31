@@ -26,12 +26,40 @@ export default function SignInPage() {
       setLoading(true);
       setError(null);
       
-      // Redirect to WorkOS OAuth flow with Microsoft provider
+      // Check if client ID is available
       const WORKOS_CLIENT_ID = requireWorkOSClientId();
-      const authUrl = `https://api.workos.com/user_management/authorize?client_id=${WORKOS_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&provider=microsoft`;
+      
+      if (!WORKOS_CLIENT_ID) {
+        throw new Error('WorkOS Client ID is not configured. Please set NEXT_PUBLIC_WORKOS_CLIENT_ID in your environment variables.');
+      }
+      
+      if (!REDIRECT_URI) {
+        throw new Error('Redirect URI is not configured. Please set NEXT_PUBLIC_WORKOS_REDIRECT_URI in your environment variables.');
+      }
+      
+      // WorkOS AuthKit authorize endpoint for social login
+      // Format: https://api.workos.com/user_management/authorize
+      const params = new URLSearchParams({
+        client_id: WORKOS_CLIENT_ID,
+        redirect_uri: REDIRECT_URI,
+        response_type: 'code',
+        provider: 'microsoft',
+      });
+      
+      const authUrl = `https://api.workos.com/user_management/authorize?${params.toString()}`;
+      
+      console.log('Redirecting to WorkOS:', {
+        url: authUrl,
+        clientId: WORKOS_CLIENT_ID.substring(0, 10) + '...',
+        redirectUri: REDIRECT_URI,
+      });
+      
+      // Redirect to WorkOS OAuth flow
       window.location.href = authUrl;
     } catch (err: any) {
-      setError(err.message || 'OAuth configuration error. Please check your environment variables.');
+      console.error('Microsoft sign-in error:', err);
+      const errorMessage = err.message || 'OAuth configuration error. Please check your environment variables.';
+      setError(errorMessage);
       setLoading(false);
     }
   };
