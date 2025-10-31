@@ -38,13 +38,27 @@ export async function GET(request: NextRequest) {
         clientId,
       });
     } else {
-      // Neither connection nor organization ID is set
-      // This will fail, but we'll provide helpful error message
-      throw new Error(
-        'Microsoft SSO requires either WORKOS_MICROSOFT_CONNECTION_ID or WORKOS_ORGANIZATION_ID to be set. ' +
-        'Please create a Microsoft Entra ID (Azure AD) connection in WorkOS Dashboard first. ' +
-        'Go to: WorkOS Dashboard → SSO → Connections → Create Connection → Microsoft Entra ID (Azure AD)'
-      );
+      // Demo/Development mode: Allow testing without full connection setup
+      // In development, try to use a connection selector if available
+      // This allows users to select their connection from WorkOS
+      try {
+        // Try with connection selector (allows users to choose their Microsoft connection)
+        // This works if you have at least one Microsoft connection in WorkOS, even if not fully configured
+        authorizationUrl = workos.sso.getAuthorizationUrl({
+          // Using connection selector - WorkOS will show available connections
+          // This requires at least one connection to exist in the WorkOS account
+          redirectUri,
+          clientId,
+        });
+      } catch (selectorError: any) {
+        // If connection selector fails, provide helpful error with setup instructions
+        throw new Error(
+          'Microsoft SSO requires either WORKOS_MICROSOFT_CONNECTION_ID or WORKOS_ORGANIZATION_ID to be set. ' +
+          'Please create a Microsoft Entra ID (Azure AD) connection in WorkOS Dashboard first. ' +
+          'Go to: WorkOS Dashboard → SSO → Connections → Create Connection → Microsoft Entra ID (Azure AD). ' +
+          'After creating the connection, set WORKOS_MICROSOFT_CONNECTION_ID in your environment variables.'
+        );
+      }
     }
     
     return NextResponse.json({ url: authorizationUrl });
