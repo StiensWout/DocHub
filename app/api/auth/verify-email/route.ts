@@ -4,82 +4,86 @@ import { workos } from '@/lib/workos/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { token, pendingAuthenticationToken } = body;
+    const { code, pendingAuthenticationToken } = body;
 
-    if (!token && !pendingAuthenticationToken) {
+    if (!code && !pendingAuthenticationToken) {
       return NextResponse.json(
-        { error: 'Verification token or pending authentication token is required' },
+        { error: 'Verification code and pending authentication token are required' },
         { status: 400 }
       );
     }
 
-    // Verify email and authenticate using pending authentication token
-    if (pendingAuthenticationToken) {
-      const { user, accessToken, refreshToken } = await workos.userManagement.authenticateWithEmailVerification({
-        pendingAuthenticationToken,
-        clientId: process.env.NEXT_PUBLIC_WORKOS_CLIENT_ID!,
-      });
+    if (!code) {
+      return NextResponse.json(
+        { error: 'Verification code is required' },
+        { status: 400 }
+      );
+    }
 
-      const response = NextResponse.json({
-        success: true,
-        user: {
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          emailVerified: user.emailVerified,
-        },
-      });
+    if (!pendingAuthenticationToken) {
+      return NextResponse.json(
+        { error: 'Pending authentication token is required' },
+        { status: 400 }
+      );
+    }
 
-      // Set session cookies
-      response.cookies.set('wos-session', accessToken, {
+    // Verify email with code and authenticate using pending authentication token
+    const { user, accessToken, refreshToken } = await workos.userManagement.authenticateWithEmailVerificationCode({
+      code,
+      pendingAuthenticationToken,
+      clientId: process.env.NEXT_PUBLIC_WORKOS_CLIENT_ID!,
+    });
+
+    const response = NextResponse.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        emailVerified: user.emailVerified,
+      },
+    });
+
+    // Set session cookies
+    response.cookies.set('wos-session', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    });
+
+    if (refreshToken) {
+      response.cookies.set('wos-refresh-token', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7, // 7 days
+        maxAge: 60 * 60 * 24 * 30, // 30 days
         path: '/',
       });
-
-      if (refreshToken) {
-        response.cookies.set('wos-refresh-token', refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 60 * 60 * 24 * 30, // 30 days
-          path: '/',
-        });
-      }
-
-      return response;
     }
 
-    // Alternative: verify using email verification token directly
-    // This might be used if WorkOS sends a different flow
-    if (token) {
-      // Use the token to verify email - exact method depends on WorkOS API
-      // This is a placeholder - check WorkOS docs for exact implementation
-      return NextResponse.json(
-        { error: 'Token verification not yet implemented. Use pending authentication token.' },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Invalid verification request' },
-      { status: 400 }
-    );
+    return response;
   } catch (error: any) {
     console.error('Email verification error:', error);
     
     if (error.status === 400 || error.status === 401) {
       return NextResponse.json(
-        { error: 'Invalid or expired verification token' },
+        { error: 'Invalid or expired verification code. Please check the code and try again.' },
+        { status: 400 }
+      );
+    }
+
+    if (error.status === 404) {
+      return NextResponse.json(
+        { error: 'Verification code not found. Please request a new code.' },
         { status: 400 }
       );
     }
 
     return NextResponse.json(
-      { error: 'Failed to verify email' },
+      { error: 'Failed to verify email. Please try again.' },
       { status: 500 }
     );
   }

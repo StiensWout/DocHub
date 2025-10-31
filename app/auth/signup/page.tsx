@@ -14,6 +14,9 @@ export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null);
   const [emailVerificationRequired, setEmailVerificationRequired] = useState(false);
   const [userEmail, setUserEmail] = useState<string>("");
+  const [verificationCode, setVerificationCode] = useState<string>("");
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  const [pendingAuthToken, setPendingAuthToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +43,7 @@ export default function SignUpPage() {
       if (data.requiresEmailVerification) {
         setEmailVerificationRequired(true);
         setUserEmail(data.email || email);
+        setPendingAuthToken(data.pendingAuthenticationToken || null);
         return;
       }
 
@@ -70,26 +74,109 @@ export default function SignUpPage() {
           <h2 className="text-xl font-semibold mb-6 text-center">Create Account</h2>
 
           {emailVerificationRequired ? (
-            <div className="mb-6 p-6 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-              <div className="flex items-start gap-3">
-                <Mail className="w-6 h-6 text-blue-400 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-blue-400 mb-2">Check Your Email</h3>
-                  <p className="text-gray-300 text-sm mb-4">
-                    We've sent a verification email to <strong>{userEmail}</strong>. 
-                    Please click the link in the email to verify your account before signing in.
-                  </p>
-                  <p className="text-gray-400 text-xs">
-                    Didn't receive the email? Check your spam folder or try signing up again.
-                  </p>
-                  <button
-                    onClick={() => router.push("/auth/signin")}
-                    className="mt-4 text-blue-400 hover:text-blue-300 text-sm transition-colors"
-                  >
-                    Go to Sign In →
-                  </button>
+            <div className="mb-6 space-y-4">
+              <div className="p-6 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Mail className="w-6 h-6 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="font-semibold text-blue-400 mb-2">Check Your Email</h3>
+                    <p className="text-gray-300 text-sm mb-4">
+                      We've sent a verification code to <strong>{userEmail}</strong>. 
+                      Please enter the code below to verify your account.
+                    </p>
+                    <p className="text-gray-400 text-xs">
+                      Didn't receive the code? Check your spam folder or try signing up again.
+                    </p>
+                  </div>
                 </div>
               </div>
+
+              {error && (
+                <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!verificationCode || !pendingAuthToken) return;
+
+                  setVerifyingCode(true);
+                  setError(null);
+
+                  try {
+                    const response = await fetch("/api/auth/verify-email", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        code: verificationCode,
+                        pendingAuthenticationToken: pendingAuthToken,
+                      }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                      throw new Error(data.error || "Failed to verify email");
+                    }
+
+                    // Success! Redirect to home
+                    router.push("/");
+                    router.refresh();
+                  } catch (err: any) {
+                    setError(err.message || "Failed to verify code");
+                  } finally {
+                    setVerifyingCode(false);
+                  }
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label htmlFor="verificationCode" className="block text-sm font-medium mb-2 text-gray-300">
+                    Verification Code
+                  </label>
+                  <input
+                    id="verificationCode"
+                    type="text"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    required
+                    maxLength={6}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 text-center text-2xl tracking-widest"
+                    placeholder="000000"
+                    autoComplete="one-time-code"
+                  />
+                  <p className="mt-2 text-xs text-gray-400 text-center">
+                    Enter the 6-digit code from your email
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={verifyingCode || !verificationCode || verificationCode.length !== 6}
+                  className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {verifyingCode ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    "Verify Email"
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => router.push("/auth/signin")}
+                  className="w-full py-2 text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                >
+                  Go to Sign In →
+                </button>
+              </form>
             </div>
           ) : (
             <>
