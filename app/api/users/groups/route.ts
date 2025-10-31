@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { getUserGroups, isAdmin } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { log } from '@/lib/logger';
 
 /**
  * GET /api/users/groups
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
     const groups = await getUserGroups(session.user.id);
     return NextResponse.json({ groups });
   } catch (error: any) {
-    console.error('Error getting user groups:', error);
+    log.error('Error getting user groups:', error);
     return NextResponse.json(
       { error: 'Failed to get user groups' },
       { status: 500 }
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
         .insert(groupInserts);
 
       if (error) {
-        console.error('Error assigning user groups:', error);
+        log.error('Error assigning user groups:', error);
         return NextResponse.json(
           { error: 'Failed to assign user groups' },
           { status: 500 }
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Error assigning user groups:', error);
+    log.error('Error assigning user groups:', error);
     return NextResponse.json(
       { error: 'Failed to assign user groups' },
       { status: 500 }

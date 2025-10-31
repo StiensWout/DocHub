@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { workos } from '@/lib/workos/server';
+import { log } from '@/lib/logger';
 
 /**
  * Generic SSO authorization endpoint
@@ -67,15 +68,15 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    console.log(`SSO authorization using: ${configMethod}`);
+    log.debug(`SSO authorization using: ${configMethod}`);
     if (organizationId && !connectionId) {
-      console.log(`✅ Using organization ID (${organizationId}). To switch providers, update the organization's connection in WorkOS Dashboard.`);
+      log.debug(`✅ Using organization ID (${organizationId}). To switch providers, update the organization's connection in WorkOS Dashboard.`);
     }
     
     return NextResponse.json({ url: authorizationUrl });
   } catch (error: any) {
-    console.error('SSO authorization error:', error);
-    console.error('Error details:', {
+    log.error('SSO authorization error:', error);
+    log.error('Error details:', {
       message: error.message,
       status: error.status,
       code: error.code,

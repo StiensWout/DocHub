@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { getUserGroups, isAdmin } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { log } from '@/lib/logger';
 
 /**
  * GET /api/documents?teamId=xxx&appId=xxx
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
       .order('updated_at', { ascending: false });
 
     if (baseError) {
-      console.error('Error fetching base documents:', baseError);
+      log.error('Error fetching base documents:', baseError);
       return NextResponse.json(
         { error: 'Failed to fetch documents' },
         { status: 500 }
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
           .in('group_name', userGroups);
 
         if (accessError) {
-          console.error('Error fetching accessible documents:', accessError);
+          log.error('Error fetching accessible documents:', accessError);
         }
 
         const accessibleDocIds = accessibleDocs?.map(d => d.team_document_id) || [];
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
     const { data: teamDocs, error: teamError } = await teamDocsQuery.order('updated_at', { ascending: false });
 
     if (teamError) {
-      console.error('Error fetching team documents:', teamError);
+      log.error('Error fetching team documents:', teamError);
       return NextResponse.json(
         { error: 'Failed to fetch documents' },
         { status: 500 }
@@ -108,7 +109,7 @@ export async function GET(request: NextRequest) {
       userGroups,
     });
   } catch (error: any) {
-    console.error('Error getting documents:', error);
+    log.error('Error getting documents:', error);
     return NextResponse.json(
       { error: 'Failed to get documents' },
       { status: 500 }

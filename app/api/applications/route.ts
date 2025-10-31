@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { log } from '@/lib/logger';
 
 /**
  * POST /api/applications
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (error) {
-      console.error('Error creating application:', error);
+      log.error('Error creating application:', error);
       
       if (error.code === '23505') {
         return NextResponse.json(
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Unexpected error creating application:', error);
+    log.error('Unexpected error creating application:', error);
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
       { status: 500 }
@@ -95,7 +96,7 @@ export async function GET(request: NextRequest) {
       .order('name');
 
     if (error) {
-      console.error('Error fetching applications:', error);
+      log.error('Error fetching applications:', error);
       return NextResponse.json(
         { error: 'Failed to fetch applications' },
         { status: 500 }
@@ -104,7 +105,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ applications: data || [] });
   } catch (error: any) {
-    console.error('Unexpected error fetching applications:', error);
+    log.error('Unexpected error fetching applications:', error);
     return NextResponse.json(
       { error: 'An unexpected error occurred' },
       { status: 500 }

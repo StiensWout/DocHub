@@ -3,6 +3,7 @@ import { workos } from '@/lib/workos/server';
 import { REDIRECT_URI } from '@/lib/workos/client';
 import { getUserGroups } from '@/lib/auth/user-groups';
 import { syncUserFromWorkOS } from '@/lib/workos/user-sync';
+import { log } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,22 +29,22 @@ export async function POST(request: NextRequest) {
     // Sync user to local database immediately after authentication
     // This ensures user data is available for admin access even when user is offline
     try {
-      console.log(`[signin] Syncing user ${user.id} to local database`);
+      log.debug(`[signin] Syncing user ${user.id} to local database`);
       await syncUserFromWorkOS(user.id);
     } catch (syncError: any) {
       // Log but don't fail the authentication flow
-      console.warn('[signin] Error syncing user to local database:', syncError.message);
+      log.warn('[signin] Error syncing user to local database:', syncError.message);
     }
 
     // Sync teams from WorkOS organizations immediately after authentication
     // This ensures teams are created when user first logs in
     if (process.env.WORKOS_USE_ORGANIZATIONS === 'true') {
       try {
-        console.log(`[signin] Syncing teams for user ${user.id} after email/password authentication`);
+        log.debug(`[signin] Syncing teams for user ${user.id} after email/password authentication`);
         await getUserGroups(user.id);
       } catch (syncError: any) {
         // Log but don't fail the authentication flow
-        console.warn('[signin] Error syncing teams after auth:', syncError.message);
+        log.warn('[signin] Error syncing teams after auth:', syncError.message);
       }
     }
 
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error: any) {
-    console.error('Sign in error:', error);
+    log.error('Sign in error:', error);
     
     // Handle WorkOS errors
     if (error.message?.includes('Invalid credentials')) {

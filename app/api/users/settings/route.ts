@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/auth/user-groups';
 import { getUserSettings, updateUserSettings } from '@/lib/workos/user-sync';
+import { log } from '@/lib/logger';
 
 /**
  * GET /api/users/settings?userId=xxx
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
       settings: settings.settings,
     });
   } catch (error: any) {
-    console.error('Error getting user settings:', error);
+    log.error('Error getting user settings:', error);
     return NextResponse.json(
       { error: `Failed to get settings: ${error.message}` },
       { status: 500 }
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
       settings: updatedSettings.settings,
     });
   } catch (error: any) {
-    console.error('Error updating user settings:', error);
+    log.error('Error updating user settings:', error);
     return NextResponse.json(
       { error: `Failed to update settings: ${error.message}` },
       { status: 500 }

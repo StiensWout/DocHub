@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session';
 import { isAdmin, getUserRole } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { getUserOrganizationMemberships, updateUserRoleInOrganization } from '@/lib/workos/organizations';
+import { log } from '@/lib/logger';
 
 /**
  * GET /api/users/role
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching user role:', error);
+        log.error('Error fetching user role:', error);
         return NextResponse.json({ error: 'Failed to get user role' }, { status: 500 });
       }
 
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ role });
   } catch (error: any) {
-    console.error('Error getting user role:', error);
+    log.error('Error getting user role:', error);
     return NextResponse.json(
       { error: 'Failed to get user role' },
       { status: 500 }
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (error) {
-      console.error('Error setting user role in database:', error);
+      log.error('Error setting user role in database:', error);
       return NextResponse.json(
         { error: 'Failed to set user role in database' },
         { status: 500 }
@@ -101,13 +102,13 @@ export async function POST(request: NextRequest) {
     const useWorkOSGroups = process.env.WORKOS_USE_ORGANIZATIONS === 'true';
     if (useWorkOSGroups) {
       try {
-        console.log(`[POST /api/users/role] Updating WorkOS organization membership role for user ${userId}`);
+        log.debug(`[POST /api/users/role] Updating WorkOS organization membership role for user ${userId}`);
         
         // Get user's organization memberships
         const memberships = await getUserOrganizationMemberships(userId, true);
         
         if (memberships.length === 0) {
-          console.warn(`[POST /api/users/role] User ${userId} has no organization memberships, skipping WorkOS update`);
+          log.warn(`[POST /api/users/role] User ${userId} has no organization memberships, skipping WorkOS update`);
         } else {
           // Update role in all organizations the user belongs to
           // Typically users belong to one organization, but we'll update all
@@ -122,17 +123,17 @@ export async function POST(request: NextRequest) {
             (r.status === 'fulfilled' && !r.value.success));
           
           if (failures.length > 0) {
-            console.error(`[POST /api/users/role] Some WorkOS role updates failed:`, failures);
+            log.error(`[POST /api/users/role] Some WorkOS role updates failed:`, failures);
             // Don't fail the entire request - database role was updated successfully
             // Just log the warning
           } else {
-            console.log(`[POST /api/users/role] ✅ Successfully updated WorkOS roles in ${memberships.length} organization(s)`);
+            log.info(`[POST /api/users/role] ✅ Successfully updated WorkOS roles in ${memberships.length} organization(s)`);
           }
         }
       } catch (error: any) {
         // Log but don't fail - database role was updated successfully
-        console.error('[POST /api/users/role] Error updating WorkOS organization membership role:', error);
-        console.warn('[POST /api/users/role] Database role updated, but WorkOS role update failed. User may need to re-login for changes to take effect.');
+        log.error('[POST /api/users/role] Error updating WorkOS organization membership role:', error);
+        log.warn('[POST /api/users/role] Database role updated, but WorkOS role update failed. User may need to re-login for changes to take effect.');
       }
     }
 
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
         : 'Role updated in database' 
     });
   } catch (error: any) {
-    console.error('Error setting user role:', error);
+    log.error('Error setting user role:', error);
     return NextResponse.json(
       { error: 'Failed to set user role' },
       { status: 500 }

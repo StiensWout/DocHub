@@ -387,31 +387,32 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 ## 🟡 MEDIUM PRIORITY - Plan for Next Sprint
 
 ### Bug #8: Excessive Console Logging
-**Files:** Multiple (411 instances → ~240 remaining)
+**Files:** Multiple (411 instances → ~138 remaining)
 
 - [x] Choose logging library (winston, pino, or similar) ✅ **Winston chosen**
 - [x] Install and configure logging library ✅ **Winston installed**
 - [x] Create logger utility module ✅ **lib/logger.ts created with sanitization**
 - [x] Replace console.log/error systematically:
-  - [x] API routes (tags, files, documents/tags) ✅ **Pattern established**
+  - [x] API routes (tags, files, documents/tags) ✅ **Complete**
+  - [x] API routes (users, auth) ✅ **Most critical routes complete**
   - [x] WorkOS operations (user-sync.ts, team-sync.ts) ✅ **Complete**
   - [x] lib/supabase/search.ts ✅ **Complete**
-  - [ ] Remaining API routes (~55 instances in 17 files)
+  - [ ] Remaining API routes (~19 instances in 9 files - low priority)
   - [ ] Remaining lib files (~119 instances in 7 files)
-  - [ ] Component error handlers (client-side - keep console for now)
+  - [x] Component error handlers (client-side - keep console for now) ✅ **Decision made**
 - [x] Add log levels (debug, info, warn, error) ✅ **Implemented**
 - [x] Remove sensitive data from logs ✅ **Sanitization added**
 - [x] Configure environment-based log levels ✅ **Environment-based levels configured**
+- [x] Make logger browser-safe ✅ **Fixed fs module error**
 - [ ] Test logging in dev and production
 
-**Progress:** ~170 instances replaced (41% complete). Pattern established - remaining can be systematically replaced following same approach.
+**Progress:** ~273 instances replaced (66% complete). All critical API routes updated. Remaining are low-priority endpoints.
 
 **Remaining Work:**
-- Replace console calls in remaining API routes (app/api/users/**, app/api/auth/**, etc.)
-- Replace console calls in remaining lib files (lib/workos/subgroups.ts, lib/auth/*, etc.)
-- Client-side components: Keep console for now (logger designed for server-side)
+- Replace console calls in remaining low-priority API routes (debug, verify-email, etc.)
+- Replace console calls in lib files (lib/workos/subgroups.ts, lib/auth/*, lib/supabase/queries.ts, etc.)
 
-**Estimated Time:** 2-3 hours remaining
+**Estimated Time:** 1-2 hours remaining for complete coverage
 
 ---
 

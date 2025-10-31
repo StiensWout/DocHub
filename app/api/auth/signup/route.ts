@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { workos } from '@/lib/workos/server';
+import { log } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,10 +34,10 @@ export async function POST(request: NextRequest) {
           userId: user.id,
           organizationId: organizationId,
         });
-        console.log(`✅ Added new user ${user.id} to organization ${organizationId}`);
+        log.info(`✅ Added new user ${user.id} to organization ${organizationId}`);
       } catch (orgError: any) {
         // Log but don't fail - user can be added to org later via Dashboard
-        console.warn(`Could not auto-add user to organization: ${orgError.message}`);
+        log.warn(`Could not auto-add user to organization: ${orgError.message}`);
       }
     }
 
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
       throw authError;
     }
   } catch (error: any) {
-    console.error('Sign up error:', error);
+    log.error('Sign up error:', error);
     
     // Handle WorkOS errors
     if (error.rawData?.code === 'user_email_already_exists' || 

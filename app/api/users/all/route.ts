@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session';
 import { isAdmin, getAllUsers } from '@/lib/auth/user-groups';
 import { getUserOrganizationMemberships } from '@/lib/workos/organizations';
 import { getAllLocalUsers } from '@/lib/workos/user-sync';
+import { log } from '@/lib/logger';
 
 /**
  * GET /api/users/all
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
           try {
             memberships = await getUserOrganizationMemberships(user.userId, true);
           } catch (error: any) {
-            console.warn(`Could not fetch memberships for user ${user.userId}:`, error.message);
+            log.warn(`Could not fetch memberships for user ${user.userId}:`, error.message);
           }
 
           return {
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
             })),
           };
         } catch (error: any) {
-          console.error(`Error enriching user ${user.userId}:`, error);
+          log.error(`Error enriching user ${user.userId}:`, error);
           return user;
         }
       })
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ users: enrichedUsers });
   } catch (error: any) {
-    console.error('Error getting all users:', error);
+    log.error('Error getting all users:', error);
     return NextResponse.json(
       { error: 'Failed to get users' },
       { status: 500 }
