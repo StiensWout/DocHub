@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Mail, Lock, Loader2 } from "lucide-react";
-import { WORKOS_CLIENT_ID, REDIRECT_URI } from "@/lib/workos/client";
+import { requireWorkOSClientId, REDIRECT_URI } from "@/lib/workos/client";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -43,10 +43,15 @@ export default function SignInPage() {
   };
 
   const handleOAuthSignIn = (provider: string) => {
-    // Redirect to WorkOS OAuth flow
-    // WorkOS AuthKit uses a specific authorization endpoint
-    const authUrl = `https://api.workos.com/user_management/authorize?client_id=${WORKOS_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&provider=${provider}`;
-    window.location.href = authUrl;
+    try {
+      // Redirect to WorkOS OAuth flow
+      // WorkOS AuthKit uses a specific authorization endpoint
+      const WORKOS_CLIENT_ID = requireWorkOSClientId();
+      const authUrl = `https://api.workos.com/user_management/authorize?client_id=${WORKOS_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&provider=${provider}`;
+      window.location.href = authUrl;
+    } catch (err: any) {
+      setError(err.message || 'OAuth configuration error. Please check your environment variables.');
+    }
   };
 
   return (
@@ -178,12 +183,13 @@ export default function SignInPage() {
 
           <p className="mt-6 text-center text-sm text-gray-400">
             Don't have an account?{" "}
-            <a
-              href="/auth/signup"
+            <button
+              type="button"
+              onClick={() => router.push("/auth/signup")}
               className="text-blue-400 hover:text-blue-300 transition-colors"
             >
               Sign up
-            </a>
+            </button>
           </p>
         </div>
       </div>
