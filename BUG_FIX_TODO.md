@@ -162,17 +162,37 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 
 ---
 
-### Bug #6: Missing Error Handling in WorkOS Operations
+### Bug #6: Missing Error Handling in WorkOS Operations ✅ COMPLETED
 **File:** `lib/workos/organizations.ts`
 
-- [ ] Review WorkOS SDK documentation for actual response structure
-- [ ] Fix error destructuring on lines 184-190
-- [ ] Fix error handling on lines 355-357
-- [ ] Add proper error logging with context
-- [ ] Return meaningful error messages
-- [ ] Add error handling tests
+- [x] Review WorkOS SDK documentation for actual response structure
+- [x] Fix error destructuring on lines 184-190
+- [x] Fix error handling on lines 355-357
+- [x] Add proper error logging with context
+- [x] Return meaningful error messages
+- [x] Add error handling tests (21 comprehensive test cases)
 
-**Estimated Time:** 2-3 hours
+**Implementation Details:**
+- Created helper functions in `lib/workos/organizations.ts`:
+  - `logWorkOSError()` - Enhanced error logging with operation context, error codes, status codes, and stack traces
+  - `getWorkOSErrorMessage()` - Extracts meaningful error messages from WorkOS error codes and HTTP status codes
+- Updated all WorkOS operation functions to:
+  - Use `logWorkOSError()` for consistent, contextual error logging
+  - Use `getWorkOSErrorMessage()` to return user-friendly error messages
+  - Changed `addUserToOrganization()` and `removeUserFromOrganization()` to return `{ success, error? }` instead of throwing errors
+  - Added proper error handling for WorkOS-specific error codes (not_found, unauthorized, forbidden, rate_limit_exceeded, etc.)
+  - Added proper error handling for HTTP status codes (404, 401, 403, 429, 500, etc.)
+- Added comprehensive test suite (`__tests__/workos-error-handling.test.ts`) with 21 tests covering:
+  - Network errors and service failures
+  - WorkOS-specific error codes (not_found, unauthorized, forbidden, rate_limit_exceeded)
+  - HTTP status code handling (404, 401, 403, 429, 500)
+  - Partial failures in batch operations
+  - Error message extraction and formatting
+  - Success/failure return value validation
+
+**Estimated Time:** 2-3 hours  
+**Actual Time:** ~2.5 hours  
+**Status:** ✅ Fixed - Comprehensive error handling with proper logging and meaningful error messages implemented and tested
 
 ---
 

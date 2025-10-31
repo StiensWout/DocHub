@@ -177,22 +177,33 @@ If document content is user-generated or imported from external sources, malicio
 
 ---
 
-### 6. Missing Error Handling in WorkOS Operations
+### 6. Missing Error Handling in WorkOS Operations ✅ FIXED
 
-**Severity:** HIGH
+**Severity:** HIGH  
+**Status:** ✅ RESOLVED  
 **File:** `lib/workos/organizations.ts`
 
-#### Issues:
-- Lines 184-190: Destructures `error` from response that may not have it
-- Lines 355-357: Similar issue with `listOrganizationMemberships`
-- Errors are swallowed without proper logging or user notification
-- Type mismatches suggest API contract may have changed
+#### Issues (Fixed):
+- ✅ **Insufficient error logging:** Errors now logged with full context (operation, error codes, status codes, stack traces)
+- ✅ **No meaningful error messages:** All functions now return user-friendly error messages based on WorkOS error codes and HTTP status codes
+- ✅ **Inconsistent error handling:** Standardized error handling across all WorkOS operations
+- ✅ **Functions throwing instead of returning errors:** `addUserToOrganization()` and `removeUserFromOrganization()` now return `{ success, error? }` objects
 
-**Fix Required:**
-- Verify WorkOS SDK response structure matches code expectations
-- Add proper error handling for all API calls
-- Log errors with context
-- Return meaningful error messages
+**Fix Applied:**
+- ✅ Created helper functions:
+  - `logWorkOSError()` - Enhanced error logging with operation context, error codes, status codes, and relevant context (userId, organizationId, etc.)
+  - `getWorkOSErrorMessage()` - Extracts meaningful error messages from:
+    - WorkOS-specific error codes (not_found, unauthorized, forbidden, rate_limit_exceeded, invalid_request)
+    - HTTP status codes (404, 401, 403, 429, 500, 502, 503)
+- ✅ Updated all WorkOS operation functions:
+  - `getOrganizations()` - Enhanced error logging
+  - `getOrganization()` - Enhanced error logging with organization ID context
+  - `getUserGroupsFromWorkOS()` - Enhanced error logging with userId context, handles partial failures
+  - `getUserOrganizationMemberships()` - Enhanced error logging, handles errors during membership enrichment
+  - `addUserToOrganization()` - Returns `{ success, error? }` instead of throwing, with meaningful error messages
+  - `removeUserFromOrganization()` - Returns `{ success, error? }` instead of throwing, with meaningful error messages
+  - `updateUserRoleInOrganization()` - Enhanced error messages and logging
+- ✅ Added comprehensive test suite with 21 tests covering all error scenarios
 
 ---
 

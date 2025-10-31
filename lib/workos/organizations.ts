@@ -2,6 +2,86 @@ import { workos } from './server';
 import { getCachedMemberships, setCachedMemberships } from './membership-cache';
 
 /**
+ * WorkOS Error Types
+ */
+interface WorkOSError extends Error {
+  code?: string;
+  statusCode?: number;
+  message: string;
+}
+
+/**
+ * Enhanced error logging with context
+ */
+function logWorkOSError(
+  operation: string,
+  error: WorkOSError | any,
+  context?: { userId?: string; organizationId?: string; [key: string]: any }
+): void {
+  const contextStr = context 
+    ? Object.entries(context).map(([k, v]) => `${k}=${v}`).join(', ')
+    : '';
+  
+  const errorDetails = {
+    operation,
+    errorCode: error?.code,
+    statusCode: error?.statusCode,
+    message: error?.message || String(error),
+    context: contextStr || 'none',
+    stack: error?.stack,
+  };
+
+  console.error(`[WorkOS Error] ${operation}${contextStr ? ` (${contextStr})` : ''}:`, errorDetails);
+}
+
+/**
+ * Extract meaningful error message from WorkOS error
+ */
+function getWorkOSErrorMessage(error: WorkOSError | any, defaultMessage: string): string {
+  if (!error) return defaultMessage;
+  
+  // Handle WorkOS-specific error codes
+  if (error.code) {
+    switch (error.code) {
+      case 'not_found':
+        return 'Resource not found';
+      case 'unauthorized':
+        return 'Unauthorized access';
+      case 'forbidden':
+        return 'Access forbidden';
+      case 'rate_limit_exceeded':
+        return 'Rate limit exceeded. Please try again later';
+      case 'invalid_request':
+        return error.message || 'Invalid request';
+      default:
+        return error.message || defaultMessage;
+    }
+  }
+  
+  // Handle HTTP status codes
+  if (error.statusCode) {
+    switch (error.statusCode) {
+      case 404:
+        return 'Resource not found';
+      case 401:
+        return 'Unauthorized access';
+      case 403:
+        return 'Access forbidden';
+      case 429:
+        return 'Rate limit exceeded. Please try again later';
+      case 500:
+      case 502:
+      case 503:
+        return 'Service temporarily unavailable. Please try again later';
+      default:
+        return error.message || defaultMessage;
+    }
+  }
+  
+  return error.message || defaultMessage;
+}
+
+/**
  * WorkOS Organization Memberships utilities
  * 
  * This module provides functions to interact with WorkOS Organizations
@@ -86,7 +166,7 @@ export async function getOrganizations(): Promise<OrganizationInfo[]> {
       };
     });
   } catch (error: any) {
-    console.error('Error getting organizations:', error);
+    logWorkOSError('getOrganizations', error);
     return [];
   }
 }
@@ -145,7 +225,7 @@ export async function getOrganization(organizationId: string): Promise<Organizat
       updatedAt: updatedAtStr,
     };
   } catch (error: any) {
-    console.error('Error getting organization:', error);
+    logWorkOSError('getOrganization', error, { organizationId });
     return null;
   }
 }
@@ -198,7 +278,10 @@ export async function getUserGroupsFromWorkOS(
           const org = await workos.organizations.getOrganization(membership.organizationId);
           return org.name;
         } catch (error: any) {
-          console.warn(`Could not fetch organization ${membership.organizationId}:`, error.message);
+          logWorkOSError('getUserGroupsFromWorkOS - fetchOrganization', error, { 
+            organizationId: membership.organizationId,
+            userId 
+          });
           // Fallback to organization ID if name can't be retrieved
           return membership.organizationId;
         }
@@ -208,10 +291,10 @@ export async function getUserGroupsFromWorkOS(
     return organizationNames.filter(Boolean);
   } catch (error: any) {
     if (error.code === 'not_found' || error.message?.includes('user')) {
-      console.log(`User ${userId} has no WorkOS organization memberships`);
+      console.log(`[getUserGroupsFromWorkOS] User ${userId} has no WorkOS organization memberships`);
       return [];
     }
-    console.error('Error getting user groups from WorkOS:', error);
+    logWorkOSError('getUserGroupsFromWorkOS', error, { userId });
     return [];
   }
 }
@@ -295,7 +378,11 @@ export async function getUserOrganizationMemberships(userId: string, useCache: b
             createdAt: createdAtStr,
           };
         } catch (error: any) {
-          console.warn(`[getUserOrganizationMemberships] Could not fetch org ${membership.organizationId}, using ID as name:`, error.message);
+          logWorkOSError('getUserOrganizationMemberships - enrichMembership', error, {
+            userId,
+            organizationId: membership.organizationId,
+            membershipIndex: index,
+          });
           
           // Handle createdAt - it might be a Date object, string, or undefined
           let createdAtStr = '';
@@ -345,8 +432,7 @@ export async function getUserOrganizationMemberships(userId: string, useCache: b
       enrichedMemberships.map(m => `${m.organizationName} (${m.organizationId})`));
     return enrichedMemberships;
   } catch (error: any) {
-    console.error(`[getUserOrganizationMemberships] Exception getting organization memberships:`, error);
-    console.error(`[getUserOrganizationMemberships] Exception stack:`, error.stack);
+    logWorkOSError('getUserOrganizationMemberships', error, { userId });
     return [];
   }
 }
@@ -355,7 +441,10 @@ export async function getUserOrganizationMemberships(userId: string, useCache: b
  * Add user to an organization
  * Requires admin privileges or appropriate permissions
  */
-export async function addUserToOrganization(userId: string, organizationId: string) {
+export async function addUserToOrganization(
+  userId: string, 
+  organizationId: string
+): Promise<{ success: boolean; error?: string }> {
   try {
     await workos.userManagement.createOrganizationMembership({
       userId: userId,
@@ -363,8 +452,9 @@ export async function addUserToOrganization(userId: string, organizationId: stri
     });
     return { success: true };
   } catch (error: any) {
-    console.error('Error adding user to organization:', error);
-    throw error;
+    logWorkOSError('addUserToOrganization', error, { userId, organizationId });
+    const errorMessage = getWorkOSErrorMessage(error, 'Failed to add user to organization');
+    return { success: false, error: errorMessage };
   }
 }
 
@@ -372,7 +462,10 @@ export async function addUserToOrganization(userId: string, organizationId: stri
  * Remove user from an organization
  * Requires admin privileges or appropriate permissions
  */
-export async function removeUserFromOrganization(userId: string, organizationId: string) {
+export async function removeUserFromOrganization(
+  userId: string, 
+  organizationId: string
+): Promise<{ success: boolean; error?: string }> {
   try {
     // Get the membership ID first
     // WorkOS SDK returns { data: [] } structure for list operations
@@ -385,14 +478,20 @@ export async function removeUserFromOrganization(userId: string, organizationId:
 
     const membership = memberships?.find(m => m.organizationId === organizationId);
     if (!membership || !membership.id) {
-      throw new Error('User is not a member of this organization');
+      const errorMessage = 'User is not a member of this organization';
+      logWorkOSError('removeUserFromOrganization - membership not found', new Error(errorMessage), {
+        userId,
+        organizationId,
+      });
+      return { success: false, error: errorMessage };
     }
 
     await workos.userManagement.deleteOrganizationMembership(membership.id);
     return { success: true };
   } catch (error: any) {
-    console.error('Error removing user from organization:', error);
-    throw error;
+    logWorkOSError('removeUserFromOrganization', error, { userId, organizationId });
+    const errorMessage = getWorkOSErrorMessage(error, 'Failed to remove user from organization');
+    return { success: false, error: errorMessage };
   }
 }
 
@@ -435,8 +534,13 @@ export async function updateUserRoleInOrganization(
     console.log(`[updateUserRoleInOrganization] ✅ Successfully updated role to "${newRole}"`);
     return { success: true };
   } catch (error: any) {
-    console.error('[updateUserRoleInOrganization] Exception updating role:', error);
-    return { success: false, error: error.message || 'Failed to update user role' };
+    logWorkOSError('updateUserRoleInOrganization', error, { 
+      userId, 
+      organizationId, 
+      newRole 
+    });
+    const errorMessage = getWorkOSErrorMessage(error, 'Failed to update user role');
+    return { success: false, error: errorMessage };
   }
 }
 
