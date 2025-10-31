@@ -18,11 +18,17 @@ export interface SessionUser {
 export async function getSession(): Promise<{ user: SessionUser; accessToken: string } | null> {
   try {
     const cookieStore = await cookies();
+    
     const accessToken = cookieStore.get('wos-session')?.value;
 
     if (!accessToken) {
       return null;
     }
+
+    // NOTE: Token refresh is disabled for now
+    // WorkOS tokens typically last long enough with the 7-day cookie expiration
+    // If token refresh is needed, it should be implemented using WorkOS's session refresh API
+    // For now, if the token is invalid, the user will need to re-authenticate
 
     // Try SSO profile first (for organization-based SSO)
     try {

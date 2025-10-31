@@ -19,6 +19,7 @@ import ApplicationEditDialog from "@/components/ApplicationEditDialog";
 import GroupSection from "@/components/GroupSection";
 import ApplicationCard from "@/components/ApplicationCard";
 import UserGroupManager from "@/components/UserGroupManager";
+import OrganizationDisplay from "@/components/OrganizationDisplay";
 import { useRecentDocuments } from "@/hooks/useRecentDocuments";
 import { useToast } from "@/components/Toast";
 import { supabase } from "@/lib/supabase/client";
@@ -93,24 +94,6 @@ function HomeContent() {
     checkAuth();
   }, [router, isMounted]);
 
-  // Check if user is admin
-  useEffect(() => {
-    const checkAdmin = async () => {
-      try {
-        const response = await fetch('/api/users/role');
-        if (response.ok) {
-          const data = await response.json();
-          setIsUserAdmin(data.role === 'admin');
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error);
-      }
-    };
-    
-    if (authChecked && user) {
-      checkAdmin();
-    }
-  }, [authChecked, user]);
 
   // Function to refresh documents without page reload
   const refreshDocuments = async () => {
@@ -159,29 +142,77 @@ function HomeContent() {
 
   // Load initial data - only after mount to avoid hydration issues
   useEffect(() => {
-    if (!isMounted) return;
+    if (!isMounted || !authChecked) return;
     
     async function loadData() {
       setLoading(true);
-      const [teamsData, appsData, groupsData] = await Promise.all([
+      
+      // First check admin status, then load and filter teams
+      let adminStatus = false;
+      try {
+        const roleResponse = await fetch('/api/users/role');
+        if (roleResponse.ok) {
+          const roleData = await roleResponse.json();
+          adminStatus = roleData.role === 'admin';
+          setIsUserAdmin(adminStatus);
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+      }
+      
+      const [allTeamsData, appsData, groupsData] = await Promise.all([
         getTeams(),
         getApplications(),
         getApplicationGroups(),
       ]);
       
-      setTeams(teamsData);
+      // Filter teams based on user's groups (unless admin)
+      let filteredTeams = allTeamsData;
+      if (!adminStatus) {
+        try {
+          // Fetch user's groups from API
+          const groupsResponse = await fetch('/api/users/groups');
+          if (groupsResponse.ok) {
+            const groupsData = await groupsResponse.json();
+            const userGroupNames = groupsData.groups || [];
+            
+            // Filter teams to only show those the user belongs to
+            if (userGroupNames.length > 0) {
+              filteredTeams = allTeamsData.filter(team => 
+                userGroupNames.includes(team.name)
+              );
+            } else {
+              // No groups = no teams
+              filteredTeams = [];
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching user groups:', error);
+          // On error, show no teams to be safe
+          filteredTeams = [];
+        }
+      }
+      
+      setTeams(filteredTeams);
       setApplications(appsData);
       setGroups(groupsData);
       
-      if (teamsData.length > 0 && !selectedTeamId) {
-        setSelectedTeamId(teamsData[0].id);
+      // Update selected team if it's no longer in filtered list
+      if (selectedTeamId && !filteredTeams.find(t => t.id === selectedTeamId)) {
+        if (filteredTeams.length > 0) {
+          setSelectedTeamId(filteredTeams[0].id);
+        } else {
+          setSelectedTeamId("");
+        }
+      } else if (filteredTeams.length > 0 && !selectedTeamId) {
+        setSelectedTeamId(filteredTeams[0].id);
       }
       
       setLoading(false);
     }
     
     loadData();
-  }, [isMounted, selectedTeamId]);
+  }, [isMounted, authChecked]);
 
   // Handle app and group query parameters from URL
   // Only process search params after component is mounted to avoid hydration issues
@@ -489,9 +520,13 @@ function HomeContent() {
                 />
               </div>
               <div className="flex items-center gap-3">
-                {teams.length > 0 && (
-                  <TeamSelector teams={teams} selectedTeamId={selectedTeamId} onTeamChange={setSelectedTeamId} />
-                )}
+                <OrganizationDisplay 
+                  className="hidden md:flex" 
+                  isAdmin={isUserAdmin}
+                  teams={teams}
+                  selectedTeamId={selectedTeamId}
+                  onTeamChange={setSelectedTeamId}
+                />
                 <button
                   onClick={() => setShowGroupManagerDialog(true)}
                   className="px-4 py-2 bg-gray-600 hover:bg-gray-700 border border-gray-600 rounded-lg text-sm transition-all flex items-center gap-2"

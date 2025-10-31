@@ -15,8 +15,10 @@ import { getUserOrganizationMemberships } from './organizations';
  */
 
 /**
- * Get subgroups for a user within an organization based on their role
- * Returns both the parent organization and any subgroups (roles)
+ * Get the user's team (subgroup) within an organization based on their role
+ * Returns ONLY the user's specific team (role), not all possible teams in the org
+ * 
+ * Structure: User -> 1 Organization -> 1 Team (their role)
  */
 export async function getUserSubgroupsInOrganization(
   userId: string, 
@@ -24,16 +26,9 @@ export async function getUserSubgroupsInOrganization(
   organizationName: string
 ): Promise<Array<{ name: string; organizationId: string; isSubgroup: boolean; role?: string }>> {
   try {
-    console.log(`[getUserSubgroupsInOrganization] Getting subgroups for user ${userId} in org ${organizationName}`);
+    console.log(`[getUserSubgroupsInOrganization] Getting user's team (role) for user ${userId} in org ${organizationName}`);
     
     const subgroups: Array<{ name: string; organizationId: string; isSubgroup: boolean; role?: string }> = [];
-    
-    // First, add the parent organization
-    subgroups.push({
-      name: organizationName,
-      organizationId: organizationId,
-      isSubgroup: false,
-    });
     
     // Get user's organization memberships to find their role in this organization
     const memberships = await getUserOrganizationMemberships(userId);
@@ -42,7 +37,7 @@ export async function getUserSubgroupsInOrganization(
     const membership = memberships.find(m => m.organizationId === organizationId);
     
     if (membership && membership.role) {
-      // The role in the organization membership is the subgroup/team
+      // The role in the organization membership is the user's team
       // Handle role - it might be a string or an object with a slug/name property
       let roleName: string = '';
       
@@ -61,16 +56,15 @@ export async function getUserSubgroupsInOrganization(
       console.log(`[getUserSubgroupsInOrganization] User has role "${roleName}" in organization "${organizationName}"`);
       
       // Only add as subgroup if role is not empty and not a generic role like "member"
-      // You can customize this logic based on your role naming conventions
       if (roleName && typeof roleName === 'string' && roleName.trim() !== '' && roleName.toLowerCase() !== 'member') {
         subgroups.push({
-          name: roleName.trim(), // Role becomes the subgroup team name
+          name: roleName.trim(), // Role becomes the team name
           organizationId: organizationId, // Same parent org
           isSubgroup: true,
           role: roleName.trim(),
         });
         
-        console.log(`[getUserSubgroupsInOrganization] Added subgroup "${roleName.trim()}" for org "${organizationName}"`);
+        console.log(`[getUserSubgroupsInOrganization] Added user's team "${roleName.trim()}" for org "${organizationName}"`);
       } else {
         console.log(`[getUserSubgroupsInOrganization] Skipping role "${roleName}" (empty or generic)`);
       }
@@ -78,18 +72,13 @@ export async function getUserSubgroupsInOrganization(
       console.log(`[getUserSubgroupsInOrganization] No role found for user in organization "${organizationName}"`);
     }
     
-    console.log(`[getUserSubgroupsInOrganization] Found ${subgroups.length} teams for org ${organizationName}:`, 
-      subgroups.map(s => `${s.name} (${s.isSubgroup ? 'subgroup/role' : 'parent'})`));
+    console.log(`[getUserSubgroupsInOrganization] Found ${subgroups.length} team(s) for user in org ${organizationName}:`, 
+      subgroups.map(s => `${s.name} (${s.isSubgroup ? 'team/role' : 'parent org - not used'})`));
     
     return subgroups;
   } catch (error: any) {
-    console.error(`[getUserSubgroupsInOrganization] Error getting subgroups:`, error);
-    // Return at least the parent org
-    return [{
-      name: organizationName,
-      organizationId: organizationId,
-      isSubgroup: false,
-    }];
+    console.error(`[getUserSubgroupsInOrganization] Error getting user's team:`, error);
+    return [];
   }
 }
 

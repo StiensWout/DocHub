@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { getSession } from './session';
-import { getUserGroupsFromWorkOS } from '@/lib/workos/organizations';
+import { getUserGroupsFromWorkOS, getUserOrganizationMemberships } from '@/lib/workos/organizations';
 import { syncTeamsFromUserOrganizations, isUserInAdminOrganization } from '@/lib/workos/team-sync';
 
 export interface UserGroup {
@@ -81,36 +81,51 @@ export async function getUserGroups(userId: string): Promise<string[]> {
       }
       
       if (workosGroups.length > 0) {
-        // Also include all subgroup teams that belong to the same parent organization
-        // This ensures users see both parent org and subgroups
-        const allTeamNames = new Set<string>(workosGroups);
+        // WorkOS groups are organizations (e.g., "CDLE")
+        // User belongs to 1 organization and 1 team (their role) within that org
+        // OR user is admin and sees all teams
+        const allTeamNames: string[] = [];
         
-        // For each parent organization group, find all subgroup teams
-        for (const parentGroupName of workosGroups) {
-          // Find the parent organization ID for this group
-          const { data: parentTeam } = await supabaseAdmin
-            .from('teams')
-            .select('workos_organization_id')
-            .eq('name', parentGroupName)
-            .single();
+        // For each organization the user belongs to, get THEIR specific team (role)
+        for (const orgName of workosGroups) {
+          // Get organization memberships to find org ID and user's role
+          const memberships = await getUserOrganizationMemberships(userId);
+          const membership = memberships.find(m => m.organizationName === orgName);
           
-          if (parentTeam?.workos_organization_id) {
-            // Find all subgroups (teams with this parent_organization_id)
-            const { data: subgroups } = await supabaseAdmin
-              .from('teams')
-              .select('name')
-              .eq('parent_organization_id', parentTeam.workos_organization_id);
+          if (membership) {
+            // Extract user's role (their team name)
+            let roleName = '';
+            if (membership.role) {
+              if (typeof membership.role === 'string') {
+                roleName = membership.role;
+              } else if (typeof membership.role === 'object') {
+                roleName = (membership.role as any).slug || (membership.role as any).name || (membership.role as any).id || '';
+              }
+            }
             
-            if (subgroups && subgroups.length > 0) {
-              subgroups.forEach(subgroup => allTeamNames.add(subgroup.name));
-              console.log(`[getUserGroups] Found ${subgroups.length} subgroups for "${parentGroupName}"`);
+            // Find the team that matches the user's role
+            if (roleName && roleName.trim() !== '' && roleName.toLowerCase() !== 'member') {
+              const { data: userTeam } = await supabaseAdmin
+                .from('teams')
+                .select('name')
+                .eq('name', roleName.trim())
+                .eq('parent_organization_id', membership.organizationId)
+                .single();
+              
+              if (userTeam) {
+                allTeamNames.push(userTeam.name);
+                console.log(`[getUserGroups] Found user's team "${userTeam.name}" for organization "${orgName}"`);
+              } else {
+                console.log(`[getUserGroups] Team "${roleName.trim()}" not found in database for organization "${orgName}"`);
+              }
+            } else {
+              console.log(`[getUserGroups] No valid role found for user in organization "${orgName}"`);
             }
           }
         }
         
-        const allGroups = Array.from(allTeamNames);
-        console.log(`[getUserGroups] Returning WorkOS groups + subgroups:`, allGroups);
-        return allGroups;
+        console.log(`[getUserGroups] Returning user's team(s) only:`, allTeamNames);
+        return allTeamNames;
       }
       // If no WorkOS groups found, fall back to database
       console.log(`[getUserGroups] No WorkOS groups found for user ${userId}, falling back to database`);

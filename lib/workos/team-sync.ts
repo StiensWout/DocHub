@@ -118,31 +118,27 @@ export async function syncTeamsFromUserOrganizations(userId: string): Promise<st
         }
         console.log(`[syncTeamsFromUserOrganizations] Organization details: name="${org.name}", id="${org.id}"`);
 
-        // Create parent organization team if it doesn't exist
-        console.log(`[syncTeamsFromUserOrganizations] Ensuring parent team exists for organization "${org.name}"`);
-        const parentTeamId = await ensureTeamForOrganization(org.name, membership.organizationId);
-        if (parentTeamId) {
-          console.log(`[syncTeamsFromUserOrganizations] ✅ Parent team created/found: ${parentTeamId} for "${org.name}"`);
-          teamIds.push(parentTeamId);
-          
-          // Get subgroups/teams within this organization
-          console.log(`[syncTeamsFromUserOrganizations] Checking for subgroups within "${org.name}"`);
-          const subgroups = await getUserSubgroupsInOrganization(userId, membership.organizationId, org.name);
-          
-          // Create teams for each subgroup
-          for (const subgroup of subgroups) {
-            if (subgroup.isSubgroup) {
-              console.log(`[syncTeamsFromUserOrganizations] Creating subgroup team: "${subgroup.name}"`);
-              const subgroupTeamId = await ensureSubgroupTeam(subgroup.name, membership.organizationId, org.name);
-              if (subgroupTeamId) {
-                console.log(`[syncTeamsFromUserOrganizations] ✅ Subgroup team created/found: ${subgroupTeamId} for "${subgroup.name}"`);
-                teamIds.push(subgroupTeamId);
-              }
+        // NOTE: We do NOT create the parent organization as a team
+        // The organization (e.g., "CDLE") is just the org, not a team
+        // Only subgroups (roles within the org) become teams
+        
+        // Get subgroups/teams within this organization (based on user's role)
+        console.log(`[syncTeamsFromUserOrganizations] Checking for subgroups (roles) within "${org.name}"`);
+        const subgroups = await getUserSubgroupsInOrganization(userId, membership.organizationId, org.name);
+        
+        // Create teams ONLY for subgroups (not the parent org)
+        for (const subgroup of subgroups) {
+          if (subgroup.isSubgroup) {
+            console.log(`[syncTeamsFromUserOrganizations] Creating subgroup team: "${subgroup.name}"`);
+            const subgroupTeamId = await ensureSubgroupTeam(subgroup.name, membership.organizationId, org.name);
+            if (subgroupTeamId) {
+              console.log(`[syncTeamsFromUserOrganizations] ✅ Subgroup team created/found: ${subgroupTeamId} for "${subgroup.name}"`);
+              teamIds.push(subgroupTeamId);
             }
           }
-        } else {
-          console.warn(`[syncTeamsFromUserOrganizations] ⚠️ Failed to create/find parent team for "${org.name}"`);
         }
+        
+        console.log(`[syncTeamsFromUserOrganizations] Organization "${org.name}" serves as parent - teams are subgroups only`);
       } catch (error: any) {
         console.error(`[syncTeamsFromUserOrganizations] Error syncing team for organization ${membership.organizationId}:`, error);
         console.error(`[syncTeamsFromUserOrganizations] Error stack:`, error.stack);
