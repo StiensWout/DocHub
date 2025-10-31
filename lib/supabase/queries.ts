@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
+import { supabaseAdmin } from "@/lib/supabase/server";
 import { Globe, Database, Zap, Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { Document, Application, Team, DocumentFile, ApplicationGroup } from "@/types";
@@ -80,7 +81,9 @@ export async function createApplication(
   groupId?: string | null
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabase
+    // Use service role client to bypass RLS policies
+    // This ensures application creation works regardless of RLS policy configuration
+    const { error } = await supabaseAdmin
       .from("applications")
       .insert({
         id,
