@@ -137,9 +137,18 @@ User Login → Check WorkOS Organizations → Create Subgroup Teams → Assign G
 WORKOS_API_KEY=sk_...
 WORKOS_CLIENT_ID=client_...
 WORKOS_USE_ORGANIZATIONS=true
-WORKOS_ADMIN_ORGANIZATION_NAME=admin  # Optional, default: "admin"
+WORKOS_ADMIN_ORGANIZATION_NAME=admin  # Optional, default: "admin" (or use "admin" role/team)
 NEXT_PUBLIC_WORKOS_REDIRECT_URI=http://localhost:3000/auth/callback
+SUPABASE_SERVICE_ROLE_KEY=...  # Server-side key for admin operations
 ```
+
+### Admin Role Detection
+Admin status can be determined by:
+1. **Organization**: User in WorkOS organization named "admin" (or `WORKOS_ADMIN_ORGANIZATION_NAME`)
+2. **Role/Team**: User has role/team "admin" in any WorkOS organization
+3. **Database**: Fallback to `user_roles` table if not using WorkOS Organizations
+
+See [Admin Setup Guide](../GETTING_STARTED/ADMIN_SETUP.md) for details.
 
 ### Database Schema
 - `teams` table includes:
