@@ -4,6 +4,15 @@ All notable changes and completed features in DocHub.
 
 ## [Current] - 2025-01-30
 
+### 🐛 Bug Fixes
+
+#### URL Navigation Consistency
+- ✅ Fixed inconsistent navigation behavior between grouped and ungrouped applications
+- ✅ All application clicks now use `router.push()` to update URL parameters
+- ✅ Ungrouped applications now support browser history, direct linking, and bookmarking
+- ✅ Consistent navigation experience across all application types
+- **Impact**: Users can now bookmark, share, and use browser back/forward with all applications
+
 ### ✨ Completed Features
 
 #### Main Page Group Overview

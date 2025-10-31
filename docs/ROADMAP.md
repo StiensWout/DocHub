@@ -25,17 +25,21 @@ Planned features, enhancements, and improvements for DocHub. Organized by priori
 ## 🎯 Medium Term (Next 1-2 Months)
 
 ### Authentication & Authorization
-- [ ] **User Authentication**
-  - [ ] Supabase Auth integration
+- [ ] **User Authentication** (WorkOS AuthKit)
+  - [ ] WorkOS AuthKit integration
   - [ ] Login/signup pages
   - [ ] Email/password authentication
-  - [ ] OAuth providers (Google, GitHub)
+  - [ ] Social OAuth providers (Google, GitHub)
+  - [ ] Magic Link authentication
   - [ ] Password reset flow
+  - [ ] Email verification
+  - [ ] Session management
+  - [ ] **See**: `docs/FEATURES/pending/workos-authkit-integration.md` for detailed implementation plan
 - [ ] **Role-Based Access Control**
-  - [ ] Team membership management
+  - [ ] Team membership management (using WorkOS Organizations)
   - [ ] Permission system (read/write/admin)
   - [ ] Team admin capabilities
-  - [ ] User roles and permissions
+  - [ ] User roles and permissions (using WorkOS Roles & Permissions)
 - [ ] **User Profiles**
   - [ ] User profile pages
   - [ ] Avatar uploads
@@ -174,6 +178,7 @@ These are ideas for future consideration, not currently prioritized:
 ### Recently Completed ✅
 - ✅ Main page group overview (replaces recent documents)
 - ✅ Group detail page with applications grid
+- ✅ Application & group search integration
 - ✅ File upload & viewing system (PDF, DOCX, images, text files)
 - ✅ In-app file editing for text files
 - ✅ Enhanced navigation (sidebar, breadcrumbs, quick access)
@@ -181,12 +186,12 @@ These are ideas for future consideration, not currently prioritized:
 - ✅ Document viewer enhancements (print, export PDF/Markdown, share links)
 - ✅ Search enhancements (history, suggestions, fuzzy matching)
 - ✅ Application management (create, edit, grouping)
-- ✅ Application & group search integration
 - ✅ Full-text search with relevance scoring
 - ✅ Document versioning system
 - ✅ Rich text editor with images
 - ✅ Template system
 - ✅ Multi-team support
+- ✅ Consistent URL navigation for all applications (2025-01-30)
 
 **See**: [Changelog](CHANGELOG.md) for complete history of completed features
 

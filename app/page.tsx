@@ -715,10 +715,7 @@ export default function Home() {
                                 key={app.id}
                                 application={app}
                                 onClick={() => {
-                                  setSelectedApp(app.id);
-                                  setSelectedDocument(null);
-                                  setSelectedDocumentAppName("");
-                                  setSelectedDocumentAppId("");
+                                  router.push(`/?app=${app.id}`);
                                 }}
                               />
                             ))}
