@@ -905,6 +905,14 @@ function HomeContent() {
         />
       )}
 
+      {/* User Group Manager Dialog */}
+      {showUserGroupManager && (
+        <UserGroupManager
+          isOpen={showUserGroupManager}
+          onClose={() => setShowUserGroupManager(false)}
+        />
+      )}
+
       {/* Edit Application Dialog */}
       {showEditApplicationDialog && editingApplication && (
         <ApplicationEditDialog

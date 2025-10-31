@@ -23,6 +23,13 @@ export interface OrganizationInfo {
   updatedAt: string;
 }
 
+export interface EnrichedMembership {
+  organizationId: string;
+  organizationName: string;
+  role?: string | object;
+  createdAt?: string;
+}
+
 /**
  * Get all organizations
  */
@@ -102,15 +109,29 @@ export async function getOrganization(organizationId: string): Promise<Organizat
  * This requires:
  * 1. Organizations to be created in WorkOS (via Dashboard or API)
  * 2. Users to be added to organizations (via Dashboard or API)
+ * 
+ * @param userId - The user ID to get groups for
+ * @param memberships - Optional pre-fetched memberships (enriched with organization names)
+ *                      If provided, avoids redundant API calls for caching optimization
  */
-export async function getUserGroupsFromWorkOS(userId: string): Promise<string[]> {
+export async function getUserGroupsFromWorkOS(
+  userId: string,
+  memberships?: EnrichedMembership[]
+): Promise<string[]> {
   try {
-    // Get user's organization memberships
-    const { data: memberships } = await workos.userManagement.listOrganizationMemberships({
+    // If memberships are provided, use them directly (caching optimization)
+    if (memberships && memberships.length > 0) {
+      console.log(`[getUserGroupsFromWorkOS] Using provided memberships (${memberships.length} memberships)`);
+      return memberships.map(m => m.organizationName).filter(Boolean);
+    }
+
+    // Otherwise, fetch memberships (legacy behavior or when memberships not provided)
+    console.log(`[getUserGroupsFromWorkOS] Fetching memberships for userId: ${userId}`);
+    const { data: membershipsData } = await workos.userManagement.listOrganizationMemberships({
       userId: userId,
     });
 
-    if (!memberships || memberships.length === 0) {
+    if (!membershipsData || membershipsData.length === 0) {
       return [];
     }
 
@@ -120,7 +141,7 @@ export async function getUserGroupsFromWorkOS(userId: string): Promise<string[]>
     // Option 2: Return organization names (more readable, used as group names)
     // Fetch organization details to get names
     const organizationNames = await Promise.all(
-      memberships.map(async (membership) => {
+      membershipsData.map(async (membership) => {
         try {
           const org = await workos.organizations.getOrganization(membership.organizationId);
           return org.name;
@@ -147,7 +168,7 @@ export async function getUserGroupsFromWorkOS(userId: string): Promise<string[]>
  * Get organization memberships for a user
  * Returns both organization IDs and details
  */
-export async function getUserOrganizationMemberships(userId: string, useCache: boolean = true) {
+export async function getUserOrganizationMemberships(userId: string, useCache: boolean = true): Promise<EnrichedMembership[]> {
   // Check cache first
   if (useCache) {
     const cached = getCachedMemberships(userId);
@@ -196,7 +217,11 @@ export async function getUserOrganizationMemberships(userId: string, useCache: b
               createdAtStr = membership.createdAt;
             } else {
               // Try to convert if it's a timestamp or other format
-              createdAtStr = new Date(membership.createdAt).toISOString();
+              try {
+                createdAtStr = new Date(membership.createdAt).toISOString();
+              } catch {
+                createdAtStr = '';
+              }
             }
           }
           
@@ -205,8 +230,9 @@ export async function getUserOrganizationMemberships(userId: string, useCache: b
           if (membership.role) {
             if (typeof membership.role === 'string') {
               roleValue = membership.role;
-            } else {
-              roleValue = membership.role;
+            } else if (typeof membership.role === 'object') {
+              // Extract slug, name, or id from role object (consistent with other code)
+              roleValue = (membership.role as any).slug || (membership.role as any).name || (membership.role as any).id || '';
             }
           }
           
@@ -241,8 +267,9 @@ export async function getUserOrganizationMemberships(userId: string, useCache: b
           if (membership.role) {
             if (typeof membership.role === 'string') {
               roleValue = membership.role;
-            } else {
-              roleValue = membership.role;
+            } else if (typeof membership.role === 'object') {
+              // Extract slug, name, or id from role object (consistent with other code)
+              roleValue = (membership.role as any).slug || (membership.role as any).name || (membership.role as any).id || '';
             }
           }
           
