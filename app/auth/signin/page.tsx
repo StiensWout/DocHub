@@ -4,12 +4,18 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, Loader2 } from "lucide-react";
 import { requireWorkOSClientId, REDIRECT_URI } from "@/lib/workos/client";
+import { getProviderName, getProviderButtonText, getProviderDescription } from "@/lib/auth/config";
 
 function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Get provider-specific text from config
+  const providerName = getProviderName();
+  const buttonText = getProviderButtonText();
+  const description = getProviderDescription();
 
   // Check for error query parameter
   useEffect(() => {
@@ -21,7 +27,7 @@ function SignInContent() {
     }
   }, [searchParams]);
 
-  const handleMicrosoftSignIn = async () => {
+  const handleSSOSignIn = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -33,26 +39,25 @@ function SignInContent() {
         throw new Error('Redirect URI is not configured. Please set NEXT_PUBLIC_WORKOS_REDIRECT_URI in your environment variables.');
       }
       
-      // Use server-side API to generate authorization URL
-      // This uses WorkOS SSO getAuthorizationUrl which is correct for Microsoft
-      const response = await fetch(`/api/auth/microsoft?redirect_uri=${encodeURIComponent(REDIRECT_URI)}`);
+      // Use generic SSO endpoint - works with any provider configured in WorkOS
+      const response = await fetch(`/api/auth/sso?redirect_uri=${encodeURIComponent(REDIRECT_URI)}`);
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.error || data.details || 'Failed to initiate Microsoft SSO');
+        throw new Error(data.error || data.details || 'Failed to initiate SSO');
       }
       
       if (!data.url) {
         throw new Error('No authorization URL returned from server');
       }
       
-      console.log('Redirecting to Microsoft SSO:', data.url);
+      console.log('Redirecting to SSO provider:', data.url);
       
-      // Redirect to Microsoft SSO
+      // Redirect to SSO provider (configured in WorkOS)
       window.location.href = data.url;
     } catch (err: any) {
-      console.error('Microsoft sign-in error:', err);
-      const errorMessage = err.message || 'OAuth configuration error. Please check your environment variables and WorkOS Dashboard configuration.';
+      console.error('SSO sign-in error:', err);
+      const errorMessage = err.message || 'SSO configuration error. Please check your environment variables and WorkOS Dashboard configuration.';
       setError(errorMessage);
       setLoading(false);
     }
@@ -74,7 +79,7 @@ function SignInContent() {
 
           <h2 className="text-xl font-semibold mb-2 text-center">Sign In</h2>
           <p className="text-sm text-gray-400 text-center mb-6">
-            Sign in with your Microsoft account
+            {description}
           </p>
 
           {error && (
@@ -84,7 +89,7 @@ function SignInContent() {
           )}
 
           <button
-            onClick={handleMicrosoftSignIn}
+            onClick={handleSSOSignIn}
             disabled={loading}
             className="w-full py-3 bg-white hover:bg-gray-100 text-gray-900 font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
           >
@@ -95,19 +100,16 @@ function SignInContent() {
               </>
             ) : (
               <>
-                <svg className="w-5 h-5" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="0" y="0" width="10" height="10" fill="#F25022"/>
-                  <rect x="12" y="0" width="10" height="10" fill="#00A4EF"/>
-                  <rect x="0" y="12" width="10" height="10" fill="#7FBA00"/>
-                  <rect x="12" y="12" width="10" height="10" fill="#FFB900"/>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="currentColor"/>
                 </svg>
-                Continue with Microsoft
+                {buttonText}
               </>
             )}
           </button>
 
           <p className="mt-6 text-center text-xs text-gray-500">
-            By signing in, you agree to use your Microsoft account to access DocHub.
+            By signing in, you agree to use {providerName} to access DocHub.
             Your account will be automatically created on first sign-in.
           </p>
         </div>
