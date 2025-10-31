@@ -194,6 +194,17 @@ CREATE TABLE teams (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Application groups table (for organizing applications)
+CREATE TABLE application_groups (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  icon_name TEXT, -- Optional icon (Lucide icon name)
+  color TEXT, -- Optional color (Tailwind color class)
+  display_order INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Applications table (shared across all teams)
 CREATE TABLE applications (
   id TEXT PRIMARY KEY,
