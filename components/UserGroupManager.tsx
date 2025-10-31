@@ -17,6 +17,12 @@ interface User {
   }>;
 }
 
+interface OrganizationWithRoles {
+  id: string;
+  name: string;
+  roles: string[]; // Available roles in this organization
+}
+
 interface UserGroupManagerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -28,8 +34,9 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
   const [saving, setSaving] = useState(false);
   const [availableGroups, setAvailableGroups] = useState<string[]>([]);
   const [availableOrganizations, setAvailableOrganizations] = useState<Array<{ id: string; name: string }>>([]);
+  const [availableRoles, setAvailableRoles] = useState<string[]>([]); // Available roles across all organizations
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [userGroups, setUserGroups] = useState<string[]>([]);
+  const [userGroups, setUserGroups] = useState<string[]>([]); // Format: "orgId:role" or "orgName" for backward compatibility
 
   useEffect(() => {
     if (isOpen) {
@@ -60,6 +67,19 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
         }
       });
       setAvailableGroups(Array.from(allGroups).sort());
+      
+      // Extract unique roles from all users' organization memberships
+      const allRoles = new Set<string>();
+      (data.users || []).forEach((user: User) => {
+        if (user.organizations) {
+          user.organizations.forEach(org => {
+            if (org.role) {
+              allRoles.add(org.role);
+            }
+          });
+        }
+      });
+      setAvailableRoles(Array.from(allRoles).sort());
     } catch (error: any) {
       console.error('Error loading users:', error);
     } finally {
@@ -85,15 +105,22 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
-    // Get groups from both user.groups and user.organizations
-    const userGroupsList = [...user.groups];
+    // Get organization+role combinations from user.organizations
+    // Format: "orgId:role" or fallback to "orgName:role"
+    const userGroupsList: string[] = [];
     if (user.organizations) {
       user.organizations.forEach(org => {
-        if (!userGroupsList.includes(org.name)) {
-          userGroupsList.push(org.name);
-        }
+        const role = org.role || 'member'; // Default role if not specified
+        // Use format "orgId:role" for precise matching
+        userGroupsList.push(`${org.id}:${role}`);
       });
     }
+    // Also include legacy groups for backward compatibility
+    user.groups.forEach(group => {
+      if (!userGroupsList.includes(group)) {
+        userGroupsList.push(group);
+      }
+    });
     setUserGroups(userGroupsList);
   };
 
@@ -103,54 +130,124 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
     try {
       setSaving(true);
 
-      // Get current user's organizations (by name)
-      const currentOrgNames = editingUser.organizations 
-        ? editingUser.organizations.map(org => org.name)
+      // Parse userGroups which are in format "orgId:role"
+      const selectedMemberships = userGroups
+        .filter(g => g.includes(':'))
+        .map(g => {
+          const [orgId, role] = g.split(':');
+          return { orgId, role };
+        })
+        .filter(m => m.orgId && m.role);
+
+      // Get current user's memberships in format "orgId:role"
+      const currentMemberships = editingUser.organizations 
+        ? editingUser.organizations.map(org => ({
+            orgId: org.id,
+            role: org.role || 'member',
+          }))
         : [];
 
-      // Find organizations to add and remove
-      const orgsToAdd = userGroups.filter(orgName => !currentOrgNames.includes(orgName));
-      const orgsToRemove = currentOrgNames.filter(orgName => !userGroups.includes(orgName));
+      // Create maps for easier comparison
+      const selectedMap = new Map(
+        selectedMemberships.map(m => [`${m.orgId}:${m.role}`, m])
+      );
+      const currentMap = new Map(
+        currentMemberships.map(m => [`${m.orgId}:${m.role}`, m])
+      );
 
-      // Get organization IDs from names
-      const orgMap = new Map(availableOrganizations.map(org => [org.name, org.id]));
-      
-      const orgIdsToAdd = orgsToAdd
-        .map(name => ({ name, id: orgMap.get(name) }))
-        .filter(org => org.id) as Array<{ name: string; id: string }>;
-      
-      const orgIdsToRemove = orgsToRemove
-        .map(name => ({ name, id: orgMap.get(name) }))
-        .filter(org => org.id) as Array<{ name: string; id: string }>;
+      // Find memberships to add (in selected but not current)
+      const membershipsToAdd = selectedMemberships.filter(
+        m => !currentMap.has(`${m.orgId}:${m.role}`)
+      );
+
+      // Find memberships to remove (in current but not selected)
+      // Also find memberships to update (same org but different role)
+      const membershipsToRemove: Array<{ orgId: string; role: string }> = [];
+      const membershipsToUpdate: Array<{ orgId: string; oldRole: string; newRole: string }> = [];
+
+      currentMemberships.forEach(current => {
+        const key = `${current.orgId}:${current.role}`;
+        const selected = selectedMap.get(key);
+        
+        if (!selected) {
+          // Check if user still has this org with a different role
+          const orgStillExists = selectedMemberships.some(m => m.orgId === current.orgId);
+          
+          if (orgStillExists) {
+            // Find the new role for this org
+            const newMembership = selectedMemberships.find(m => m.orgId === current.orgId);
+            if (newMembership) {
+              membershipsToUpdate.push({
+                orgId: current.orgId,
+                oldRole: current.role,
+                newRole: newMembership.role,
+              });
+            }
+          } else {
+            // User is being removed from this org entirely
+            membershipsToRemove.push(current);
+          }
+        }
+      });
 
       // Update WorkOS organization memberships
       const updatePromises: Promise<any>[] = [];
 
-      // Add users to organizations
-      for (const org of orgIdsToAdd) {
+      // Remove old memberships first (to avoid conflicts)
+      for (const membership of membershipsToRemove) {
         updatePromises.push(
           fetch('/api/organizations/membership', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userId: editingUser.userId,
-              organizationId: org.id,
-              action: 'add',
+              organizationId: membership.orgId,
+              action: 'remove',
             }),
           })
         );
       }
 
-      // Remove users from organizations
-      for (const org of orgIdsToRemove) {
+      // Update role changes (remove old, add new)
+      for (const update of membershipsToUpdate) {
+        // Remove old membership
         updatePromises.push(
           fetch('/api/organizations/membership', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userId: editingUser.userId,
-              organizationId: org.id,
+              organizationId: update.orgId,
               action: 'remove',
+            }),
+          })
+        );
+        // Add with new role
+        updatePromises.push(
+          fetch('/api/organizations/membership', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: editingUser.userId,
+              organizationId: update.orgId,
+              action: 'add',
+              role: update.newRole,
+            }),
+          })
+        );
+      }
+
+      // Add new memberships (with roles)
+      for (const membership of membershipsToAdd) {
+        updatePromises.push(
+          fetch('/api/organizations/membership', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: editingUser.userId,
+              organizationId: membership.orgId,
+              action: 'add',
+              role: membership.role,
             }),
           })
         );
@@ -372,7 +469,7 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
                   {editingUser?.userId === user.userId && (
                     <div className="mt-4 p-4 bg-white/5 rounded-lg border border-blue-500/30">
                       <div className="mb-3">
-                        <label className="text-sm font-semibold mb-2 block">Assign WorkOS Organizations</label>
+                        <label className="text-sm font-semibold mb-2 block">Assign WorkOS Organizations & Roles</label>
                         <select
                           multiple
                           value={userGroups}
@@ -381,24 +478,39 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
                             setUserGroups(selectedGroups);
                           }}
                           className="w-full min-h-[200px] px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                          size={Math.min(availableOrganizations.length, 8)}
+                          size={Math.min(availableOrganizations.length * (availableRoles.length + 1), 10)}
                         >
                           {availableOrganizations.length === 0 ? (
                             <option disabled>No organizations available. Create organizations in WorkOS first.</option>
                           ) : (
-                            availableOrganizations.map((org) => (
-                              <option
-                                key={org.id}
-                                value={org.name}
-                                className="bg-[#1a1a1a] text-white"
-                              >
-                                {org.name}
-                              </option>
-                            ))
+                            availableOrganizations.map((org) => {
+                              // Show organization with all available roles
+                              // Default roles if none exist: 'admin', 'member', 'user'
+                              const rolesToShow = availableRoles.length > 0 
+                                ? availableRoles 
+                                : ['admin', 'member', 'user'];
+                              
+                              return (
+                                <optgroup key={org.id} label={org.name} className="bg-[#2a2a2a]">
+                                  {rolesToShow.map((role) => {
+                                    const optionValue = `${org.id}:${role}`;
+                                    return (
+                                      <option
+                                        key={optionValue}
+                                        value={optionValue}
+                                        className="bg-[#1a1a1a] text-white pl-4"
+                                      >
+                                        {org.name} - {role}
+                                      </option>
+                                    );
+                                  })}
+                                </optgroup>
+                              );
+                            })
                           )}
                         </select>
                         <div className="mt-2 text-xs text-gray-400">
-                          Hold Ctrl/Cmd to select multiple organizations
+                          Hold Ctrl/Cmd to select multiple organization+role combinations
                         </div>
                         <div className="mt-3 flex gap-2">
                           <button

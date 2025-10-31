@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { userId, organizationId, action } = body;
+    const { userId, organizationId, action, role } = body;
 
     if (!userId || !organizationId || !action || !['add', 'remove'].includes(action)) {
       return NextResponse.json(
@@ -30,11 +30,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    log.info(`[POST /api/organizations/membership] ${action} user ${userId} from organization ${organizationId}`);
+    log.info(`[POST /api/organizations/membership] ${action} user ${userId} from organization ${organizationId}${role ? ` with role ${role}` : ''}`);
 
     let result;
     if (action === 'add') {
+      // First add user to organization
       result = await addUserToOrganization(userId, organizationId);
+      
+      // If role is specified and add was successful, update the role
+      if (result.success && role) {
+        const { updateUserRoleInOrganization } = await import('@/lib/workos/organizations');
+        const roleResult = await updateUserRoleInOrganization(userId, organizationId, role);
+        if (!roleResult.success) {
+          log.warn(`[POST /api/organizations/membership] User added but role update failed:`, roleResult.error);
+          // Don't fail the entire request, but log the warning
+        }
+      }
     } else {
       result = await removeUserFromOrganization(userId, organizationId);
     }
