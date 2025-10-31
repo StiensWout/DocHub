@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FileText, Search, BookOpen, ChevronRight, Layers, Plus, FolderKanban, Settings } from "lucide-react";
 import { getTeams, getApplications, getAllDocumentsForApp, getApplicationGroups } from "@/lib/supabase/queries";
@@ -18,13 +18,16 @@ import ApplicationGroupManager from "@/components/ApplicationGroupManager";
 import ApplicationEditDialog from "@/components/ApplicationEditDialog";
 import GroupSection from "@/components/GroupSection";
 import ApplicationCard from "@/components/ApplicationCard";
+import UserGroupManager from "@/components/UserGroupManager";
+import OrganizationDisplay from "@/components/OrganizationDisplay";
 import { useRecentDocuments } from "@/hooks/useRecentDocuments";
 import { useToast } from "@/components/Toast";
 import { supabase } from "@/lib/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import type { ApplicationWithDocs, Team, Application, Document, BreadcrumbItem, ApplicationGroup } from "@/types";
 import type { SearchResult, DocumentSearchResult } from "@/lib/supabase/search";
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [teams, setTeams] = useState<Team[]>([]);
@@ -47,12 +50,50 @@ export default function Home() {
   const [newDocumentAppId, setNewDocumentAppId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [showUserGroupManager, setShowUserGroupManager] = useState(false);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
   
-  // Recent documents hook
+  // Recent documents hook - only use after mount to avoid hydration issues
   const { recentDocuments, addRecentDocument } = useRecentDocuments();
   
   // Toast notifications
   const toast = useToast();
+  
+  // Auth hook for sign out and user info
+  const { signOut, user } = useAuth();
+
+  // Set mounted state to avoid hydration issues
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Check authentication status on mount
+  useEffect(() => {
+    if (!isMounted) return;
+    
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/auth/session");
+        const data = await response.json();
+        
+        if (!data.authenticated) {
+          // Redirect to sign in if not authenticated
+          router.push("/auth/signin");
+          return;
+        }
+        
+        setAuthChecked(true);
+      } catch (error) {
+        console.error("Error checking auth:", error);
+        router.push("/auth/signin");
+      }
+    };
+    
+    checkAuth();
+  }, [router, isMounted]);
+
 
   // Function to refresh documents without page reload
   const refreshDocuments = async () => {
@@ -99,32 +140,90 @@ export default function Home() {
     setRecentDocs(allRecentDocs);
   };
 
-  // Load initial data
+  // Load initial data - only after mount to avoid hydration issues
   useEffect(() => {
+    if (!isMounted || !authChecked) return;
+    
     async function loadData() {
       setLoading(true);
-      const [teamsData, appsData, groupsData] = await Promise.all([
+      
+      // First check admin status, then load and filter teams
+      let adminStatus = false;
+      try {
+        const roleResponse = await fetch('/api/users/role');
+        if (roleResponse.ok) {
+          const roleData = await roleResponse.json();
+          adminStatus = roleData.role === 'admin';
+          setIsUserAdmin(adminStatus);
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+      }
+      
+      const [allTeamsData, appsData, groupsData] = await Promise.all([
         getTeams(),
         getApplications(),
         getApplicationGroups(),
       ]);
       
-      setTeams(teamsData);
+      // Filter teams based on user's groups (unless admin)
+      // Admin users see all teams, regular users see only their teams
+      let filteredTeams = allTeamsData;
+      if (!adminStatus) {
+        try {
+          // Fetch user's groups from API
+          const groupsResponse = await fetch('/api/users/groups');
+          if (groupsResponse.ok) {
+            const groupsData = await groupsResponse.json();
+            const userGroupNames = groupsData.groups || [];
+            
+            // Filter teams to only show those the user belongs to
+            if (userGroupNames.length > 0) {
+              filteredTeams = allTeamsData.filter(team => 
+                userGroupNames.includes(team.name)
+              );
+            } else {
+              // No groups = no teams
+              filteredTeams = [];
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching user groups:', error);
+          // On error, show no teams to be safe
+          filteredTeams = [];
+        }
+      } else {
+        // Admin: Show all teams (no filtering needed)
+        console.log('[page] Admin user detected - showing all teams:', allTeamsData.length);
+        filteredTeams = allTeamsData;
+      }
+      
+      setTeams(filteredTeams);
       setApplications(appsData);
       setGroups(groupsData);
       
-      if (teamsData.length > 0 && !selectedTeamId) {
-        setSelectedTeamId(teamsData[0].id);
+      // Update selected team if it's no longer in filtered list
+      if (selectedTeamId && !filteredTeams.find(t => t.id === selectedTeamId)) {
+        if (filteredTeams.length > 0) {
+          setSelectedTeamId(filteredTeams[0].id);
+        } else {
+          setSelectedTeamId("");
+        }
+      } else if (filteredTeams.length > 0 && !selectedTeamId) {
+        setSelectedTeamId(filteredTeams[0].id);
       }
       
       setLoading(false);
     }
     
     loadData();
-  }, []);
+  }, [isMounted, authChecked]);
 
   // Handle app and group query parameters from URL
+  // Only process search params after component is mounted to avoid hydration issues
   useEffect(() => {
+    if (!isMounted) return;
+    
     const appParam = searchParams.get('app');
     const groupParam = searchParams.get('group');
     
@@ -149,7 +248,7 @@ export default function Home() {
         setSelectedDocumentAppId("");
       }
     }
-  }, [searchParams, applications, groups]);
+  }, [searchParams, applications, groups, isMounted]);
 
   // Update applications with docs when team or apps change
   useEffect(() => {
@@ -320,6 +419,19 @@ export default function Home() {
     }
   }, [recentDocuments, applications]);
 
+  // Don't render content until mounted and auth is checked
+  // This ensures server and client render the same initial state
+  if (!isMounted || !authChecked) {
+    return (
+      <div className="bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite] text-blue-500"></div>
+          <p className="mt-4 text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] flex">
       {/* Sidebar */}
@@ -339,7 +451,10 @@ export default function Home() {
             onDocumentSelect={handleDocumentSelect}
             collapsed={sidebarCollapsed}
             onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
+            onSignOut={signOut}
             recentDocuments={recentDocuments}
+            isAdmin={isUserAdmin}
+            onManageUsers={() => setShowUserGroupManager(true)}
             onHomeClick={() => {
               setSelectedApp(null);
               setSelectedGroup(null);
@@ -410,9 +525,13 @@ export default function Home() {
                 />
               </div>
               <div className="flex items-center gap-3">
-                {teams.length > 0 && (
-                  <TeamSelector teams={teams} selectedTeamId={selectedTeamId} onTeamChange={setSelectedTeamId} />
-                )}
+                <OrganizationDisplay 
+                  className="hidden md:flex" 
+                  isAdmin={isUserAdmin}
+                  teams={teams}
+                  selectedTeamId={selectedTeamId}
+                  onTeamChange={setSelectedTeamId}
+                />
                 <button
                   onClick={() => setShowGroupManagerDialog(true)}
                   className="px-4 py-2 bg-gray-600 hover:bg-gray-700 border border-gray-600 rounded-lg text-sm transition-all flex items-center gap-2"
@@ -786,6 +905,14 @@ export default function Home() {
         />
       )}
 
+      {/* User Group Manager Dialog */}
+      {showUserGroupManager && (
+        <UserGroupManager
+          isOpen={showUserGroupManager}
+          onClose={() => setShowUserGroupManager(false)}
+        />
+      )}
+
       {/* Edit Application Dialog */}
       {showEditApplicationDialog && editingApplication && (
         <ApplicationEditDialog
@@ -1059,4 +1186,22 @@ function parseTimeAgo(timeAgo: string): number {
   };
 
   return value * (multipliers[unit] || 0);
+}
+
+// Wrap HomeContent in Suspense to fix useSearchParams hydration error
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite] text-blue-500"></div>
+            <p className="mt-4 text-gray-400">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
+  );
 }

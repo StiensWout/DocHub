@@ -1,3 +1,4 @@
+import 'server-only'; // This marks the entire file as server-only
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;

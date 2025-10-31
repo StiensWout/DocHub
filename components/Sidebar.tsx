@@ -15,7 +15,12 @@ import {
   X,
   Clock,
   Layers,
+  LogOut,
+  Users,
+  Shield,
+  User,
 } from "lucide-react";
+import Link from "next/link";
 import type { Team, Application, Document, RecentDocument, ApplicationGroup } from "@/types";
 import { getApplicationGroups } from "@/lib/supabase/queries";
 
@@ -34,6 +39,9 @@ interface SidebarProps {
   onCreateDocument?: () => void;
   onUploadFile?: () => void;
   onHomeClick?: () => void;
+  onSignOut?: () => void;
+  isAdmin?: boolean;
+  onManageUsers?: () => void;
 }
 
 const SIDEBAR_COLLAPSED_KEY = "dochub_sidebar_collapsed";
@@ -53,6 +61,9 @@ export default function Sidebar({
   onCreateDocument,
   onUploadFile,
   onHomeClick,
+  onSignOut,
+  isAdmin = false,
+  onManageUsers,
 }: SidebarProps) {
   const [internalCollapsed, setInternalCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -689,7 +700,66 @@ export default function Sidebar({
                   <span className="text-sm">Upload File</span>
                 </button>
               )}
+
+              {/* User Section */}
+              <div className="px-4 py-2 mt-4 border-t border-white/10">
+                <Link
+                  href="/profile"
+                  onClick={() => {
+                    if (window.innerWidth < 1024) {
+                      setMobileOpen(false);
+                    }
+                  }}
+                  className="w-full px-4 py-2 text-left flex items-center gap-3 hover:bg-blue-500/20 transition-colors text-blue-400 block"
+                >
+                  <User className="w-4 h-4" />
+                  <span className="text-sm">Profile</span>
+                </Link>
+              </div>
+
+              {/* Admin Section */}
+              {isAdmin && onManageUsers && (
+                <>
+                  <div className="px-4 py-2 mt-2 border-t border-white/10">
+                    <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                      <Shield className="w-3 h-3" />
+                      Admin
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => {
+                      onManageUsers();
+                      if (window.innerWidth < 1024) {
+                        setMobileOpen(false);
+                      }
+                    }}
+                    className="w-full px-4 py-2 text-left flex items-center gap-3 hover:bg-purple-500/20 transition-colors text-purple-400"
+                  >
+                    <Users className="w-4 h-4" />
+                    <span className="text-sm">Manage Users</span>
+                  </button>
+                </>
+              )}
             </>
+          )}
+        </div>
+
+        {/* Footer with Logout */}
+        <div className="border-t border-white/10 p-4">
+          {onSignOut && (
+            <button
+              onClick={() => {
+                onSignOut();
+                if (window.innerWidth < 1024) {
+                  setMobileOpen(false);
+                }
+              }}
+              className="w-full px-4 py-2 text-left flex items-center gap-3 hover:bg-red-500/20 transition-colors text-red-400 rounded-lg"
+              aria-label="Sign out"
+            >
+              <LogOut className="w-4 h-4" />
+              {!collapsed && <span className="text-sm">Sign Out</span>}
+            </button>
           )}
         </div>
       </aside>

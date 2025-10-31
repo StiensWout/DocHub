@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { X, Loader2 } from "lucide-react";
-import { createApplication, checkApplicationIdExists, getApplicationGroups } from "@/lib/supabase/queries";
+import { checkApplicationIdExists, getApplicationGroups } from "@/lib/supabase/queries";
 import { useToast } from "./Toast";
 import IconPicker from "./IconPicker";
 import ColorPicker from "./ColorPicker";
@@ -137,10 +137,25 @@ export default function ApplicationCreateDialog({
     setIsCreating(true);
 
     try {
-      const result = await createApplication(id, name.trim(), icon, color, groupId);
+      // Call API route instead of direct database access
+      const response = await fetch('/api/applications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id,
+          name: name.trim(),
+          iconName: icon,
+          color,
+          groupId: groupId || null,
+        }),
+      });
 
-      if (!result.success) {
-        toast.error(result.error || "Failed to create application");
+      const result = await response.json();
+      
+      if (!response.ok) {
+        toast.error(result.error || 'Failed to create application');
         setIsCreating(false);
         return;
       }

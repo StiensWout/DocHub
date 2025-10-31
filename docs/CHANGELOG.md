@@ -4,7 +4,71 @@ All notable changes and completed features in DocHub.
 
 ## [Current] - 2025-01-30
 
+### ✨ Completed Features
+
+#### Provider-Agnostic SSO Authentication ✅
+- ✅ **Generic SSO System**: Provider-agnostic authentication architecture
+- ✅ **Organization-Based Auth**: Uses WorkOS Organizations for flexible provider switching
+- ✅ **Generic SSO Endpoint**: `/api/auth/sso` works with any SSO provider
+- ✅ **Provider Switching**: Change providers in WorkOS Dashboard without code changes
+- ✅ **Session Handling**: Supports both SSO profiles and User Management users
+- ✅ **Sign-in Page**: Generic UI that adapts to any provider
+- ✅ **Callback Handler**: `/auth/callback` route for SSO authentication
+- ✅ **Session Management**: Proper handling of SSO profiles vs User Management users
+- ✅ Sign-up page redirects to sign-in (SSO doesn't require separate sign-up)
+- ✅ **Key Benefit**: Switch from test SSO to Microsoft (or any provider) by updating organization connection
+- **Status**: ✅ Fully functional with test SSO, ready for production provider
+- **See**: `docs/FEATURES/pending/auth-provider-switching.md` for migration guide
+
+#### WorkOS SSO Integration - Phase 1 ✅
+- ✅ Installed and configured WorkOS Node.js SDK
+- ✅ Created WorkOS server-side client (`lib/workos/server.ts`)
+- ✅ Created WorkOS client-side utilities (`lib/workos/client.ts`)
+- ✅ Implemented session management utilities (`lib/auth/session.ts`)
+- ✅ Created authentication API routes:
+  - POST `/api/auth/signin` - Email/password authentication
+  - POST `/api/auth/signup` - User registration
+  - GET `/auth/callback` - OAuth callback handler
+  - POST `/api/auth/signout` - Sign out endpoint
+  - GET `/api/auth/session` - Session status check
+- ✅ Created authentication UI pages:
+  - `/auth/signin` - Sign in page with email/password and OAuth buttons
+  - `/auth/signup` - Registration page
+- ✅ Implemented Next.js middleware for route protection
+- ✅ Created client-side auth hook (`hooks/useAuth.ts`)
+- ✅ Added client-side authentication check on home page
+- ✅ Protected routes: `/documents/*`, `/groups/*`, `/api/files/*`
+- ✅ OAuth providers UI ready (Google, GitHub) - requires WorkOS Dashboard configuration
+- ✅ Email verification with codes - inline code input on sign-up page
+- **Status**: Phase 1 complete, Email verification complete, Phase 2 (Magic Link, Password Reset) pending
+- **Note**: OAuth providers need to be configured in WorkOS Dashboard with credentials
+
 ### 🐛 Bug Fixes
+
+#### SSO Callback Route Fix
+- ✅ Fixed 404 error on `/auth/callback` - created route handler at correct path
+- ✅ Updated callback to use `workos.sso.getProfileAndToken()` for SSO authentication
+- ✅ Improved error handling and logging in callback route
+- **Impact**: SSO authentication flow now completes successfully
+
+#### SSO Session Handling Fix
+- ✅ Fixed "User not found" error after SSO authentication
+- ✅ Changed from `userManagement.getUser()` to `sso.getProfile()` for SSO tokens
+- ✅ Added automatic fallback between SSO and User Management APIs
+- ✅ Proper handling of SSO profiles vs User Management users
+- **Impact**: Session retrieval now works correctly with SSO authentication
+
+#### WorkOS Email Verification Fix (Legacy)
+- ✅ Fixed `authenticateWithEmailVerificationCode` TypeError - method doesn't exist
+- ✅ Changed to correct method: `authenticateWithEmailVerification` with `code` parameter
+- **Note**: Email verification not currently used (SSO only)
+
+#### WorkOS Navigation Fix
+- ✅ Fixed runtime error when navigating from sign-in to sign-up page
+- ✅ Changed `WORKOS_CLIENT_ID` to not throw on module load
+- ✅ Added `requireWorkOSClientId()` function that only throws when OAuth is used
+- ✅ Changed anchor tag to Next.js `router.push()` for client-side navigation
+- **Impact**: Smooth navigation between auth pages without runtime errors
 
 #### URL Navigation Consistency
 - ✅ Fixed inconsistent navigation behavior between grouped and ungrouped applications

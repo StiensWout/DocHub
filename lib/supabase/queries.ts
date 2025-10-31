@@ -71,43 +71,9 @@ export async function getTeams(): Promise<Team[]> {
   }));
 }
 
-// Create a new application
-export async function createApplication(
-  id: string,
-  name: string,
-  iconName: string,
-  color: string,
-  groupId?: string | null
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    const { error } = await supabase
-      .from("applications")
-      .insert({
-        id,
-        name,
-        icon_name: iconName,
-        color,
-        group_id: groupId || null,
-      });
-
-    if (error) {
-      console.error("Error creating application:", error);
-      // Provide more helpful error messages
-      if (error.code === "23505") {
-        return { success: false, error: "An application with this ID already exists" };
-      }
-      if (error.code === "42501") {
-        return { success: false, error: "Permission denied. Please check RLS policies." };
-      }
-      return { success: false, error: error.message || "Failed to create application" };
-    }
-
-    return { success: true };
-  } catch (err) {
-    console.error("Unexpected error creating application:", err);
-    return { success: false, error: "An unexpected error occurred" };
-  }
-}
+// NOTE: createApplication has been moved to /api/applications route
+// Use the API route instead: POST /api/applications
+// This was moved because it requires server-only environment variables
 
 // Update an existing application
 export async function updateApplication(
