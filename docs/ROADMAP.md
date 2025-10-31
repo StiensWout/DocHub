@@ -29,10 +29,10 @@ Planned features, enhancements, and improvements for DocHub. Organized by priori
   - [x] WorkOS AuthKit integration (Phase 1)
   - [x] Login/signup pages
   - [x] Email/password authentication
+  - [x] Email verification with codes ✅
   - [x] Social OAuth providers (Google, GitHub) - UI ready, needs provider setup
   - [ ] Magic Link authentication
   - [ ] Password reset flow
-  - [ ] Email verification
   - [x] Session management
   - [x] Authentication middleware
   - [x] Client-side auth hooks

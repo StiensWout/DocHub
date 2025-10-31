@@ -153,7 +153,7 @@ export const REDIRECT_URI = process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI!;
 2. ✅ Create sign-in page (`app/auth/signin/page.tsx`) - **COMPLETED**
 3. ✅ Implement sign-up API route (`app/api/auth/signup/route.ts`) - **COMPLETED**
 4. ✅ Implement sign-in API route (`app/api/auth/signin/route.ts`) - **COMPLETED**
-5. [ ] Handle email verification flow - **PENDING**
+5. ✅ Handle email verification flow with codes - **COMPLETED**
 
 **API Endpoints Implemented**: ✅
 - ✅ `POST /api/auth/signup` - Create new user account
@@ -161,14 +161,22 @@ export const REDIRECT_URI = process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI!;
 - ✅ `GET /api/auth/session` - Get current user session status
 - ✅ `POST /api/auth/signout` - Sign out user
 - ✅ `GET /api/auth/callback` - OAuth callback handler
-- [ ] `POST /api/auth/verify-email` - Verify email address (pending)
+- ✅ `POST /api/auth/verify-email` - Verify email address with verification code
 
 **UI Components Implemented**: ✅
 - ✅ Sign-in page with email/password form
 - ✅ Sign-up page with registration form
+- ✅ Email verification code input form on sign-up page
 - ✅ OAuth provider buttons (Google, GitHub) on sign-in page
 - ✅ Loading states and error handling
 - ✅ Client-side auth hook (`hooks/useAuth.ts`)
+
+**Email Verification Implementation**: ✅
+- ✅ Sign-up page detects when email verification is required
+- ✅ Displays verification code input form inline
+- ✅ Uses WorkOS `authenticateWithEmailVerification` method
+- ✅ Handles 6-digit verification codes from WorkOS emails
+- ✅ Automatically authenticates user after successful verification
 
 **Configuration**:
 - Enable Email/Password in WorkOS Dashboard
@@ -561,7 +569,7 @@ middleware.ts         # Next.js middleware for route protection
 - [x] Create OAuth callback handler (`app/api/auth/callback/route.ts`) ✅
 - [x] Create session status API (`/api/auth/session`) ✅
 - [x] Create client-side auth hook (`hooks/useAuth.ts`) ✅
-- [ ] Test email verification flow (pending)
+- [x] Test email verification flow ✅
 
 ### Phase 3: Additional Auth Methods 🚧 IN PROGRESS
 - [ ] Implement Magic Link authentication
@@ -601,7 +609,7 @@ middleware.ts         # Next.js middleware for route protection
 ### Phase 8: Additional Features (Future)
 - [ ] Implement Magic Link authentication
 - [ ] Implement password reset flow
-- [ ] Implement email verification flow
+- [x] Implement email verification flow ✅
 - [ ] Add MFA support
 - [ ] Add passkey support
 
@@ -610,7 +618,7 @@ middleware.ts         # Next.js middleware for route protection
 - [ ] Integration tests for auth flows
 - [ ] E2E tests for sign-in/sign-up
 - [ ] Test password reset flow
-- [ ] Test email verification
+- [x] Test email verification ✅
 - [ ] Test OAuth flows
 - [ ] Test session management
 - [ ] Test protected routes

@@ -25,10 +25,26 @@ All notable changes and completed features in DocHub.
 - ✅ Added client-side authentication check on home page
 - ✅ Protected routes: `/documents/*`, `/groups/*`, `/api/files/*`
 - ✅ OAuth providers UI ready (Google, GitHub) - requires WorkOS Dashboard configuration
-- **Status**: Phase 1 complete, Phase 2 (Magic Link, Password Reset, Email Verification) pending
+- ✅ Email verification with codes - inline code input on sign-up page
+- **Status**: Phase 1 complete, Email verification complete, Phase 2 (Magic Link, Password Reset) pending
 - **Note**: OAuth providers need to be configured in WorkOS Dashboard with credentials
 
 ### 🐛 Bug Fixes
+
+#### WorkOS Email Verification Fix
+- ✅ Fixed `authenticateWithEmailVerificationCode` TypeError - method doesn't exist
+- ✅ Changed to correct method: `authenticateWithEmailVerification` with `code` parameter
+- ✅ Updated sign-up page to use verification codes instead of links (matches WorkOS default)
+- ✅ Added inline code verification form on sign-up page
+- ✅ Improved error handling for invalid/expired verification codes
+- **Impact**: Email verification now works correctly with 6-digit codes sent by WorkOS
+
+#### WorkOS Navigation Fix
+- ✅ Fixed runtime error when navigating from sign-in to sign-up page
+- ✅ Changed `WORKOS_CLIENT_ID` to not throw on module load
+- ✅ Added `requireWorkOSClientId()` function that only throws when OAuth is used
+- ✅ Changed anchor tag to Next.js `router.push()` for client-side navigation
+- **Impact**: Smooth navigation between auth pages without runtime errors
 
 #### URL Navigation Consistency
 - ✅ Fixed inconsistent navigation behavior between grouped and ungrouped applications
