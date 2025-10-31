@@ -18,11 +18,15 @@ export async function GET(request: NextRequest) {
     // According to WorkOS docs, MicrosoftOAuth is a supported provider value
     // This works with OAuth connections configured at the environment level
     
-    // Check if a specific connection ID is provided (preferred for company accounts)
+    // Check configuration options (priority order):
+    // 1. Connection ID (specific Microsoft connection)
+    // 2. Organization ID (organization's SSO connection - works if org uses Microsoft)
+    // 3. Provider parameter (environment-level OAuth - fallback, may not work with company accounts)
     const connectionId = process.env.WORKOS_MICROSOFT_CONNECTION_ID;
     const organizationId = process.env.WORKOS_ORGANIZATION_ID;
     
     let authorizationUrl: string;
+    let configMethod: string;
     
     if (connectionId) {
       // Use specific connection ID (recommended for company/enterprise accounts)
@@ -32,13 +36,17 @@ export async function GET(request: NextRequest) {
         redirectUri,
         clientId,
       });
+      configMethod = 'connection ID';
     } else if (organizationId) {
-      // Use organization ID
+      // Use organization ID (uses the organization's configured SSO connection)
+      // Note: The organization must have a Microsoft connection configured
+      // If org currently uses test SSO, update org connection to Microsoft in WorkOS Dashboard
       authorizationUrl = workos.sso.getAuthorizationUrl({
         organization: organizationId,
         redirectUri,
         clientId,
       });
+      configMethod = 'organization ID';
     } else {
       // Use provider parameter (works with environment-level OAuth config)
       // Note: This requires Microsoft OAuth to be configured in WorkOS Dashboard
@@ -48,6 +56,12 @@ export async function GET(request: NextRequest) {
         redirectUri,
         clientId,
       });
+      configMethod = 'provider parameter (fallback)';
+    }
+    
+    console.log(`Microsoft SSO using: ${configMethod}`);
+    if (organizationId && !connectionId) {
+      console.log(`⚠️  Using organization ID. Ensure your organization (${organizationId}) has a Microsoft connection configured in WorkOS Dashboard.`);
     }
     
     return NextResponse.json({ url: authorizationUrl });
