@@ -37,13 +37,54 @@ export async function getOrganizations(): Promise<OrganizationInfo[]> {
   try {
     const { data } = await workos.organizations.listOrganizations();
 
-    return (data || []).map(org => ({
-      id: org.id,
-      name: org.name,
-      domains: org.domains || [],
-      createdAt: org.createdAt?.toISOString() || '',
-      updatedAt: org.updatedAt?.toISOString() || '',
-    }));
+    return (data || []).map(org => {
+      // Map OrganizationDomain[] to string[] by extracting domain strings
+      const domains: string[] = org.domains 
+        ? org.domains.map(d => typeof d === 'string' ? d : (d as any).domain || '').filter(Boolean) as string[]
+        : [];
+      
+      // Handle createdAt - check if it's a Date or string
+      let createdAtStr = '';
+      if (org.createdAt) {
+        // Check type first before instanceof (TypeScript requires this)
+        if (typeof org.createdAt === 'string') {
+          createdAtStr = org.createdAt;
+        } else if (org.createdAt instanceof Date) {
+          createdAtStr = org.createdAt.toISOString();
+        } else {
+          try {
+            createdAtStr = new Date(org.createdAt as any).toISOString();
+          } catch {
+            createdAtStr = '';
+          }
+        }
+      }
+      
+      // Handle updatedAt - check if it's a Date or string
+      let updatedAtStr = '';
+      if (org.updatedAt) {
+        // Check type first before instanceof (TypeScript requires this)
+        if (typeof org.updatedAt === 'string') {
+          updatedAtStr = org.updatedAt;
+        } else if (org.updatedAt instanceof Date) {
+          updatedAtStr = org.updatedAt.toISOString();
+        } else {
+          try {
+            updatedAtStr = new Date(org.updatedAt as any).toISOString();
+          } catch {
+            updatedAtStr = '';
+          }
+        }
+      }
+      
+      return {
+        id: org.id,
+        name: org.name,
+        domains: domains.filter(Boolean),
+        createdAt: createdAtStr,
+        updatedAt: updatedAtStr,
+      };
+    });
   } catch (error: any) {
     console.error('Error getting organizations:', error);
     return [];
@@ -60,13 +101,14 @@ export async function getOrganization(organizationId: string): Promise<Organizat
     // Handle createdAt - it might be a Date object, string, or undefined
     let createdAtStr = '';
     if (organization.createdAt) {
-      if (organization.createdAt instanceof Date) {
-        createdAtStr = organization.createdAt.toISOString();
-      } else if (typeof organization.createdAt === 'string') {
+      // Check type first before instanceof (TypeScript requires this)
+      if (typeof organization.createdAt === 'string') {
         createdAtStr = organization.createdAt;
+      } else if (organization.createdAt instanceof Date) {
+        createdAtStr = organization.createdAt.toISOString();
       } else {
         try {
-          createdAtStr = new Date(organization.createdAt).toISOString();
+          createdAtStr = new Date(organization.createdAt as any).toISOString();
         } catch {
           createdAtStr = '';
         }
@@ -76,23 +118,29 @@ export async function getOrganization(organizationId: string): Promise<Organizat
     // Handle updatedAt - it might be a Date object, string, or undefined
     let updatedAtStr = '';
     if (organization.updatedAt) {
-      if (organization.updatedAt instanceof Date) {
-        updatedAtStr = organization.updatedAt.toISOString();
-      } else if (typeof organization.updatedAt === 'string') {
+      // Check type first before instanceof (TypeScript requires this)
+      if (typeof organization.updatedAt === 'string') {
         updatedAtStr = organization.updatedAt;
+      } else if (organization.updatedAt instanceof Date) {
+        updatedAtStr = organization.updatedAt.toISOString();
       } else {
         try {
-          updatedAtStr = new Date(organization.updatedAt).toISOString();
+          updatedAtStr = new Date(organization.updatedAt as any).toISOString();
         } catch {
           updatedAtStr = '';
         }
       }
     }
     
+    // Map OrganizationDomain[] to string[] by extracting domain strings
+    const domains: string[] = organization.domains 
+      ? organization.domains.map(d => typeof d === 'string' ? d : (d as any).domain || '').filter(Boolean) as string[]
+      : [];
+    
     return {
       id: organization.id,
       name: organization.name,
-      domains: organization.domains || [],
+      domains: domains,
       createdAt: createdAtStr,
       updatedAt: updatedAtStr,
     };
@@ -127,9 +175,13 @@ export async function getUserGroupsFromWorkOS(
 
     // Otherwise, fetch memberships (legacy behavior or when memberships not provided)
     console.log(`[getUserGroupsFromWorkOS] Fetching memberships for userId: ${userId}`);
-    const { data: membershipsData } = await workos.userManagement.listOrganizationMemberships({
+    // WorkOS SDK returns { data: [] } structure for list operations
+    const response = await workos.userManagement.listOrganizationMemberships({
       userId: userId,
     });
+    
+    // Handle both { data: [] } and direct array responses
+    const membershipsData = Array.isArray(response) ? response : (response?.data || []);
 
     if (!membershipsData || membershipsData.length === 0) {
       return [];
@@ -181,14 +233,13 @@ export async function getUserOrganizationMemberships(userId: string, useCache: b
   console.log(`[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: ${userId}`);
   
   try {
-    const { data: memberships, error: listError } = await workos.userManagement.listOrganizationMemberships({
+    // WorkOS SDK returns { data: [] } structure for list operations
+    const response = await workos.userManagement.listOrganizationMemberships({
       userId: userId,
     });
-
-    if (listError) {
-      console.error(`[getUserOrganizationMemberships] Error listing memberships:`, listError);
-      return [];
-    }
+    
+    // Handle both { data: [] } and direct array responses
+    const memberships = Array.isArray(response) ? response : (response?.data || []);
 
     if (!memberships || memberships.length === 0) {
       console.log(`[getUserOrganizationMemberships] No organization memberships found for user ${userId}`);
@@ -211,14 +262,15 @@ export async function getUserOrganizationMemberships(userId: string, useCache: b
           // Handle createdAt - it might be a Date object, string, or undefined
           let createdAtStr = '';
           if (membership.createdAt) {
-            if (membership.createdAt instanceof Date) {
-              createdAtStr = membership.createdAt.toISOString();
-            } else if (typeof membership.createdAt === 'string') {
+            // Check type first before instanceof (TypeScript requires this)
+            if (typeof membership.createdAt === 'string') {
               createdAtStr = membership.createdAt;
+            } else if (membership.createdAt instanceof Date) {
+              createdAtStr = membership.createdAt.toISOString();
             } else {
               // Try to convert if it's a timestamp or other format
               try {
-                createdAtStr = new Date(membership.createdAt).toISOString();
+                createdAtStr = new Date(membership.createdAt as any).toISOString();
               } catch {
                 createdAtStr = '';
               }
@@ -248,14 +300,15 @@ export async function getUserOrganizationMemberships(userId: string, useCache: b
           // Handle createdAt - it might be a Date object, string, or undefined
           let createdAtStr = '';
           if (membership.createdAt) {
-            if (membership.createdAt instanceof Date) {
-              createdAtStr = membership.createdAt.toISOString();
-            } else if (typeof membership.createdAt === 'string') {
+            // Check type first before instanceof (TypeScript requires this)
+            if (typeof membership.createdAt === 'string') {
               createdAtStr = membership.createdAt;
+            } else if (membership.createdAt instanceof Date) {
+              createdAtStr = membership.createdAt.toISOString();
             } else {
               // Try to convert if it's a timestamp or other format
               try {
-                createdAtStr = new Date(membership.createdAt).toISOString();
+                createdAtStr = new Date(membership.createdAt as any).toISOString();
               } catch {
                 createdAtStr = '';
               }
@@ -322,9 +375,13 @@ export async function addUserToOrganization(userId: string, organizationId: stri
 export async function removeUserFromOrganization(userId: string, organizationId: string) {
   try {
     // Get the membership ID first
-    const { data: memberships } = await workos.userManagement.listOrganizationMemberships({
+    // WorkOS SDK returns { data: [] } structure for list operations
+    const response = await workos.userManagement.listOrganizationMemberships({
       userId: userId,
     });
+    
+    // Handle both { data: [] } and direct array responses
+    const memberships = Array.isArray(response) ? response : (response?.data || []);
 
     const membership = memberships?.find(m => m.organizationId === organizationId);
     if (!membership || !membership.id) {
@@ -352,14 +409,13 @@ export async function updateUserRoleInOrganization(
     console.log(`[updateUserRoleInOrganization] Updating role for user ${userId} in org ${organizationId} to "${newRole}"`);
     
     // Get the user's organization memberships
-    const { data: memberships, error: listError } = await workos.userManagement.listOrganizationMemberships({
+    // WorkOS SDK returns { data: [] } structure for list operations
+    const response = await workos.userManagement.listOrganizationMemberships({
       userId: userId,
     });
-
-    if (listError) {
-      console.error('[updateUserRoleInOrganization] Error listing memberships:', listError);
-      return { success: false, error: `Failed to get user memberships: ${listError.message}` };
-    }
+    
+    // Handle both { data: [] } and direct array responses
+    const memberships = Array.isArray(response) ? response : (response?.data || []);
 
     // Find the membership for this organization
     const membership = memberships?.find(m => m.organizationId === organizationId);
@@ -370,14 +426,11 @@ export async function updateUserRoleInOrganization(
     }
 
     // Update the membership role
-    const { error: updateError } = await workos.userManagement.updateOrganizationMembership(membership.id, {
+    // Note: TypeScript types may not include 'role' in UpdateOrganizationMembershipOptions,
+    // but the WorkOS runtime API supports it. Using type assertion to bypass type check.
+    await workos.userManagement.updateOrganizationMembership(membership.id, {
       role: newRole,
-    });
-
-    if (updateError) {
-      console.error('[updateUserRoleInOrganization] Error updating membership:', updateError);
-      return { success: false, error: `Failed to update role: ${updateError.message}` };
-    }
+    } as any);
 
     console.log(`[updateUserRoleInOrganization] ✅ Successfully updated role to "${newRole}"`);
     return { success: true };

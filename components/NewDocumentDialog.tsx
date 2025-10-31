@@ -5,6 +5,7 @@ import TeamSelector from "@/components/TeamSelector";
 import DocumentViewer from "@/components/DocumentViewer";
 import DocumentEditor from "@/components/DocumentEditor";
 import TemplateSelector from "@/components/TemplateSelector";
+import TagSelector, { type Tag } from "@/components/TagSelector";
 import { supabase } from "@/lib/supabase/client";
 import type { ApplicationWithDocs, Team, Application, Document } from "@/types";
 import type { DocumentTemplate } from "@/lib/templates";
@@ -13,7 +14,7 @@ interface NewDocumentDialogProps {
   appId: string;
   teamId: string;
   onClose: () => void;
-  onCreated: () => void;
+  onCreated: (createdDocument: { id: string; type: "base" | "team"; appId: string }) => void;
 }
 
 function NewDocumentDialog({ appId, teamId, onClose, onCreated }: NewDocumentDialogProps) {
@@ -22,6 +23,8 @@ function NewDocumentDialog({ appId, teamId, onClose, onCreated }: NewDocumentDia
   const [category, setCategory] = useState("");
   const [documentType, setDocumentType] = useState<"base" | "team">("team");
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleCreate = async () => {
     if (!title.trim() || !category.trim()) {
@@ -34,6 +37,7 @@ function NewDocumentDialog({ appId, teamId, onClose, onCreated }: NewDocumentDia
       return;
     }
 
+    setIsCreating(true);
     try {
       const tableName = documentType === "base" ? "base_documents" : "team_documents";
       const insertData: any = {
@@ -52,14 +56,51 @@ function NewDocumentDialog({ appId, teamId, onClose, onCreated }: NewDocumentDia
       if (error) {
         console.error("Error creating document:", error);
         alert(`Failed to create document: ${error.message || JSON.stringify(error)}`);
+        setIsCreating(false);
         return;
       }
 
-      onCreated();
+      // Add tags to the document if any are selected
+      if (selectedTags.length > 0 && data && data[0]) {
+        const documentId = data[0].id;
+        try {
+          const tagIds = selectedTags.map((tag) => tag.id);
+          const response = await fetch(`/api/documents/${documentId}/tags`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              tagIds,
+              documentType,
+            }),
+          });
+
+          if (!response.ok) {
+            console.error("Failed to add tags to document");
+            // Don't fail the whole operation if tags fail
+          }
+        } catch (tagError) {
+          console.error("Error adding tags:", tagError);
+          // Don't fail the whole operation if tags fail
+        }
+      }
+
+      // Pass the created document data to the callback
+      if (data && data[0]) {
+        onCreated({
+          id: data[0].id,
+          type: documentType,
+          appId: appId,
+        });
+      }
+      
       onClose();
     } catch (err: any) {
       console.error("Error creating document:", err);
       alert(`Failed to create document: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -147,6 +188,18 @@ function NewDocumentDialog({ appId, teamId, onClose, onCreated }: NewDocumentDia
             )}
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Tags (Optional)
+            </label>
+            <TagSelector
+              selectedTags={selectedTags}
+              onChange={setSelectedTags}
+              placeholder="Add tags to categorize this document..."
+              maxTags={10}
+            />
+          </div>
+
           <div className="flex gap-2 pt-4">
             <button
               onClick={onClose}
@@ -156,9 +209,10 @@ function NewDocumentDialog({ appId, teamId, onClose, onCreated }: NewDocumentDia
             </button>
             <button
               onClick={handleCreate}
-              className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg font-medium transition-all"
+              disabled={isCreating}
+              className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create
+              {isCreating ? "Creating..." : "Create"}
             </button>
           </div>
         </div>

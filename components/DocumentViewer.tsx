@@ -1,10 +1,13 @@
 "use client";
 
-import { X, Edit, Trash2, Clock, Printer, Download, Share2 } from "lucide-react";
-import { useState } from "react";
+import { X, Edit, Trash2, Clock, Printer, Download, Share2, Settings } from "lucide-react";
+import { useState, useEffect } from "react";
+import DOMPurify from "dompurify";
 import DocumentVersionHistory from "./DocumentVersionHistory";
+import DocumentMetadataEditor from "./DocumentMetadataEditor";
 import FileList from "./FileList";
 import Breadcrumbs from "./Breadcrumbs";
+import TagDisplay, { type Tag } from "./TagDisplay";
 import { useToast } from "./Toast";
 import { supabase } from "@/lib/supabase/client";
 import type { Document, BreadcrumbItem } from "@/types";
@@ -27,8 +30,30 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showMetadataEditor, setShowMetadataEditor] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [documentTags, setDocumentTags] = useState<Tag[]>([]);
   const toast = useToast();
+
+  // Load document tags
+  useEffect(() => {
+    async function loadTags() {
+      if (!document || !appId) return;
+      try {
+        const response = await fetch(
+          `/api/documents/${document.id}/tags?type=${document.type}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setDocumentTags(data.tags || []);
+        }
+      } catch (error) {
+        console.error("Error loading document tags:", error);
+      }
+    }
+
+    loadTags();
+  }, [document?.id, document?.type, appId]);
 
   if (!document) return null;
 
@@ -231,6 +256,17 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
   const renderContent = (content: string | undefined) => {
     if (!content) return <p className="text-gray-400 italic">No content available</p>;
 
+    // Sanitize HTML content to prevent XSS attacks
+    const sanitizedContent = DOMPurify.sanitize(content, {
+      ALLOWED_TAGS: [
+        'p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'a', 'img', 'table', 'thead',
+        'tbody', 'tr', 'th', 'td', 'hr', 'div', 'span', 'sub', 'sup', 'del', 'ins'
+      ],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'style'],
+      ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+    });
+
     return (
       <div className="print-content">
         {/* Print-only header */}
@@ -244,7 +280,7 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
         <div
           id={`document-content-${document.id}`}
           className="prose prose-invert max-w-none"
-          dangerouslySetInnerHTML={{ __html: content }}
+          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
         />
       </div>
     );
@@ -279,6 +315,11 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
               <span className="text-foreground-muted">•</span>
               <span>{document.updated}</span>
             </div>
+            {documentTags.length > 0 && (
+              <div className="mt-2">
+                <TagDisplay tags={documentTags} />
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2 ml-4 flex-shrink-0">
             <button
@@ -346,12 +387,20 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
             >
               <Clock className="w-5 h-5 text-foreground-secondary" />
             </button>
+            <button
+              onClick={() => setShowMetadataEditor(true)}
+              className="p-2 hover:bg-glass-hover rounded-lg transition-colors"
+              title="Edit document metadata"
+              aria-label="Edit document metadata"
+            >
+              <Settings className="w-5 h-5 text-foreground-secondary" />
+            </button>
             {onEdit && (
               <button
                 onClick={onEdit}
                 className="p-2 hover:bg-glass-hover rounded-lg transition-colors"
-                title="Edit document"
-                aria-label="Edit document"
+                title="Edit document content"
+                aria-label="Edit document content"
               >
                 <Edit className="w-5 h-5 text-foreground-secondary" />
               </button>
@@ -430,6 +479,30 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
             </button>
           </div>
         </div>
+      )}
+
+      {/* Metadata Editor Modal */}
+      {showMetadataEditor && document && appId && (
+        <DocumentMetadataEditor
+          document={document}
+          appId={appId}
+          teamId={teamId}
+          onClose={() => setShowMetadataEditor(false)}
+          onSave={async () => {
+            // Reload tags after save
+            const tagsResponse = await fetch(
+              `/api/documents/${document.id}/tags?type=${document.type}`
+            );
+            if (tagsResponse.ok) {
+              const tagsData = await tagsResponse.json();
+              setDocumentTags(tagsData.tags || []);
+            }
+            // Call onVersionRestored if available to trigger refresh
+            if (onVersionRestored) {
+              onVersionRestored();
+            }
+          }}
+        />
       )}
 
       {/* Version History Modal */}

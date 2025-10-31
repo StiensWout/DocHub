@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { X, Download, ZoomIn, ZoomOut, Maximize2, Loader2, Edit, Save } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { renderAsync } from "docx-preview";
+import DOMPurify from "dompurify";
+import { isMimeTypeAllowed, getFileExtension } from "@/lib/constants/file-validation";
 import type { DocumentFile } from "@/types";
 import { supabase } from "@/lib/supabase/client";
 
@@ -44,9 +46,11 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
       setScale(1.0);
       setIsEditing(false);
       setEditedContent("");
-      // Clear docx container
+      // Clear docx container using safe DOM manipulation (prevents XSS)
       if (docxContainerRef.current) {
-        docxContainerRef.current.innerHTML = "";
+        while (docxContainerRef.current.firstChild) {
+          docxContainerRef.current.removeChild(docxContainerRef.current.firstChild);
+        }
       }
       return;
     }
@@ -64,13 +68,13 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
         if (data?.publicUrl) {
           setFileUrl(data.publicUrl);
           
-          // Check if it's a DOCX file
+          // Check if it's a DOCX file using shared validation
           const isDocx = file.file_type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-                       file.file_type === "application/msword" ||
-                       file.file_name.toLowerCase().endsWith(".docx") ||
-                       file.file_name.toLowerCase().endsWith(".doc");
+                       file.file_type === "application/msword";
+          const fileExtension = getFileExtension(file.file_name);
+          const isValidDocx = isDocx && (fileExtension === ".docx" || fileExtension === ".doc");
           
-          if (isDocx) {
+          if (isValidDocx) {
             // Load DOCX file and store arrayBuffer for rendering when container is ready
             try {
               const response = await fetch(data.publicUrl);
@@ -116,10 +120,15 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
     if (docxArrayBuffer && docxContainerRef.current && !docxRendered) {
       const renderDocx = async () => {
         try {
-          docxContainerRef.current!.innerHTML = "";
+          // Clear container using safe DOM manipulation (prevents XSS)
+          const container = docxContainerRef.current!;
+          while (container.firstChild) {
+            container.removeChild(container.firstChild);
+          }
           
           try {
-            await renderAsync(docxArrayBuffer, docxContainerRef.current!, null, {
+            // renderAsync writes HTML directly to the DOM, so we sanitize after rendering
+            await renderAsync(docxArrayBuffer, container, null, {
               className: "docx-wrapper",
               inWrapper: true,
               ignoreWidth: false,
@@ -134,6 +143,21 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
               showChanges: false,
             });
             
+            // Sanitize the rendered HTML to prevent XSS attacks
+            // Use permissive config to preserve document structure while removing scripts
+            const sanitizedHTML = DOMPurify.sanitize(container.innerHTML, {
+              ALLOWED_TAGS: [
+                'p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'a', 'img', 'table', 'thead',
+                'tbody', 'tr', 'th', 'td', 'hr', 'div', 'span', 'sub', 'sup', 'del', 'ins',
+                'section', 'article', 'header', 'footer', 'nav', 'figure', 'figcaption'
+              ],
+              ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'style', 'data-*'],
+              ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+              KEEP_CONTENT: true,
+            });
+            container.innerHTML = sanitizedHTML;
+            
             setDocxRendered(true);
           } catch (renderErr) {
             console.error("docx-preview render error:", renderErr);
@@ -142,6 +166,20 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
               await renderAsync(docxArrayBuffer, docxContainerRef.current!, null, {
                 inWrapper: false,
               });
+              // Sanitize the fallback rendered HTML as well
+              const fallbackContainer = docxContainerRef.current!;
+              const sanitizedFallbackHTML = DOMPurify.sanitize(fallbackContainer.innerHTML, {
+                ALLOWED_TAGS: [
+                  'p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                  'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'a', 'img', 'table', 'thead',
+                  'tbody', 'tr', 'th', 'td', 'hr', 'div', 'span', 'sub', 'sup', 'del', 'ins',
+                  'section', 'article', 'header', 'footer', 'nav', 'figure', 'figcaption'
+                ],
+                ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'style', 'data-*'],
+                ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+                KEEP_CONTENT: true,
+              });
+              fallbackContainer.innerHTML = sanitizedFallbackHTML;
               setDocxRendered(true);
             } catch (fallbackErr) {
               console.error("docx-preview fallback error:", fallbackErr);

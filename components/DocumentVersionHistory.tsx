@@ -1,5 +1,8 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { X, Clock, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import DOMPurify from "dompurify";
 import { supabase } from "@/lib/supabase/client";
 import type { Document } from "@/types";
 
@@ -225,7 +228,17 @@ export default function DocumentVersionHistory({
                       <h4 className="text-sm font-semibold text-gray-400 mb-2">Content</h4>
                       <div
                         className="prose prose-invert max-w-none bg-[#0a0a0a] p-4 rounded border border-white/5"
-                        dangerouslySetInnerHTML={{ __html: selectedVersion.content }}
+                        dangerouslySetInnerHTML={{ 
+                          __html: DOMPurify.sanitize(selectedVersion.content, {
+                            ALLOWED_TAGS: [
+                              'p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                              'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'a', 'img', 'table', 'thead',
+                              'tbody', 'tr', 'th', 'td', 'hr', 'div', 'span', 'sub', 'sup', 'del', 'ins'
+                            ],
+                            ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'id', 'style'],
+                            ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|callto|cid|xmpp|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+                          })
+                        }}
                       />
                     </div>
                   )}

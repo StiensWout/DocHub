@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/auth/session";
+import { getUserGroups, isAdmin } from "@/lib/auth/user-groups";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import type { DocumentFile } from "@/types";
 
 // Maximum file size: 50MB
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
@@ -23,11 +26,104 @@ const ALLOWED_FILE_TYPES = [
   "image/svg+xml",
 ];
 
+/**
+ * Check if a user has permission to modify/delete a file
+ * @param fileMetadata - The file metadata from database
+ * @param userId - The user ID
+ * @param userGroups - The user's groups
+ * @param userIsAdmin - Whether the user is an admin
+ * @returns true if user has permission, false otherwise
+ */
+async function canModifyFile(
+  fileMetadata: DocumentFile,
+  userId: string,
+  userGroups: string[],
+  userIsAdmin: boolean
+): Promise<boolean> {
+  // Admins can modify any file
+  if (userIsAdmin) {
+    return true;
+  }
+
+  // If file is associated with a document, check document access
+  if (fileMetadata.document_id && fileMetadata.document_type) {
+    // Check if user has access to the document via document_access_groups
+    const { data: accessGroups, error } = await supabaseAdmin
+      .from("document_access_groups")
+      .select("group_name")
+      .eq("team_document_id", fileMetadata.document_id);
+
+    if (error) {
+      console.error("Error checking document access:", error);
+      return false;
+    }
+
+    const allowedGroups = (accessGroups || []).map(a => a.group_name);
+    
+    // Check if user is in any of the allowed groups
+    if (allowedGroups.length > 0) {
+      return userGroups.some(group => allowedGroups.includes(group));
+    }
+
+    // If document has no access groups defined, default to no access for team documents
+    // Base documents are always accessible, but we should still check ownership
+    if (fileMetadata.document_type === "base") {
+      // Base documents are generally accessible, but we can check ownership if uploaded_by exists
+      if (fileMetadata.uploaded_by) {
+        return fileMetadata.uploaded_by === userId;
+      }
+      return true; // Base documents without owner are accessible
+    }
+
+    // Team documents with no access groups = no access by default
+    return false;
+  }
+
+  // If file is only associated with an application (no document)
+  // Check if user uploaded it or if it's public and user can see it
+  if (fileMetadata.application_id) {
+    // If user uploaded it, they can modify it
+    if (fileMetadata.uploaded_by === userId) {
+      return true;
+    }
+
+    // For application-level files, check visibility and team membership
+    if (fileMetadata.visibility === "public") {
+      // Public files can be modified by anyone authenticated (conservative: only owner)
+      // For stricter security, only allow owner to modify
+      return fileMetadata.uploaded_by === userId;
+    }
+
+    if (fileMetadata.visibility === "team" && fileMetadata.team_id) {
+      // Team files: check if user's groups match the team
+      // This is a simplified check - in reality, teams and groups might be more complex
+      return userGroups.some(group => {
+        // Simple check: if group name contains team_id or vice versa
+        // This is a placeholder - actual team/group mapping might be more complex
+        return group.toLowerCase().includes(fileMetadata.team_id!.toLowerCase()) ||
+               fileMetadata.team_id!.toLowerCase().includes(group.toLowerCase());
+      });
+    }
+  }
+
+  // Default: no access
+  return false;
+}
+
 export async function PUT(
   request: NextRequest,
   context: { params: Promise<{ fileId: string }> }
 ) {
   try {
+    // Authentication check
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const params = await context.params;
     const fileId = params.fileId;
 
@@ -49,6 +145,23 @@ export async function PUT(
       return NextResponse.json(
         { error: "File not found" },
         { status: 404 }
+      );
+    }
+
+    // Authorization check
+    const userIsAdmin = await isAdmin();
+    const userGroups = await getUserGroups(session.user.id);
+    const hasPermission = await canModifyFile(
+      existingFile as DocumentFile,
+      session.user.id,
+      userGroups,
+      userIsAdmin
+    );
+
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error: "Forbidden: You do not have permission to modify this file" },
+        { status: 403 }
       );
     }
 
@@ -160,6 +273,15 @@ export async function DELETE(
   context: { params: Promise<{ fileId: string }> }
 ) {
   try {
+    // Authentication check
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const params = await context.params;
     const fileId = params.fileId;
 
@@ -181,6 +303,23 @@ export async function DELETE(
       return NextResponse.json(
         { error: "File not found" },
         { status: 404 }
+      );
+    }
+
+    // Authorization check
+    const userIsAdmin = await isAdmin();
+    const userGroups = await getUserGroups(session.user.id);
+    const hasPermission = await canModifyFile(
+      fileMetadata as DocumentFile,
+      session.user.id,
+      userGroups,
+      userIsAdmin
+    );
+
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error: "Forbidden: You do not have permission to delete this file" },
+        { status: 403 }
       );
     }
 

@@ -1,240 +1,138 @@
 # DocHub Current Status
 
 **Last Updated**: 2025-01-30  
-**Current Branch**: `feature/workos-authkit-integration`
+**Current Branch**: `feature/document-search-filtering`
 
 ---
 
-## ✅ Completed Features
+## 🎯 Quick Status
 
-### Authentication & Authorization
+### ✅ What's Working
 
-#### WorkOS SSO Integration ✅
-- **Status**: Complete
-- **Details**:
-  - Provider-agnostic SSO system implemented
-  - Generic SSO endpoint (`/api/auth/sso`)
-  - SSO callback handler (`/auth/callback`)
-  - Session management with WorkOS
-  - Support for email/password authentication (WorkOS User Management)
-  - Dual authentication: SSO + email/password on same page
-  - Session cookies with 7-day expiration
-  - Authentication middleware for route protection
+- **Authentication**: WorkOS SSO + Email/Password authentication
+- **Teams & Organizations**: Auto-sync from WorkOS Organizations
+- **Document Management**: Create, edit, view, version documents
+- **Search**: Real-time search with suggestions, history, filtering
+- **File Attachments**: Upload, view, manage files
+- **Tags**: Tag-based organization and filtering
+- **Access Control**: Team-based document access
 
-#### WorkOS Organization Memberships for Groups ✅
-- **Status**: Complete and Active
-- **Environment Variable**: `WORKOS_USE_ORGANIZATIONS=true`
-- **Details**:
-  - Groups are now sourced from WorkOS Organization Memberships
-  - Users belong to organizations in WorkOS
-  - Organization names become group names in DocHub
-  - Automatic team creation from organizations (subgroup teams only)
-  - Admin organization support (users in "admin" org see all teams)
-  - Fallback to database groups if WorkOS unavailable
+### 🚧 In Progress
 
-#### Automatic Team Creation ✅
-- **Status**: Complete
-- **Details**:
-  - Teams automatically created when users join WorkOS organizations
-  - Only **subgroup teams** (roles) are created, NOT parent organizations
-  - Parent organizations (e.g., "CDLE") are just organizations, not teams
-  - Subgroup teams are created from user roles within organizations
-  - Teams linked to parent organizations via `parent_organization_id`
-  - Team sync happens during authentication (signin/callback)
+- **Enhanced Document Search**: Tag filtering, advanced operators (Phase 1.6+)
+- **Document Metadata Editing**: Editing title, tags, document type after creation
 
-#### User Profile & Organization Display ✅
-- **Status**: Complete
-- **Routes**:
-  - `/profile` - User profile page
-  - `/api/user/profile` - Profile API endpoint
-  - `/api/user/organizations` - Organizations API endpoint
-- **Components**:
-  - `OrganizationDisplay` component in header
-  - Admin users can switch teams via OrganizationDisplay
-  - Regular users see only their team
-- **Features**:
-  - User profile page with organization memberships
-  - Display current organization and team
-  - Team switching for admins
-  - User role and groups display
+### 📋 Planned
 
-#### Team Filtering & Access Control ✅
-- **Status**: Complete
-- **Details**:
-  - Sidebar shows only teams user belongs to (unless admin)
-  - Teams filtered based on WorkOS organization memberships
-  - Removed duplicate `TeamSelector` component
-  - Admin sees all teams via OrganizationDisplay
-  - Access control ensures users only see documents from their teams
+- **WorkOS AuthKit Phase 2**: MFA, Magic Link, Passkeys
+- **Advanced Application Management**: Bulk operations, analytics
+- **Real-time Collaboration**: Live document editing
+- **Advanced Permissions**: Document-level permissions
 
 ---
 
-## 🚧 Partially Complete / In Progress
+## 🔧 Current Configuration
 
-### WorkOS AuthKit Integration
-- **Phase 1 (SSO)**: ✅ Complete
-- **Phase 2 (Advanced Features)**: ⏳ Pending
-  - Multi-Factor Authentication (MFA)
-  - Magic Link authentication
-  - Passkeys support
-  - Password reset flows
-  - Email verification flows
-
----
-
-## ❌ Not Started / Future Work
-
-### Enhanced Features
-- Real-time document collaboration
-- Document comments and mentions
-- Notifications system
-- Advanced permissions (document-level)
-- Team management UI (create/edit teams)
-- Activity feed
-- Analytics dashboards
-- Search enhancements (saved searches, related docs)
-
-### Integrations
-- Slack integration
-- GitHub integration
-- Webhook support
-- API for third-party integrations
-
-### Performance & Scale
-- Redis caching layer
-- CDN for static assets
-- Database query optimization
-- Background job processing
-
----
-
-## 📋 Current Architecture
-
-### Authentication Flow
-```
-User → SSO Provider (via WorkOS) → /auth/callback → Session Cookie → App
-     OR
-User → Email/Password → WorkOS User Management → Session Cookie → App
-```
-
-### Team/Organization Structure
-```
-User → 1 Organization (WorkOS) → 1 Team (User's Role within Org)
-Admin → All Organizations → All Teams
-```
-
-### Group/Team Sync Flow
-```
-User Login → Check WorkOS Organizations → Create Subgroup Teams → Assign Groups
-```
-
----
-
-## 🔧 Configuration
-
-### Environment Variables (Required)
+**Environment Variables**:
 ```bash
 WORKOS_API_KEY=sk_...
 WORKOS_CLIENT_ID=client_...
 WORKOS_USE_ORGANIZATIONS=true
-WORKOS_ADMIN_ORGANIZATION_NAME=admin  # Optional, default: "admin" (or use "admin" role/team)
+WORKOS_ADMIN_ORGANIZATION_NAME=admin
 NEXT_PUBLIC_WORKOS_REDIRECT_URI=http://localhost:3000/auth/callback
-SUPABASE_SERVICE_ROLE_KEY=...  # Server-side key for admin operations
 ```
 
-### Admin Role Detection
-Admin status can be determined by:
-1. **Organization**: User in WorkOS organization named "admin" (or `WORKOS_ADMIN_ORGANIZATION_NAME`)
-2. **Role/Team**: User has role/team "admin" in any WorkOS organization
-3. **Database**: Fallback to `user_roles` table if not using WorkOS Organizations
+---
 
-See [Admin Setup Guide](../GETTING_STARTED/ADMIN_SETUP.md) for details.
+## 📚 Feature Status
 
-### Database Schema
-- `teams` table includes:
-  - `workos_organization_id` - Maps to WorkOS organization
-  - `parent_organization_id` - For subgroup teams
-- `user_groups`, `user_roles`, `document_access_groups` - Still exist for fallback
+### Core Features ✅
+
+| Feature | Status | Documentation |
+|---------|--------|---------------|
+| Authentication & SSO | ✅ Complete | [Authentication](FEATURES/AUTHENTICATION.md) |
+| Teams & Organizations | ✅ Complete | [Teams](FEATURES/TEAMS.md) |
+| Document Management | ✅ Complete | [Documents](FEATURES/DOCUMENTS.md) |
+| Search & Discovery | ✅ Complete* | [Search](FEATURES/SEARCH.md) |
+| File Management | ✅ Complete | [Files](FEATURES/FILES.md) |
+
+*Enhanced features in progress - see [Enhanced Search](FEATURES/pending/enhanced-document-search-filtering.md)
+
+### In Development 🚧
+
+| Feature | Status | Documentation |
+|---------|--------|---------------|
+| Enhanced Search & Filtering | 🚧 Phase 1.6 | [Feature Request](FEATURES/pending/enhanced-document-search-filtering.md) |
 
 ---
 
-## 📝 Recent Changes
+## 🎯 Active Development
 
-### 2025-01-30
-- ✅ Implemented user profile page
-- ✅ Created OrganizationDisplay component
-- ✅ Fixed team filtering in sidebar
-- ✅ Removed duplicate TeamSelector
-- ✅ Added admin team switching
-- ✅ Updated team sync to only create subgroup teams
-- ✅ Fixed missing imports and token refresh issues
+**Current Focus**: Enhanced Document Search and Filtering
 
----
+**Completed**:
+- ✅ Tag system (database, API, UI components)
+- ✅ Tag filtering in search
+- ✅ Document metadata editing
+- ✅ Auto-open newly created documents
 
-## 🎯 Next Steps
+**In Progress**:
+- 🚧 Search result presentation improvements
+- 🚧 Sorting options for search results
 
-### Immediate (High Priority)
-1. **Document Management**
-   - Improve document search and filtering
-   - Add document tags/categories
-   - Enhance document versioning UI
-   - Add document templates management
-
-2. **Application Management**
-   - Bulk application operations
-   - Application import/export
-   - Custom application icons
-   - Application analytics
-
-3. **User Experience**
-   - Improve team switching UX
-   - Add keyboard shortcuts
-   - Enhanced search functionality
-   - Mobile responsive improvements
-
-### Short Term (Medium Priority)
-4. **WorkOS AuthKit Phase 2**
-   - Add MFA support
-   - Implement Magic Link authentication
-   - Add password reset flows
-   - Advanced session management
-
-5. **User Management**
-   - Team management UI
-   - User invitation system
-   - Organization switching improvements
-   - User activity logging
-
-### Long Term (Future)
-6. **Advanced Features**
-   - Document collaboration (real-time editing)
-   - Document comments and annotations
-   - Advanced permissions system
-   - Audit logging and compliance
-
-7. **Documentation**
-   - User guide for organization/team management
-   - Admin guide for managing organizations in WorkOS
-   - API documentation
-   - Developer contribution guide
+See [Feature Request](FEATURES/pending/enhanced-document-search-filtering.md) for details.
 
 ---
 
-## 📚 Key Documentation
+## 📖 Key Documentation
 
-- **Setup**: `docs/FEATURES/pending/workos-setup-guide.md`
-- **Architecture**: `docs/ARCHITECTURE/OVERVIEW.md`
-- **Database**: `docs/ARCHITECTURE/DATABASE.md`
-- **Development**: `docs/DEVELOPMENT/GUIDE.md`
+- **[Documentation Index](INDEX.md)** - Start here for navigation
+- **[Getting Started](GETTING_STARTED/INSTALLATION.md)** - Setup guide
+- **[WorkOS Setup](SETUP/WORKOS.md)** - Authentication setup
+- **[Admin Setup](ADMIN_SETUP.md)** - Admin configuration
+- **[Architecture](ARCHITECTURE/OVERVIEW.md)** - System design
 
 ---
 
 ## 🐛 Known Issues
 
-- Token refresh disabled (WorkOS tokens last 7 days, sufficient for now)
-- Some old database group management code still present (fallback support)
+- Token refresh disabled (tokens last 7 days, sufficient for now)
+- Some legacy database group code still present (fallback support)
 
 ---
 
-**Questions?** Check the documentation or review the codebase.
+## 📝 Recent Changes
 
+**2025-01-30**:
+- ✅ Created tag system (database, API, UI)
+- ✅ Integrated tags into document creation/editing
+- ✅ Added tag filtering to search
+- ✅ Created document metadata editor
+- ✅ Auto-open newly created documents
+- ✅ Modernized search bar UI
+- ✅ Documentation overhaul
+
+---
+
+## 🚀 Next Steps
+
+### Immediate
+1. Complete enhanced search features (snippets, sorting)
+2. Improve search result presentation
+3. Add saved searches feature
+
+### Short Term
+1. WorkOS AuthKit Phase 2 (MFA, Magic Link)
+2. Advanced application management
+3. User experience improvements
+
+### Long Term
+1. Real-time collaboration
+2. Advanced permissions system
+3. Analytics and reporting
+
+See [Roadmap](ROADMAP.md) for detailed plans.
+
+---
+
+**For detailed information, see the [Documentation Index](INDEX.md)**

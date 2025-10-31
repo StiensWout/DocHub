@@ -40,6 +40,7 @@ export interface SearchFilters {
   applicationId?: string;
   category?: string;
   documentType?: "base" | "team" | "all";
+  tagIds?: string[]; // Array of tag IDs to filter by
 }
 
 // Calculate Levenshtein distance for fuzzy matching
@@ -125,6 +126,52 @@ export async function searchDocuments(
   const results: DocumentSearchResult[] = [];
   const fuzzyResults: DocumentSearchResult[] = [];
 
+  // Get document IDs that match tag filters (if tags are specified)
+  let baseDocIdsWithTags: string[] | null = null;
+  let teamDocIdsWithTags: string[] | null = null;
+  
+  if (filters.tagIds && filters.tagIds.length > 0) {
+    // For base documents
+    if (!filters.documentType || filters.documentType === "all" || filters.documentType === "base") {
+      const { data: baseTagDocs } = await supabase
+        .from("document_tags")
+        .select("document_id")
+        .eq("document_type", "base")
+        .in("tag_id", filters.tagIds);
+      
+      if (baseTagDocs) {
+        // Group by document_id and count tags - documents must have ALL specified tags
+        const docTagCounts = new Map<string, number>();
+        baseTagDocs.forEach((dt: any) => {
+          docTagCounts.set(dt.document_id, (docTagCounts.get(dt.document_id) || 0) + 1);
+        });
+        // Only include documents that have all the specified tags
+        baseDocIdsWithTags = Array.from(docTagCounts.entries())
+          .filter(([_, count]) => count === filters.tagIds!.length)
+          .map(([docId]) => docId);
+      }
+    }
+    
+    // For team documents
+    if ((!filters.documentType || filters.documentType === "all" || filters.documentType === "team") && filters.teamId) {
+      const { data: teamTagDocs } = await supabase
+        .from("document_tags")
+        .select("document_id")
+        .eq("document_type", "team")
+        .in("tag_id", filters.tagIds);
+      
+      if (teamTagDocs) {
+        const docTagCounts = new Map<string, number>();
+        teamTagDocs.forEach((dt: any) => {
+          docTagCounts.set(dt.document_id, (docTagCounts.get(dt.document_id) || 0) + 1);
+        });
+        teamDocIdsWithTags = Array.from(docTagCounts.entries())
+          .filter(([_, count]) => count === filters.tagIds!.length)
+          .map(([docId]) => docId);
+      }
+    }
+  }
+
   // Search base documents
   if (!filters.documentType || filters.documentType === "all" || filters.documentType === "base") {
     let baseQuery = supabase
@@ -149,6 +196,16 @@ export async function searchDocuments(
 
     if (filters.category) {
       baseQuery = baseQuery.eq("category", filters.category);
+    }
+
+    // Filter by tag IDs if specified
+    if (baseDocIdsWithTags !== null) {
+      if (baseDocIdsWithTags.length === 0) {
+        // No documents match the tag filter, skip processing
+        baseQuery = baseQuery.eq("id", "00000000-0000-0000-0000-000000000000"); // Will return no results
+      } else {
+        baseQuery = baseQuery.in("id", baseDocIdsWithTags);
+      }
     }
 
     const { data: baseDocs, error: baseError } = await baseQuery;
@@ -209,6 +266,16 @@ export async function searchDocuments(
 
     if (filters.category) {
       teamQuery = teamQuery.eq("category", filters.category);
+    }
+
+    // Filter by tag IDs if specified
+    if (teamDocIdsWithTags !== null) {
+      if (teamDocIdsWithTags.length === 0) {
+        // No documents match the tag filter, skip processing
+        teamQuery = teamQuery.eq("id", "00000000-0000-0000-0000-000000000000"); // Will return no results
+      } else {
+        teamQuery = teamQuery.in("id", teamDocIdsWithTags);
+      }
     }
 
     const { data: teamDocs, error: teamError } = await teamQuery;

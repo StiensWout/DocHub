@@ -636,10 +636,10 @@ function HomeContent() {
               }}
               onVersionRestored={async () => {
                 await refreshDocuments();
-                // Update selected document if it was restored
+                // Update selected document if it was restored/updated
                 if (selectedDocument) {
                   const allDocs = await getAllDocumentsForApp(selectedTeamId, selectedDocumentAppId);
-                  const updatedDoc = allDocs.find((d) => d.id === selectedDocument.id);
+                  const updatedDoc = allDocs.find((d) => d.id === selectedDocument.id && d.type === selectedDocument.type);
                   if (updatedDoc) {
                     setSelectedDocument(updatedDoc);
                   }
@@ -869,8 +869,29 @@ function HomeContent() {
             setShowNewDocumentDialog(false);
             setNewDocumentAppId("");
           }}
-          onCreated={async () => {
+          onCreated={async (createdDoc) => {
+            // Refresh documents to include the newly created one
             await refreshDocuments();
+            
+            // Find the newly created document from the refreshed list
+            const allDocs = await getAllDocumentsForApp(selectedTeamId, createdDoc.appId);
+            const newDoc = allDocs.find((d) => d.id === createdDoc.id && d.type === createdDoc.type);
+            
+            if (newDoc) {
+              // Find the application name
+              const app = applications.find((a) => a.id === createdDoc.appId);
+              const appName = app?.name || "";
+              
+              // Automatically select and open the newly created document
+              setSelectedDocument(newDoc);
+              setSelectedDocumentAppName(appName);
+              setSelectedDocumentAppId(createdDoc.appId);
+              setSelectedApp(createdDoc.appId);
+              
+              toast.success("Document created successfully");
+            } else {
+              toast.success("Document created successfully");
+            }
           }}
         />
       )}
