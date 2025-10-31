@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FileText, Search, BookOpen, ChevronRight, Layers, Plus, FolderKanban, Settings } from "lucide-react";
 import { getTeams, getApplications, getAllDocumentsForApp, getApplicationGroups } from "@/lib/supabase/queries";
@@ -24,7 +24,7 @@ import { supabase } from "@/lib/supabase/client";
 import type { ApplicationWithDocs, Team, Application, Document, BreadcrumbItem, ApplicationGroup } from "@/types";
 import type { SearchResult, DocumentSearchResult } from "@/lib/supabase/search";
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [teams, setTeams] = useState<Team[]>([]);
@@ -48,15 +48,23 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   
-  // Recent documents hook
+  // Recent documents hook - only use after mount to avoid hydration issues
   const { recentDocuments, addRecentDocument } = useRecentDocuments();
   
   // Toast notifications
   const toast = useToast();
 
+  // Set mounted state to avoid hydration issues
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Check authentication status on mount
   useEffect(() => {
+    if (!isMounted) return;
+    
     const checkAuth = async () => {
       try {
         const response = await fetch("/api/auth/session");
@@ -76,7 +84,7 @@ export default function Home() {
     };
     
     checkAuth();
-  }, [router]);
+  }, [router, isMounted]);
 
   // Function to refresh documents without page reload
   const refreshDocuments = async () => {
@@ -123,8 +131,10 @@ export default function Home() {
     setRecentDocs(allRecentDocs);
   };
 
-  // Load initial data
+  // Load initial data - only after mount to avoid hydration issues
   useEffect(() => {
+    if (!isMounted) return;
+    
     async function loadData() {
       setLoading(true);
       const [teamsData, appsData, groupsData] = await Promise.all([
@@ -145,10 +155,13 @@ export default function Home() {
     }
     
     loadData();
-  }, []);
+  }, [isMounted, selectedTeamId]);
 
   // Handle app and group query parameters from URL
+  // Only process search params after component is mounted to avoid hydration issues
   useEffect(() => {
+    if (!isMounted) return;
+    
     const appParam = searchParams.get('app');
     const groupParam = searchParams.get('group');
     
@@ -173,7 +186,7 @@ export default function Home() {
         setSelectedDocumentAppId("");
       }
     }
-  }, [searchParams, applications, groups]);
+  }, [searchParams, applications, groups, isMounted]);
 
   // Update applications with docs when team or apps change
   useEffect(() => {
@@ -344,8 +357,9 @@ export default function Home() {
     }
   }, [recentDocuments, applications]);
 
-  // Don't render content until auth is checked
-  if (!authChecked) {
+  // Don't render content until mounted and auth is checked
+  // This ensures server and client render the same initial state
+  if (!isMounted || !authChecked) {
     return (
       <div className="bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -1095,4 +1109,22 @@ function parseTimeAgo(timeAgo: string): number {
   };
 
   return value * (multipliers[unit] || 0);
+}
+
+// Wrap HomeContent in Suspense to fix useSearchParams hydration error
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite] text-blue-500"></div>
+            <p className="mt-4 text-gray-400">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
+  );
 }
