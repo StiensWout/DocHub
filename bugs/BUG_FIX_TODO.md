@@ -514,6 +514,39 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 
 ---
 
+### Bug #24: Document Changes Not Displayed After Save Until Page Reload
+**Files:** `components/DocumentEditor.tsx`, `components/DocumentMetadataEditor.tsx`, `components/DocumentViewer.tsx`, `app/page.tsx`
+
+- [ ] Review `onSave()` callback implementation in `app/page.tsx` (line 660-665)
+- [ ] Ensure document refresh happens after save:
+  - [ ] Verify `refreshDocuments()` is called and updates selected document
+  - [ ] Check if selected document state is updated after refresh
+- [ ] Update `DocumentViewer` component to react to document prop changes:
+  - [ ] Ensure component re-renders when `document` prop updates
+  - [ ] Add `useEffect` to reload document content when document ID changes
+  - [ ] Verify document content display refreshes after save
+- [ ] Test `DocumentEditor` save flow:
+  - [ ] Save document content changes
+  - [ ] Verify UI updates immediately without page reload
+  - [ ] Verify parent component refreshes document data
+- [ ] Test `DocumentMetadataEditor` save flow:
+  - [ ] Save metadata changes (title, category, tags)
+  - [ ] Verify UI updates immediately without page reload
+  - [ ] Verify metadata display refreshes correctly
+- [ ] Add state synchronization:
+  - [ ] Ensure document list refresh triggers document view refresh
+  - [ ] Consider using shared state management if needed
+  - [ ] Verify no stale data persists after save
+- [ ] Test edge cases:
+  - [ ] Save content, then save metadata (both should refresh)
+  - [ ] Save, then navigate away and back (should show saved changes)
+  - [ ] Multiple rapid saves (should handle correctly)
+- [ ] Add test cases for UI refresh after save operations
+
+**Estimated Time:** 2-3 hours
+
+---
+
 ## 🟢 LOW PRIORITY - Technical Debt
 
 ### Bug #15: Code Duplication

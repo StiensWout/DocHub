@@ -240,6 +240,37 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 
 ---
 
+### 24. Document Changes Not Displayed After Save Until Page Reload
+
+**Severity:** MEDIUM
+**Category:** Functionality / UI State Management
+**Status:** 🔴 ACTIVE
+**Files:** `components/DocumentEditor.tsx`, `components/DocumentMetadataEditor.tsx`, `components/DocumentViewer.tsx`, `app/page.tsx`
+
+#### Issues:
+- When saving document content or metadata changes, the UI doesn't reflect the updates immediately
+- User must manually reload the page to see saved changes
+- Document content saved via `DocumentEditor.tsx` (line 120-154) successfully updates database
+- After save, `onSave()` callback is called (line 146) but doesn't trigger UI refresh
+- `DocumentMetadataEditor.tsx` has similar issue - saves successfully but parent component doesn't refresh display
+- `DocumentViewer.tsx` displays document content but doesn't reload after edits
+
+#### Impact:
+- **MEDIUM** - Poor user experience, requires manual page reload
+- Users may think changes weren't saved
+- Confusing UX - user expects immediate visual feedback after saving
+- Data is saved correctly but UI state is stale
+
+#### Fix Required:
+- Ensure `onSave()` callback in parent component (`app/page.tsx`) refreshes the selected document data
+- Update `DocumentViewer` component to refresh document content when `document` prop changes
+- Add state refresh mechanism after successful save operations
+- Consider using React state management or refetching document data after save
+- Ensure document list and document view are synchronized after saves
+- Test both content edits and metadata edits refresh correctly
+
+---
+
 ## 🟢 LOW PRIORITY ISSUES
 
 ### 15. Code Duplication
