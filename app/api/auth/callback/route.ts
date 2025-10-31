@@ -11,11 +11,39 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Exchange the authorization code for a session
-    const { user, accessToken, refreshToken } = await workos.userManagement.authenticateWithCode({
-      code,
-      clientId: process.env.NEXT_PUBLIC_WORKOS_CLIENT_ID!,
-    });
+    // For SSO (MicrosoftOAuth provider), use getProfileAndToken
+    // For User Management OAuth, use authenticateWithCode
+    // Try SSO first (Microsoft uses SSO API)
+    let user: any;
+    let accessToken: string;
+    let refreshToken: string | undefined;
+
+    try {
+      // Try SSO getProfileAndToken first (for Microsoft OAuth via SSO)
+      const profileResult = await workos.sso.getProfileAndToken({
+        code,
+        clientId: process.env.NEXT_PUBLIC_WORKOS_CLIENT_ID!,
+      });
+      
+      user = {
+        id: profileResult.profile.id,
+        email: profileResult.profile.email,
+        firstName: profileResult.profile.firstName,
+        lastName: profileResult.profile.lastName,
+      };
+      accessToken = profileResult.accessToken;
+      refreshToken = profileResult.refreshToken;
+    } catch (ssoError: any) {
+      // Fallback to userManagement for other OAuth flows (if needed)
+      const authResult = await workos.userManagement.authenticateWithCode({
+        code,
+        clientId: process.env.NEXT_PUBLIC_WORKOS_CLIENT_ID!,
+      });
+      
+      user = authResult.user;
+      accessToken = authResult.accessToken;
+      refreshToken = authResult.refreshToken;
+    }
 
     // Create a response that redirects to home
     const response = NextResponse.redirect(new URL('/', request.url));

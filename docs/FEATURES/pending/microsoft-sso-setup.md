@@ -138,10 +138,10 @@ NEXT_PUBLIC_WORKOS_CLIENT_ID=client_your_workos_client_id
 NEXT_PUBLIC_WORKOS_REDIRECT_URI=http://localhost:3000/auth/callback
 WORKOS_COOKIE_PASSWORD=your_random_32_char_string
 
-# Microsoft SSO Connection (REQUIRED)
-# Get this from WorkOS Dashboard → SSO → Connections → Your Microsoft Connection → Connection ID
-# The connection ID starts with "conn_"
-WORKOS_MICROSOFT_CONNECTION_ID=conn_xxxxxxxxxxxxx
+# Microsoft SSO Connection (OPTIONAL)
+# Only needed if you want to use a specific connection ID instead of provider parameter
+# If not set, the code uses provider: 'MicrosoftOAuth' automatically
+# WORKOS_MICROSOFT_CONNECTION_ID=conn_xxxxxxxxxxxxx
 
 # Alternative: Use Organization ID if you have an organization with Microsoft connection
 # WORKOS_ORGANIZATION_ID=org_xxxxxxxxxxxxx
