@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { workos } from '@/lib/workos/server';
 import { decodeJWTPayload } from './jwt-utils';
+import { log } from '@/lib/logger';
 
 export interface SessionUser {
   id: string;
@@ -51,7 +52,7 @@ export async function getSession(): Promise<{ user: SessionUser; accessToken: st
       // If SSO fails, try User Management (for email/password or social OAuth)
       // Only log if it's not a "wrong token type" error
       if (ssoError.code !== 'invalid_token' && ssoError.message?.includes('token')) {
-        console.log('Token is not SSO token, trying User Management...');
+        log.debug('Token is not SSO token, trying User Management...');
       }
       
       try {
@@ -65,7 +66,7 @@ export async function getSession(): Promise<{ user: SessionUser; accessToken: st
           const payload = decodeJWTPayload(accessToken);
           userId = payload.sub; // 'sub' claim contains the user ID
         } catch (decodeError: any) {
-          console.warn('Could not decode token to extract user ID:', decodeError.message);
+          log.warn('Could not decode token to extract user ID:', decodeError.message);
         }
 
         if (!userId) {
@@ -89,7 +90,7 @@ export async function getSession(): Promise<{ user: SessionUser; accessToken: st
         }
       } catch (userMgmtError: any) {
         // Neither SSO nor User Management worked
-        console.error('Failed to get user from both SSO and User Management:', {
+        log.error('Failed to get user from both SSO and User Management:', {
           ssoError: ssoError.message,
           userMgmtError: userMgmtError.message,
         });
@@ -99,7 +100,7 @@ export async function getSession(): Promise<{ user: SessionUser; accessToken: st
 
     return null;
   } catch (error: any) {
-    console.error('Error getting session:', error);
+    log.error('Error getting session:', error);
     return null;
   }
 }

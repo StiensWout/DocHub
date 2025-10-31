@@ -3,6 +3,7 @@ import { Globe, Database, Zap, Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { Document, Application, Team, DocumentFile, ApplicationGroup } from "@/types";
 import * as LucideIcons from "lucide-react"; // Import all Lucide icons
+import { log } from "@/lib/logger";
 
 export interface DatabaseApplication {
   id: string;
@@ -60,7 +61,7 @@ export async function getTeams(): Promise<Team[]> {
     .order("name");
 
   if (error) {
-    console.error("Error fetching teams:", error);
+    log.error("Error fetching teams:", error);
     return [];
   }
 
@@ -91,7 +92,7 @@ export async function updateApplication(
     .eq("id", id);
 
   if (error) {
-    console.error("Error updating application:", error);
+    log.error("Error updating application:", error);
     return { success: false, error: error.message };
   }
 
@@ -107,7 +108,7 @@ export async function checkApplicationIdExists(id: string): Promise<boolean> {
     .single();
 
   if (error && error.code !== "PGRST116") { // PGRST116 = no rows returned
-    console.error("Error checking application ID:", error);
+    log.error("Error checking application ID:", error);
     return false;
   }
 
@@ -122,7 +123,7 @@ export async function getApplications(): Promise<Application[]> {
     .order("name");
 
   if (error) {
-    console.error("Error fetching applications:", error);
+    log.error("Error fetching applications:", error);
     return [];
   }
 
@@ -152,7 +153,7 @@ export async function getBaseDocuments(appId: string): Promise<Document[]> {
     .order("created_at");
 
   if (error) {
-    console.error("Error fetching base documents:", error);
+    log.error("Error fetching base documents:", error);
     return [];
   }
 
@@ -180,7 +181,7 @@ export async function getTeamDocuments(
     .order("updated_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching team documents:", error);
+    log.error("Error fetching team documents:", error);
     return [];
   }
 
@@ -215,7 +216,7 @@ export async function getDocumentById(
   teamId?: string,
   appId?: string
 ): Promise<{ document: Document; appName: string } | null> {
-  console.log("getDocumentById called with:", { documentId, teamId, appId });
+  log.debug("getDocumentById called with:", { documentId, teamId, appId });
   
   // Try base documents first
   const { data: baseDoc, error: baseError } = await supabase
@@ -224,12 +225,12 @@ export async function getDocumentById(
     .eq("id", documentId)
     .single();
 
-  console.log("Base document query:", { baseDoc, baseError });
+  log.debug("Base document query:", { baseDoc, baseError });
 
   if (!baseError && baseDoc) {
     // Verify appId matches if provided
     if (appId && baseDoc.application_id !== appId) {
-      console.log("Base doc appId mismatch, checking team documents");
+      log.debug("Base doc appId mismatch, checking team documents");
       // If appId doesn't match, continue to check team documents
     } else {
       // Base document found - return it (ignore teamId for base documents)
@@ -239,7 +240,7 @@ export async function getDocumentById(
         .eq("id", baseDoc.application_id)
         .single();
 
-      console.log("Returning base document:", { document: baseDoc, appName: app?.name });
+      log.debug("Returning base document:", { document: baseDoc, appName: app?.name });
 
       return {
         document: {
@@ -263,17 +264,17 @@ export async function getDocumentById(
     .eq("id", documentId)
     .single();
 
-  console.log("Team document query:", { teamDoc, teamError });
+  log.debug("Team document query:", { teamDoc, teamError });
 
   if (!teamError && teamDoc) {
     // Verify teamId and appId match if provided
     // Allow "base" teamId to pass through (for compatibility with share URLs)
     if (teamId && teamId !== "base" && teamDoc.team_id !== teamId) {
-      console.log("Team doc teamId mismatch:", { providedTeamId: teamId, docTeamId: teamDoc.team_id });
+      log.debug("Team doc teamId mismatch:", { providedTeamId: teamId, docTeamId: teamDoc.team_id });
       return null;
     }
     if (appId && teamDoc.application_id !== appId) {
-      console.log("Team doc appId mismatch:", { providedAppId: appId, docAppId: teamDoc.application_id });
+      log.debug("Team doc appId mismatch:", { providedAppId: appId, docAppId: teamDoc.application_id });
       return null;
     }
 
@@ -284,7 +285,7 @@ export async function getDocumentById(
       .eq("id", teamDoc.application_id)
       .single();
 
-    console.log("Returning team document:", { document: teamDoc, appName: app?.name });
+    log.debug("Returning team document:", { document: teamDoc, appName: app?.name });
 
     return {
       document: {
@@ -300,7 +301,7 @@ export async function getDocumentById(
     };
   }
 
-  console.log("No document found");
+  log.debug("No document found");
   return null;
 }
 
@@ -342,7 +343,7 @@ export async function getDocumentFiles(
     .order("uploaded_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching document files:", error);
+    log.error("Error fetching document files:", error);
     return [];
   }
 
@@ -362,7 +363,7 @@ export async function getApplicationFiles(
     .order("uploaded_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching application files:", error);
+    log.error("Error fetching application files:", error);
     return [];
   }
 
@@ -411,7 +412,7 @@ export async function insertFileMetadata(
     .single();
 
   if (error) {
-    console.error("Error inserting file metadata:", error);
+    log.error("Error inserting file metadata:", error);
     return null;
   }
 
@@ -426,7 +427,7 @@ export async function deleteFileMetadata(fileId: string): Promise<boolean> {
     .eq("id", fileId);
 
   if (error) {
-    console.error("Error deleting file metadata:", error);
+    log.error("Error deleting file metadata:", error);
     return false;
   }
 
@@ -442,7 +443,7 @@ export async function getFileMetadata(fileId: string): Promise<DocumentFile | nu
     .single();
 
   if (error) {
-    console.error("Error fetching file metadata:", error);
+    log.error("Error fetching file metadata:", error);
     return null;
   }
 
@@ -462,7 +463,7 @@ export async function getApplicationGroups(): Promise<ApplicationGroup[]> {
     .order("name");
 
   if (error) {
-    console.error("Error fetching application groups:", error);
+    log.error("Error fetching application groups:", error);
     return [];
   }
 
@@ -517,13 +518,13 @@ export async function createApplicationGroup(
       .single();
 
     if (error) {
-      console.error("Error creating application group:", error);
+      log.error("Error creating application group:", error);
       return { success: false, error: error.message || "Failed to create application group" };
     }
 
     return { success: true, groupId: data.id };
   } catch (err) {
-    console.error("Unexpected error creating application group:", err);
+    log.error("Unexpected error creating application group:", err);
     return { success: false, error: "An unexpected error occurred" };
   }
 }
@@ -544,7 +545,7 @@ export async function updateApplicationGroup(
     .eq("id", id);
 
   if (error) {
-    console.error("Error updating application group:", error);
+    log.error("Error updating application group:", error);
     return { success: false, error: error.message };
   }
 
@@ -559,7 +560,7 @@ export async function deleteApplicationGroup(id: string): Promise<{ success: boo
     .eq("id", id);
 
   if (error) {
-    console.error("Error deleting application group:", error);
+    log.error("Error deleting application group:", error);
     return { success: false, error: error.message };
   }
 

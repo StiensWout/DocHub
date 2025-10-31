@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { log } from '@/lib/logger';
 
 /**
  * POST /api/documents/access
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
         .insert(accessInserts);
 
       if (error) {
-        console.error('Error setting document access:', error);
+        log.error('Error setting document access:', error);
         return NextResponse.json(
           { error: 'Failed to set document access' },
           { status: 500 }
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Error setting document access:', error);
+    log.error('Error setting document access:', error);
     return NextResponse.json(
       { error: 'Failed to set document access' },
       { status: 500 }
@@ -92,7 +93,7 @@ export async function GET(request: NextRequest) {
       .eq('team_document_id', documentId);
 
     if (error) {
-      console.error('Error fetching document access:', error);
+      log.error('Error fetching document access:', error);
       return NextResponse.json(
         { error: 'Failed to get document access' },
         { status: 500 }
@@ -103,7 +104,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ groups });
   } catch (error: any) {
-    console.error('Error getting document access:', error);
+    log.error('Error getting document access:', error);
     return NextResponse.json(
       { error: 'Failed to get document access' },
       { status: 500 }

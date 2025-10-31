@@ -86,6 +86,7 @@ function HomeContent() {
         
         setAuthChecked(true);
       } catch (error) {
+        // Client-side: use console.error for now (logger may not work in browser)
         console.error("Error checking auth:", error);
         router.push("/auth/signin");
       }
@@ -157,6 +158,7 @@ function HomeContent() {
           setIsUserAdmin(adminStatus);
         }
       } catch (error) {
+        // Client-side: use console.error for now
         console.error('Error checking admin status:', error);
       }
       
@@ -188,12 +190,14 @@ function HomeContent() {
             }
           }
         } catch (error) {
+          // Client-side: use console.error for now
           console.error('Error fetching user groups:', error);
           // On error, show no teams to be safe
           filteredTeams = [];
         }
       } else {
         // Admin: Show all teams (no filtering needed)
+        // Client-side: use console.log for debug info
         console.log('[page] Admin user detected - showing all teams:', allTeamsData.length);
         filteredTeams = allTeamsData;
       }

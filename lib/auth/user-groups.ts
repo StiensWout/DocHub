@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 import { getSession } from './session';
 import { getUserGroupsFromWorkOS, getUserOrganizationMemberships } from '@/lib/workos/organizations';
 import { syncTeamsFromUserOrganizations, isUserInAdminOrganization } from '@/lib/workos/team-sync';
+import { log } from '@/lib/logger';
 
 export interface UserGroup {
   id: string;
@@ -33,35 +34,35 @@ export interface UserRole {
  * 3. Set WORKOS_USE_ORGANIZATIONS=true environment variable
  */
 export async function getUserGroups(userId: string): Promise<string[]> {
-  console.log(`[getUserGroups] Called for userId: ${userId}`);
+  log.debug(`[getUserGroups] Called for userId: ${userId}`);
   
   // Check if we should use WorkOS Organization Memberships
   const useWorkOSGroups = process.env.WORKOS_USE_ORGANIZATIONS === 'true';
-  console.log(`[getUserGroups] WORKOS_USE_ORGANIZATIONS=${process.env.WORKOS_USE_ORGANIZATIONS}, useWorkOSGroups=${useWorkOSGroups}`);
+  log.debug(`[getUserGroups] WORKOS_USE_ORGANIZATIONS=${process.env.WORKOS_USE_ORGANIZATIONS}, useWorkOSGroups=${useWorkOSGroups}`);
   
   if (useWorkOSGroups) {
     try {
-      console.log(`[getUserGroups] Starting WorkOS organization sync for user ${userId}`);
+      log.debug(`[getUserGroups] Starting WorkOS organization sync for user ${userId}`);
       
       // Fetch memberships ONCE and reuse throughout
       const memberships = await getUserOrganizationMemberships(userId, true);
-      console.log(`[getUserGroups] Fetched ${memberships.length} organization memberships (cached for reuse)`);
+      log.debug(`[getUserGroups] Fetched ${memberships.length} organization memberships (cached for reuse)`);
       
       // Sync organizations to teams (creates teams for new organizations)
       // Pass cached memberships to avoid redundant fetch
       const syncedTeamIds = await syncTeamsFromUserOrganizations(userId, memberships);
-      console.log(`[getUserGroups] Synced ${syncedTeamIds.length} teams:`, syncedTeamIds);
+      log.debug(`[getUserGroups] Synced ${syncedTeamIds.length} teams:`, syncedTeamIds);
       
       // Get user's groups from WorkOS (use cached memberships)
       const workosGroups = await getUserGroupsFromWorkOS(userId, memberships);
-      console.log(`[getUserGroups] WorkOS groups found:`, workosGroups);
+      log.debug(`[getUserGroups] WorkOS groups found:`, workosGroups);
       
       // Check if user is in admin organization (uses cached memberships)
       const isInAdminOrg = await isUserInAdminOrganization(userId, memberships);
-      console.log(`[getUserGroups] Is user in admin organization: ${isInAdminOrg}`);
+      log.debug(`[getUserGroups] Is user in admin organization: ${isInAdminOrg}`);
       
       if (isInAdminOrg) {
-        console.log(`[getUserGroups] User is admin - fetching all teams`);
+        log.debug(`[getUserGroups] User is admin - fetching all teams`);
         // Admin users see all existing teams/groups plus an "Admin" group
         const { data: allTeams, error: teamsError } = await supabaseAdmin
           .from('teams')
@@ -69,19 +70,19 @@ export async function getUserGroups(userId: string): Promise<string[]> {
           .order('name');
         
         if (teamsError) {
-          console.error(`[getUserGroups] Error fetching all teams:`, teamsError);
+          log.error(`[getUserGroups] Error fetching all teams:`, teamsError);
         }
         
         const allTeamNames = (allTeams || []).map(t => t.name);
-        console.log(`[getUserGroups] All teams found:`, allTeamNames);
+        log.debug(`[getUserGroups] All teams found:`, allTeamNames);
         
         // Add "Admin" group if not already in the list
         if (!allTeamNames.includes('Admin')) {
           allTeamNames.unshift('Admin');
-          console.log(`[getUserGroups] Added 'Admin' group to list`);
+          log.debug(`[getUserGroups] Added 'Admin' group to list`);
         }
         
-        console.log(`[getUserGroups] Returning admin groups:`, allTeamNames);
+        log.debug(`[getUserGroups] Returning admin groups:`, allTeamNames);
         return allTeamNames;
       }
       
@@ -117,29 +118,29 @@ export async function getUserGroups(userId: string): Promise<string[]> {
               
               if (userTeam) {
                 allTeamNames.push(userTeam.name);
-                console.log(`[getUserGroups] Found user's team "${userTeam.name}" for organization "${orgName}"`);
+                log.debug(`[getUserGroups] Found user's team "${userTeam.name}" for organization "${orgName}"`);
               } else {
-                console.log(`[getUserGroups] Team "${roleName.trim()}" not found in database for organization "${orgName}"`);
+                log.debug(`[getUserGroups] Team "${roleName.trim()}" not found in database for organization "${orgName}"`);
               }
             } else {
-              console.log(`[getUserGroups] No valid role found for user in organization "${orgName}"`);
+              log.debug(`[getUserGroups] No valid role found for user in organization "${orgName}"`);
             }
           }
         }
         
-        console.log(`[getUserGroups] Returning user's team(s) only:`, allTeamNames);
+        log.debug(`[getUserGroups] Returning user's team(s) only:`, allTeamNames);
         return allTeamNames;
       }
       // If no WorkOS groups found, fall back to database
-      console.log(`[getUserGroups] No WorkOS groups found for user ${userId}, falling back to database`);
+      log.debug(`[getUserGroups] No WorkOS groups found for user ${userId}, falling back to database`);
     } catch (error: any) {
-      console.error('[getUserGroups] Error fetching groups from WorkOS:', error);
-      console.error('[getUserGroups] Error stack:', error.stack);
-      console.warn('Error fetching groups from WorkOS, falling back to database:', error.message);
+      log.error('[getUserGroups] Error fetching groups from WorkOS:', error);
+      log.error('[getUserGroups] Error stack:', error.stack);
+      log.warn('Error fetching groups from WorkOS, falling back to database:', error.message);
       // Fall through to database fallback
     }
   } else {
-    console.log(`[getUserGroups] WORKOS_USE_ORGANIZATIONS is not enabled, using database fallback`);
+    log.debug(`[getUserGroups] WORKOS_USE_ORGANIZATIONS is not enabled, using database fallback`);
   }
   
   // Fallback to database (legacy support or when Directory Sync not configured)
@@ -150,13 +151,13 @@ export async function getUserGroups(userId: string): Promise<string[]> {
       .eq('user_id', userId);
 
     if (error) {
-      console.error('Error fetching user groups from database:', error);
+      log.error('Error fetching user groups from database:', error);
       return [];
     }
 
     return (data || []).map(g => g.group_name);
   } catch (error) {
-    console.error('Error getting user groups:', error);
+    log.error('Error getting user groups:', error);
     return [];
   }
 }
@@ -178,16 +179,16 @@ export async function isAdmin(userId?: string): Promise<boolean> {
     // If using WorkOS Organizations, check admin organization membership
     if (useWorkOSGroups) {
       try {
-        console.log(`[isAdmin] Checking WorkOS admin organization for user: ${targetUserId}`);
+        log.debug(`[isAdmin] Checking WorkOS admin organization for user: ${targetUserId}`);
         const isInAdminOrg = await isUserInAdminOrganization(targetUserId);
         if (isInAdminOrg) {
-          console.log(`[isAdmin] ✅ User ${targetUserId} is admin via WorkOS organization`);
+          log.debug(`[isAdmin] ✅ User ${targetUserId} is admin via WorkOS organization`);
           return true;
         }
-        console.log(`[isAdmin] User ${targetUserId} is NOT in admin organization, checking database fallback`);
+        log.debug(`[isAdmin] User ${targetUserId} is NOT in admin organization, checking database fallback`);
         // Fall through to database check as backup
       } catch (error: any) {
-        console.warn('[isAdmin] Error checking WorkOS admin organization, falling back to database:', error.message);
+        log.warn('[isAdmin] Error checking WorkOS admin organization, falling back to database:', error.message);
         // Fall through to database check
       }
     }
@@ -204,13 +205,13 @@ export async function isAdmin(userId?: string): Promise<boolean> {
         // User doesn't have a role yet, default to 'user'
         return false;
       }
-      console.error('Error checking admin status:', error);
+      log.error('Error checking admin status:', error);
       return false;
     }
 
     return data?.role === 'admin';
   } catch (error) {
-    console.error('Error checking admin status:', error);
+    log.error('Error checking admin status:', error);
     return false;
   }
 }
@@ -238,7 +239,7 @@ export async function getUserRole(userId?: string): Promise<'admin' | 'user'> {
         }
         // Fall through to database check as backup
       } catch (error: any) {
-        console.warn('Error checking WorkOS admin organization, falling back to database:', error.message);
+        log.warn('Error checking WorkOS admin organization, falling back to database:', error.message);
         // Fall through to database check
       }
     }
@@ -255,13 +256,13 @@ export async function getUserRole(userId?: string): Promise<'admin' | 'user'> {
         // User doesn't have a role yet, default to 'user'
         return 'user';
       }
-      console.error('Error fetching user role:', error);
+      log.error('Error fetching user role:', error);
       return 'user';
     }
 
     return (data?.role as 'admin' | 'user') || 'user';
   } catch (error) {
-    console.error('Error getting user role:', error);
+    log.error('Error getting user role:', error);
     return 'user';
   }
 }
@@ -288,7 +289,7 @@ export async function getAllUsers(): Promise<Array<{ userId: string; email: stri
       .select('user_id, role');
 
     if (rolesError) {
-      console.error('Error fetching user roles:', rolesError);
+      log.error('Error fetching user roles:', rolesError);
       // Continue without roles - users will have default 'user' role
     }
 
@@ -303,7 +304,7 @@ export async function getAllUsers(): Promise<Array<{ userId: string; email: stri
       .select('user_id, group_name');
 
     if (groupsError) {
-      console.error('Error fetching user groups:', groupsError);
+      log.error('Error fetching user groups:', groupsError);
       // Continue without groups - users will have empty groups array
     }
 
@@ -326,7 +327,7 @@ export async function getAllUsers(): Promise<Array<{ userId: string; email: stri
       };
     });
   } catch (error) {
-    console.error('Error getting all users:', error);
+    log.error('Error getting all users:', error);
     return [];
   }
 }

@@ -1,6 +1,7 @@
 import { workos } from './server';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { getUserOrganizationMemberships } from './organizations';
+import { log } from '@/lib/logger';
 
 /**
  * Subgroup utilities
@@ -27,7 +28,7 @@ export async function getUserSubgroupsInOrganization(
   cachedMemberships?: any[]
 ): Promise<Array<{ name: string; organizationId: string; isSubgroup: boolean; role?: string }>> {
   try {
-    console.log(`[getUserSubgroupsInOrganization] Getting user's team (role) for user ${userId} in org ${organizationName}`);
+    log.debug(`[getUserSubgroupsInOrganization] Getting user's team (role) for user ${userId} in org ${organizationName}`);
     
     const subgroups: Array<{ name: string; organizationId: string; isSubgroup: boolean; role?: string }> = [];
     
@@ -48,13 +49,13 @@ export async function getUserSubgroupsInOrganization(
         // Role is an object - extract the role identifier
         // WorkOS role objects typically have a 'slug' property
         roleName = (membership.role as any).slug || (membership.role as any).name || (membership.role as any).id || '';
-        console.log(`[getUserSubgroupsInOrganization] Role is an object, extracted:`, {
+        log.debug(`[getUserSubgroupsInOrganization] Role is an object, extracted:`, {
           role: membership.role,
           extractedName: roleName
         });
       }
       
-      console.log(`[getUserSubgroupsInOrganization] User has role "${roleName}" in organization "${organizationName}"`);
+      log.debug(`[getUserSubgroupsInOrganization] User has role "${roleName}" in organization "${organizationName}"`);
       
       // Only add as subgroup if role is not empty and not a generic role like "member"
       if (roleName && typeof roleName === 'string' && roleName.trim() !== '' && roleName.toLowerCase() !== 'member') {
@@ -65,20 +66,20 @@ export async function getUserSubgroupsInOrganization(
           role: roleName.trim(),
         });
         
-        console.log(`[getUserSubgroupsInOrganization] Added user's team "${roleName.trim()}" for org "${organizationName}"`);
+        log.debug(`[getUserSubgroupsInOrganization] Added user's team "${roleName.trim()}" for org "${organizationName}"`);
       } else {
-        console.log(`[getUserSubgroupsInOrganization] Skipping role "${roleName}" (empty or generic)`);
+        log.debug(`[getUserSubgroupsInOrganization] Skipping role "${roleName}" (empty or generic)`);
       }
     } else {
-      console.log(`[getUserSubgroupsInOrganization] No role found for user in organization "${organizationName}"`);
+      log.debug(`[getUserSubgroupsInOrganization] No role found for user in organization "${organizationName}"`);
     }
     
-    console.log(`[getUserSubgroupsInOrganization] Found ${subgroups.length} team(s) for user in org ${organizationName}:`, 
+    log.debug(`[getUserSubgroupsInOrganization] Found ${subgroups.length} team(s) for user in org ${organizationName}:`, 
       subgroups.map(s => `${s.name} (${s.isSubgroup ? 'team/role' : 'parent org - not used'})`));
     
     return subgroups;
   } catch (error: any) {
-    console.error(`[getUserSubgroupsInOrganization] Error getting user's team:`, error);
+    log.error(`[getUserSubgroupsInOrganization] Error getting user's team:`, error);
     return [];
   }
 }
@@ -92,7 +93,7 @@ export async function ensureSubgroupTeam(
   parentOrganizationName: string
 ): Promise<string | null> {
   try {
-    console.log(`[ensureSubgroupTeam] Ensuring subgroup team "${subgroupName}" exists for parent "${parentOrganizationName}"`);
+    log.debug(`[ensureSubgroupTeam] Ensuring subgroup team "${subgroupName}" exists for parent "${parentOrganizationName}"`);
     
     // Check if subgroup team already exists
     const { data: existingTeam } = await supabaseAdmin
@@ -109,7 +110,7 @@ export async function ensureSubgroupTeam(
           .update({ parent_organization_id: parentOrganizationId })
           .eq('id', existingTeam.id);
       }
-      console.log(`[ensureSubgroupTeam] Subgroup team "${subgroupName}" already exists: ${existingTeam.id}`);
+      log.debug(`[ensureSubgroupTeam] Subgroup team "${subgroupName}" already exists: ${existingTeam.id}`);
       return existingTeam.id;
     }
     
@@ -124,14 +125,14 @@ export async function ensureSubgroupTeam(
       .single();
     
     if (error) {
-      console.error(`[ensureSubgroupTeam] Error creating subgroup team "${subgroupName}":`, error);
+      log.error(`[ensureSubgroupTeam] Error creating subgroup team "${subgroupName}":`, error);
       return null;
     }
     
-    console.log(`[ensureSubgroupTeam] ✅ Created subgroup team "${subgroupName}" (ID: ${newTeam.id}) for parent "${parentOrganizationName}"`);
+    log.info(`[ensureSubgroupTeam] ✅ Created subgroup team "${subgroupName}" (ID: ${newTeam.id}) for parent "${parentOrganizationName}"`);
     return newTeam.id;
   } catch (error: any) {
-    console.error(`[ensureSubgroupTeam] Exception creating subgroup team:`, error);
+    log.error(`[ensureSubgroupTeam] Exception creating subgroup team:`, error);
     return null;
   }
 }

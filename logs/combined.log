@@ -26,3 +26,32 @@
 {"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 11:50:05"}
 {"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-10-31 11:50:05"}
 {"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-10-31 11:50:05"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 12:02:50"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 12:02:50"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-10-31 12:02:50"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 12:02:50"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-10-31 12:02:50"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 12:02:50"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 12:02:50"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-10-31 12:02:50"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-10-31 12:02:51"}
+{"0":"CDLE (role: admin)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-10-31 12:02:51"}
+{"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 12:02:51"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-10-31 12:02:51"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-10-31 12:02:51"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:08:35"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-10-31 14:08:35"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:08:35"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:08:35"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:08:36"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-10-31 14:08:36"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:08:36"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-10-31 14:08:36"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-10-31 14:08:36"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-10-31 14:08:36"}
+{"0":"CDLE (role: admin)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-10-31 14:08:36"}
+{"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 14:08:36"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:08:38"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:08:38"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-10-31 14:08:38"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-10-31 14:08:39"}
