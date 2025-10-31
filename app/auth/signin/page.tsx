@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, Loader2 } from "lucide-react";
 import { requireWorkOSClientId, REDIRECT_URI } from "@/lib/workos/client";
 
-export default function SignInPage() {
+function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -119,6 +119,22 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrap in Suspense to fix useSearchParams hydration issues
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto" />
+          <p className="mt-4 text-gray-400">Loading...</p>
+        </div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   );
 }
 
