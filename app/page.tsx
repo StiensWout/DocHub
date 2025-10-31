@@ -18,9 +18,11 @@ import ApplicationGroupManager from "@/components/ApplicationGroupManager";
 import ApplicationEditDialog from "@/components/ApplicationEditDialog";
 import GroupSection from "@/components/GroupSection";
 import ApplicationCard from "@/components/ApplicationCard";
+import UserGroupManager from "@/components/UserGroupManager";
 import { useRecentDocuments } from "@/hooks/useRecentDocuments";
 import { useToast } from "@/components/Toast";
 import { supabase } from "@/lib/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import type { ApplicationWithDocs, Team, Application, Document, BreadcrumbItem, ApplicationGroup } from "@/types";
 import type { SearchResult, DocumentSearchResult } from "@/lib/supabase/search";
 
@@ -49,12 +51,17 @@ function HomeContent() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [showUserGroupManager, setShowUserGroupManager] = useState(false);
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
   
   // Recent documents hook - only use after mount to avoid hydration issues
   const { recentDocuments, addRecentDocument } = useRecentDocuments();
   
   // Toast notifications
   const toast = useToast();
+  
+  // Auth hook for sign out and user info
+  const { signOut, user } = useAuth();
 
   // Set mounted state to avoid hydration issues
   useEffect(() => {
@@ -85,6 +92,25 @@ function HomeContent() {
     
     checkAuth();
   }, [router, isMounted]);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const response = await fetch('/api/users/role');
+        if (response.ok) {
+          const data = await response.json();
+          setIsUserAdmin(data.role === 'admin');
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+      }
+    };
+    
+    if (authChecked && user) {
+      checkAdmin();
+    }
+  }, [authChecked, user]);
 
   // Function to refresh documents without page reload
   const refreshDocuments = async () => {
@@ -389,7 +415,10 @@ function HomeContent() {
             onDocumentSelect={handleDocumentSelect}
             collapsed={sidebarCollapsed}
             onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
+            onSignOut={signOut}
             recentDocuments={recentDocuments}
+            isAdmin={isUserAdmin}
+            onManageUsers={() => setShowUserGroupManager(true)}
             onHomeClick={() => {
               setSelectedApp(null);
               setSelectedGroup(null);
