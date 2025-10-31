@@ -43,16 +43,21 @@ export async function getUserGroups(userId: string): Promise<string[]> {
     try {
       console.log(`[getUserGroups] Starting WorkOS organization sync for user ${userId}`);
       
+      // Fetch memberships ONCE and reuse throughout
+      const memberships = await getUserOrganizationMemberships(userId, true);
+      console.log(`[getUserGroups] Fetched ${memberships.length} organization memberships (cached for reuse)`);
+      
       // Sync organizations to teams (creates teams for new organizations)
-      const syncedTeamIds = await syncTeamsFromUserOrganizations(userId);
+      // Pass cached memberships to avoid redundant fetch
+      const syncedTeamIds = await syncTeamsFromUserOrganizations(userId, memberships);
       console.log(`[getUserGroups] Synced ${syncedTeamIds.length} teams:`, syncedTeamIds);
       
-      // Get user's groups from WorkOS
-      const workosGroups = await getUserGroupsFromWorkOS(userId);
+      // Get user's groups from WorkOS (use cached memberships)
+      const workosGroups = await getUserGroupsFromWorkOS(userId, memberships);
       console.log(`[getUserGroups] WorkOS groups found:`, workosGroups);
       
-      // Check if user is in admin organization
-      const isInAdminOrg = await isUserInAdminOrganization(userId);
+      // Check if user is in admin organization (uses cached memberships)
+      const isInAdminOrg = await isUserInAdminOrganization(userId, memberships);
       console.log(`[getUserGroups] Is user in admin organization: ${isInAdminOrg}`);
       
       if (isInAdminOrg) {
@@ -83,13 +88,11 @@ export async function getUserGroups(userId: string): Promise<string[]> {
       if (workosGroups.length > 0) {
         // WorkOS groups are organizations (e.g., "CDLE")
         // User belongs to 1 organization and 1 team (their role) within that org
-        // OR user is admin and sees all teams
         const allTeamNames: string[] = [];
         
         // For each organization the user belongs to, get THEIR specific team (role)
+        // Use cached memberships instead of fetching again
         for (const orgName of workosGroups) {
-          // Get organization memberships to find org ID and user's role
-          const memberships = await getUserOrganizationMemberships(userId);
           const membership = memberships.find(m => m.organizationName === orgName);
           
           if (membership) {

@@ -23,15 +23,16 @@ import { getUserOrganizationMemberships } from './organizations';
 export async function getUserSubgroupsInOrganization(
   userId: string, 
   organizationId: string,
-  organizationName: string
+  organizationName: string,
+  cachedMemberships?: any[]
 ): Promise<Array<{ name: string; organizationId: string; isSubgroup: boolean; role?: string }>> {
   try {
     console.log(`[getUserSubgroupsInOrganization] Getting user's team (role) for user ${userId} in org ${organizationName}`);
     
     const subgroups: Array<{ name: string; organizationId: string; isSubgroup: boolean; role?: string }> = [];
     
-    // Get user's organization memberships to find their role in this organization
-    const memberships = await getUserOrganizationMemberships(userId);
+    // Use cached memberships if provided, otherwise fetch (will use cache)
+    const memberships = cachedMemberships || await getUserOrganizationMemberships(userId, true);
     
     // Find the membership for this specific organization
     const membership = memberships.find(m => m.organizationId === organizationId);

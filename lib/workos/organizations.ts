@@ -1,4 +1,5 @@
 import { workos } from './server';
+import { getCachedMemberships, setCachedMemberships } from './membership-cache';
 
 /**
  * WorkOS Organization Memberships utilities
@@ -146,8 +147,17 @@ export async function getUserGroupsFromWorkOS(userId: string): Promise<string[]>
  * Get organization memberships for a user
  * Returns both organization IDs and details
  */
-export async function getUserOrganizationMemberships(userId: string) {
-  console.log(`[getUserOrganizationMemberships] Fetching memberships for userId: ${userId}`);
+export async function getUserOrganizationMemberships(userId: string, useCache: boolean = true) {
+  // Check cache first
+  if (useCache) {
+    const cached = getCachedMemberships(userId);
+    if (cached !== null) {
+      console.log(`[getUserOrganizationMemberships] ✅ Using cached memberships for userId: ${userId} (${cached.length} memberships)`);
+      return cached;
+    }
+  }
+  
+  console.log(`[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: ${userId}`);
   
   try {
     const { data: memberships, error: listError } = await workos.userManagement.listOrganizationMemberships({
@@ -161,6 +171,10 @@ export async function getUserOrganizationMemberships(userId: string) {
 
     if (!memberships || memberships.length === 0) {
       console.log(`[getUserOrganizationMemberships] No organization memberships found for user ${userId}`);
+      // Cache empty result to avoid repeated checks
+      if (useCache) {
+        setCachedMemberships(userId, []);
+      }
       return [];
     }
 
@@ -170,10 +184,8 @@ export async function getUserOrganizationMemberships(userId: string) {
     console.log(`[getUserOrganizationMemberships] Enriching memberships with organization details...`);
     const enrichedMemberships = await Promise.all(
       memberships.map(async (membership, index) => {
-        console.log(`[getUserOrganizationMemberships] Processing membership ${index + 1}/${memberships.length}: orgId=${membership.organizationId}`);
         try {
           const org = await workos.organizations.getOrganization(membership.organizationId);
-          console.log(`[getUserOrganizationMemberships] Successfully fetched org: name="${org.name}", id="${org.id}"`);
           
           // Handle createdAt - it might be a Date object, string, or undefined
           let createdAtStr = '';
@@ -188,10 +200,20 @@ export async function getUserOrganizationMemberships(userId: string) {
             }
           }
           
+          // Handle role - it might be a string or an object
+          let roleValue: string | object = '';
+          if (membership.role) {
+            if (typeof membership.role === 'string') {
+              roleValue = membership.role;
+            } else {
+              roleValue = membership.role;
+            }
+          }
+          
           return {
             organizationId: membership.organizationId,
             organizationName: org.name,
-            role: membership.role || '', // Role can be used as subgroup identifier
+            role: roleValue, // Role can be used as subgroup identifier
             createdAt: createdAtStr,
           };
         } catch (error: any) {
@@ -214,17 +236,32 @@ export async function getUserOrganizationMemberships(userId: string) {
             }
           }
           
+          // Handle role
+          let roleValue: string | object = '';
+          if (membership.role) {
+            if (typeof membership.role === 'string') {
+              roleValue = membership.role;
+            } else {
+              roleValue = membership.role;
+            }
+          }
+          
           return {
             organizationId: membership.organizationId,
             organizationName: membership.organizationId, // Fallback to ID
-            role: membership.role,
+            role: roleValue,
             createdAt: createdAtStr,
           };
         }
       })
     );
 
-    console.log(`[getUserOrganizationMemberships] ✅ Returning ${enrichedMemberships.length} enriched memberships:`, 
+    // Cache the result
+    if (useCache) {
+      setCachedMemberships(userId, enrichedMemberships);
+    }
+
+    console.log(`[getUserOrganizationMemberships] ✅ Returning ${enrichedMemberships.length} enriched memberships (cached):`, 
       enrichedMemberships.map(m => `${m.organizationName} (${m.organizationId})`));
     return enrichedMemberships;
   } catch (error: any) {

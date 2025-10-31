@@ -200,6 +200,7 @@ CREATE TABLE applications (
   name TEXT NOT NULL,
   icon_name TEXT NOT NULL, -- e.g., 'Globe', 'Database', etc.
   color TEXT NOT NULL, -- Tailwind color classes
+  group_id UUID REFERENCES application_groups(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -323,6 +324,7 @@ CREATE TABLE document_access_groups (
 CREATE INDEX idx_base_documents_app_id ON base_documents(application_id);
 CREATE INDEX idx_team_documents_team_app ON team_documents(team_id, application_id);
 CREATE INDEX idx_team_documents_app_id ON team_documents(application_id);
+CREATE INDEX idx_applications_group_id ON applications(group_id);
 
 -- Template indexes
 CREATE INDEX idx_document_templates_category ON document_templates(category);

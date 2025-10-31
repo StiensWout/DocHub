@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { workos } from '@/lib/workos/server';
+import { decodeJWTPayload } from './jwt-utils';
 
 export interface SessionUser {
   id: string;
@@ -59,12 +60,10 @@ export async function getSession(): Promise<{ user: SessionUser; accessToken: st
         let userId: string | null = null;
         
         try {
-          // Decode JWT token (without verification - we trust WorkOS tokens)
-          const tokenParts = accessToken.split('.');
-          if (tokenParts.length === 3) {
-            const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
-            userId = payload.sub; // 'sub' claim contains the user ID
-          }
+          // Decode JWT token using Base64url (RFC 7515)
+          // JWTs use Base64url encoding, not standard Base64
+          const payload = decodeJWTPayload(accessToken);
+          userId = payload.sub; // 'sub' claim contains the user ID
         } catch (decodeError: any) {
           console.warn('Could not decode token to extract user ID:', decodeError.message);
         }

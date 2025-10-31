@@ -84,14 +84,16 @@ export async function ensureTeamForOrganization(organizationName: string, organi
 /**
  * Sync all teams from user's WorkOS organizations
  * Creates teams in DocHub for any organizations the user belongs to
+ * 
+ * @param userId - The user ID
+ * @param cachedMemberships - Optional cached memberships to avoid redundant API calls
  */
-export async function syncTeamsFromUserOrganizations(userId: string): Promise<string[]> {
+export async function syncTeamsFromUserOrganizations(userId: string, cachedMemberships?: any[]): Promise<string[]> {
   console.log(`[syncTeamsFromUserOrganizations] Starting sync for userId: ${userId}`);
   
   try {
-    // Get user's organization memberships
-    console.log(`[syncTeamsFromUserOrganizations] Fetching organization memberships for user ${userId}`);
-    const memberships = await getUserOrganizationMemberships(userId);
+    // Get user's organization memberships (use cache or cached parameter)
+    const memberships = cachedMemberships || await getUserOrganizationMemberships(userId, true);
     console.log(`[syncTeamsFromUserOrganizations] Found ${memberships?.length || 0} organization memberships:`, 
       memberships?.map(m => `${m.organizationName} (${m.organizationId})`));
     
@@ -110,21 +112,19 @@ export async function syncTeamsFromUserOrganizations(userId: string): Promise<st
       
       try {
         // Get organization details to ensure we have the name
-        console.log(`[syncTeamsFromUserOrganizations] Fetching organization details for ${membership.organizationId}`);
         const org = await getOrganization(membership.organizationId);
         if (!org) {
           console.warn(`[syncTeamsFromUserOrganizations] Organization ${membership.organizationId} not found, skipping`);
           continue;
         }
-        console.log(`[syncTeamsFromUserOrganizations] Organization details: name="${org.name}", id="${org.id}"`);
 
         // NOTE: We do NOT create the parent organization as a team
         // The organization (e.g., "CDLE") is just the org, not a team
         // Only subgroups (roles within the org) become teams
         
         // Get subgroups/teams within this organization (based on user's role)
-        console.log(`[syncTeamsFromUserOrganizations] Checking for subgroups (roles) within "${org.name}"`);
-        const subgroups = await getUserSubgroupsInOrganization(userId, membership.organizationId, org.name);
+        // Pass cached memberships to avoid another fetch
+        const subgroups = await getUserSubgroupsInOrganization(userId, membership.organizationId, org.name, memberships);
         
         // Create teams ONLY for subgroups (not the parent org)
         for (const subgroup of subgroups) {
@@ -158,10 +158,11 @@ export async function syncTeamsFromUserOrganizations(userId: string): Promise<st
  * Check if user is in an "admin" organization
  * Admin organization name can be configured via environment variable
  */
-export async function isUserInAdminOrganization(userId: string): Promise<boolean> {
+export async function isUserInAdminOrganization(userId: string, cachedMemberships?: any[]): Promise<boolean> {
   try {
     const adminOrgName = process.env.WORKOS_ADMIN_ORGANIZATION_NAME || 'admin';
-    const memberships = await getUserOrganizationMemberships(userId);
+    // Use cached memberships if provided, otherwise fetch (will use cache)
+    const memberships = cachedMemberships || await getUserOrganizationMemberships(userId, true);
     
     return memberships.some(m => 
       m.organizationName.toLowerCase() === adminOrgName.toLowerCase()
