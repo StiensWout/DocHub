@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Loader2 } from "lucide-react";
 import type { Tag } from "./TagDisplay";
+import { useTagContext } from "@/contexts/TagContext";
 
 interface TagSelectorProps {
   selectedTags: Tag[];
@@ -28,6 +29,7 @@ export default function TagSelector({
   const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const { triggerRefresh } = useTagContext();
 
   // Fetch tag suggestions
   useEffect(() => {
@@ -131,6 +133,9 @@ export default function TagSelector({
       handleAddTag(newTag);
       setQuery("");
       setShowSuggestions(false);
+      
+      // Trigger tag refresh to update SearchBar and other components
+      triggerRefresh();
     } catch (error) {
       console.error("Error creating tag:", error);
       alert("Failed to create tag. Please try again.");

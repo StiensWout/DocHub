@@ -8,6 +8,7 @@ import { useSearchHistory, type SearchHistoryItem } from "@/hooks/useSearchHisto
 import TagDisplay, { type Tag } from "./TagDisplay";
 import type { Application } from "@/types";
 import * as LucideIcons from "lucide-react";
+import { useTagContext } from "@/contexts/TagContext";
 
 interface SearchBarProps {
   onResultClick: (result: SearchResult) => void;
@@ -46,6 +47,7 @@ export default function SearchBar({ onResultClick, teamId }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   
   const { history, saveSearch, clearHistory, getRecentSearches } = useSearchHistory();
+  const { refreshTrigger } = useTagContext();
 
   // Load applications, categories, and tags
   useEffect(() => {
@@ -69,7 +71,7 @@ export default function SearchBar({ onResultClick, teamId }: SearchBarProps) {
       }
     }
     loadData();
-  }, [teamId]);
+  }, [teamId, refreshTrigger]); // Add refreshTrigger as dependency to refresh when tags are created
 
   // Update filters when team changes
   useEffect(() => {
@@ -475,11 +477,11 @@ export default function SearchBar({ onResultClick, teamId }: SearchBarProps) {
           )}
         </div>
 
-        {/* Keyboard shortcut hint */}
+        {/* Keyboard shortcut hint - moved to left side to avoid overlap with filter button */}
         {!isFocused && !query && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-xs text-gray-500 pointer-events-none">
-            <kbd className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px]">⌘</kbd>
-            <kbd className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[10px]">K</kbd>
+          <div className="absolute left-12 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-xs text-gray-500 pointer-events-none opacity-50">
+            <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-[10px]">⌘</kbd>
+            <kbd className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded text-[10px]">K</kbd>
           </div>
         )}
       </div>
