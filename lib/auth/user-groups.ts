@@ -268,6 +268,8 @@ export async function getUserRole(userId?: string): Promise<'admin' | 'user'> {
 
 /**
  * Get all users (admin only)
+ * Now uses local database for faster access
+ * Includes all synced users, even if they don't have a role yet
  */
 export async function getAllUsers(): Promise<Array<{ userId: string; email: string; role: string; groups: string[] }>> {
   try {
@@ -276,15 +278,24 @@ export async function getAllUsers(): Promise<Array<{ userId: string; email: stri
       throw new Error('Unauthorized: Admin access required');
     }
 
-    // Get all user roles
+    // Get all users from local database
+    const { getAllLocalUsers } = await import('@/lib/workos/user-sync');
+    const localUsers = await getAllLocalUsers();
+
+    // Get all user roles (create map for quick lookup)
     const { data: roles, error: rolesError } = await supabaseAdmin
       .from('user_roles')
       .select('user_id, role');
 
     if (rolesError) {
       console.error('Error fetching user roles:', rolesError);
-      return [];
+      // Continue without roles - users will have default 'user' role
     }
+
+    const rolesByUserId: Record<string, string> = {};
+    (roles || []).forEach(r => {
+      rolesByUserId[r.user_id] = r.role;
+    });
 
     // Get all user groups
     const { data: groups, error: groupsError } = await supabaseAdmin
@@ -293,7 +304,7 @@ export async function getAllUsers(): Promise<Array<{ userId: string; email: stri
 
     if (groupsError) {
       console.error('Error fetching user groups:', groupsError);
-      return [];
+      // Continue without groups - users will have empty groups array
     }
 
     // Group groups by user_id
@@ -305,13 +316,15 @@ export async function getAllUsers(): Promise<Array<{ userId: string; email: stri
       groupsByUser[g.user_id].push(g.group_name);
     });
 
-    // Combine roles and groups
-    return (roles || []).map(role => ({
-      userId: role.user_id,
-      email: '', // Will be populated from WorkOS if needed
-      role: role.role,
-      groups: groupsByUser[role.user_id] || [],
-    }));
+    // Return all local users, with roles and groups if they exist
+    return localUsers.map(localUser => {
+      return {
+        userId: localUser.workos_user_id,
+        email: localUser.email || '',
+        role: rolesByUserId[localUser.workos_user_id] || 'user', // Default to 'user' if no role
+        groups: groupsByUser[localUser.workos_user_id] || [],
+      };
+    });
   } catch (error) {
     console.error('Error getting all users:', error);
     return [];

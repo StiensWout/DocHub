@@ -7,16 +7,11 @@
  * The cache is cleared after each request to ensure fresh data.
  */
 
-interface Membership {
-  organizationId: string;
-  organizationName: string;
-  role: string | object;
-  createdAt: string;
-}
+import type { EnrichedMembership } from './organizations';
 
 // Simple in-memory cache (per process, cleared on server restart)
 const membershipCache = new Map<string, {
-  data: Membership[];
+  data: EnrichedMembership[];
   timestamp: number;
 }>();
 
@@ -26,7 +21,7 @@ const CACHE_TTL = 5 * 60 * 1000;
 /**
  * Get cached memberships or null if not cached/expired
  */
-export function getCachedMemberships(userId: string): Membership[] | null {
+export function getCachedMemberships(userId: string): EnrichedMembership[] | null {
   const cached = membershipCache.get(userId);
   
   if (!cached) {
@@ -46,7 +41,7 @@ export function getCachedMemberships(userId: string): Membership[] | null {
 /**
  * Store memberships in cache
  */
-export function setCachedMemberships(userId: string, memberships: Membership[]): void {
+export function setCachedMemberships(userId: string, memberships: EnrichedMembership[]): void {
   membershipCache.set(userId, {
     data: memberships,
     timestamp: Date.now(),

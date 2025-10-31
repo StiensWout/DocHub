@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { workos } from '@/lib/workos/server';
 import { getUserGroups } from '@/lib/auth/user-groups';
+import { syncUserFromWorkOS } from '@/lib/workos/user-sync';
 
 /**
  * SSO Callback Handler
@@ -61,6 +62,16 @@ export async function GET(request: NextRequest) {
         userId: user.id, 
         email: user.email 
       });
+    }
+
+    // Sync user to local database immediately after authentication
+    // This ensures user data is available for admin access even when user is offline
+    try {
+      console.log(`[callback] Syncing user ${user.id} to local database`);
+      await syncUserFromWorkOS(user.id);
+    } catch (syncError: any) {
+      // Log but don't fail the authentication flow
+      console.warn('[callback] Error syncing user to local database:', syncError.message);
     }
 
     // Sync teams from WorkOS organizations immediately after authentication

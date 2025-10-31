@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { isAdmin, getAllUsers } from '@/lib/auth/user-groups';
-import { workos } from '@/lib/workos/server';
 import { getUserOrganizationMemberships } from '@/lib/workos/organizations';
+import { getAllLocalUsers } from '@/lib/workos/user-sync';
 
 /**
  * GET /api/users/all
- * Get all users in the organization (admin only)
- * Enriched with WorkOS profile data and organization memberships
+ * Get all users (admin only)
+ * Uses local database for fast access, enriched with organization memberships
  */
 export async function GET(request: NextRequest) {
   try {
@@ -21,28 +21,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
     }
 
-    // Get users from database
+    // Get users from local database (includes roles and groups)
     const users = await getAllUsers();
+    
+    // Get all local user records for additional profile data
+    const localUsers = await getAllLocalUsers();
+    const localUsersMap = new Map(localUsers.map(u => [u.workos_user_id, u]));
 
-    // Enrich with WorkOS profile data and organization memberships
+    // Enrich with local profile data and organization memberships
     const enrichedUsers = await Promise.all(
       users.map(async (user) => {
         try {
-          // Get user profile from WorkOS
-          let userProfile = null;
-          try {
-            const workosUser = await workos.userManagement.getUser(user.userId);
-            userProfile = {
-              email: workosUser.email,
-              firstName: workosUser.firstName,
-              lastName: workosUser.lastName,
-              emailVerified: workosUser.emailVerified,
-            };
-          } catch (error: any) {
-            // User might be SSO user, not User Management user
-            console.warn(`Could not fetch WorkOS user ${user.userId}:`, error.message);
-          }
-
+          // Get local user profile data
+          const localUser = localUsersMap.get(user.userId);
+          
           // Get organization memberships
           let memberships: any[] = [];
           try {
@@ -53,10 +45,12 @@ export async function GET(request: NextRequest) {
 
           return {
             ...user,
-            email: userProfile?.email || user.email,
-            firstName: userProfile?.firstName,
-            lastName: userProfile?.lastName,
-            emailVerified: userProfile?.emailVerified || false,
+            email: localUser?.email || user.email,
+            firstName: localUser?.first_name,
+            lastName: localUser?.last_name,
+            emailVerified: localUser?.email_verified || false,
+            profilePictureUrl: localUser?.profile_picture_url,
+            lastSyncedAt: localUser?.last_synced_at,
             organizations: memberships.map(m => ({
               id: m.organizationId,
               name: m.organizationName,
