@@ -1,7 +1,8 @@
 # WorkOS Integration - Next Steps
 
 **Last Updated**: 2025-01-30  
-**Status**: Phase 1 Complete, Email Verification Complete
+**Status**: Microsoft SSO Only - Initial Setup Complete
+**Current Authentication Method**: Microsoft SSO (Single Sign-On) only
 
 ---
 
@@ -30,28 +31,34 @@
 
 ## 🚧 Next Steps - Priority Order
 
-### 1. **Configure Social OAuth Providers** (High Priority)
-**Status**: UI Ready, Needs WorkOS Dashboard Configuration
+### 1. **Configure Microsoft SSO Provider** (High Priority) ✅ DONE
+**Status**: UI Implemented, Needs WorkOS Dashboard Configuration
 
-The OAuth buttons are already implemented on the sign-in page, but they need to be configured in the WorkOS Dashboard.
+The Microsoft SSO button is implemented on the sign-in page and ready for configuration.
 
 **Steps**:
 1. Go to WorkOS Dashboard → User Management → Social Providers
-2. Configure Google OAuth:
-   - Enable Google provider
-   - Add OAuth client ID and secret from Google Cloud Console
-   - Set redirect URI: `http://localhost:3000/auth/callback` (dev) and production URL
-3. Configure GitHub OAuth:
-   - Enable GitHub provider
-   - Add OAuth client ID and secret from GitHub Settings
-   - Set redirect URI: `http://localhost:3000/auth/callback` (dev) and production URL
-4. Test social login flows
+2. Enable Microsoft OAuth provider
+3. Configure Microsoft OAuth:
+   - **Option A: Microsoft Azure AD (Recommended for Enterprise)**
+     - Register app in Azure Portal: https://portal.azure.com
+     - Add OAuth client ID and secret from Azure AD
+     - Set redirect URI: `http://localhost:3000/auth/callback` (dev) and production URL
+     - Configure API permissions if needed
+   - **Option B: Microsoft Personal Accounts (Consumer)**
+     - Register app at: https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps
+     - Add OAuth client ID and secret
+     - Set redirect URI: `http://localhost:3000/auth/callback` (dev) and production URL
+4. Test Microsoft SSO login flow
 
 **Estimated Time**: 1-2 hours
 
-**Files Already Created**:
-- `app/auth/signin/page.tsx` - OAuth buttons ready
+**Files Created**:
+- `app/auth/signin/page.tsx` - Microsoft SSO button ready
+- `app/auth/signup/page.tsx` - Redirects to sign-in (SSO doesn't need separate sign-up)
 - `app/api/auth/callback/route.ts` - OAuth callback handler ready
+
+**Reference**: [Microsoft OAuth Setup Guide](https://workos.com/docs/authkit/social-login/microsoft)
 
 ---
 

@@ -6,6 +6,16 @@ All notable changes and completed features in DocHub.
 
 ### ✨ Completed Features
 
+#### Microsoft SSO Only Authentication ✅
+- ✅ Adapted authentication system to use Microsoft SSO only
+- ✅ Removed email/password authentication
+- ✅ Removed Google and GitHub OAuth options
+- ✅ Updated sign-in page with Microsoft SSO button
+- ✅ Sign-up page redirects to sign-in (SSO doesn't require separate sign-up)
+- ✅ Microsoft OAuth callback handler already implemented
+- **Status**: Ready for WorkOS Dashboard configuration
+- **Note**: Microsoft OAuth provider needs to be configured in WorkOS Dashboard
+
 #### WorkOS AuthKit Integration - Phase 1 ✅
 - ✅ Installed and configured WorkOS Node.js SDK
 - ✅ Created WorkOS server-side client (`lib/workos/server.ts`)
