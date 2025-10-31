@@ -106,6 +106,10 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
       }
 
       setAvailableOrganizations(data.organizations || []);
+      
+      // Reload users to ensure we have the latest roles (roles are extracted from users)
+      // This ensures we capture all custom roles from existing memberships
+      await loadUsers();
     } catch (error: any) {
       console.error('Error loading organizations:', error);
     }
@@ -493,22 +497,25 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
                           ) : (
                             availableOrganizations.map((org) => {
                               // Show organization with all available roles
-                              // Default roles if none exist: 'admin', 'member', 'user'
-                              const rolesToShow = availableRoles.length > 0 
-                                ? availableRoles 
-                                : ['admin', 'member', 'user'];
+                              // Get roles that are actually used, plus common defaults
+                              const defaultRoles = ['admin', 'member', 'user'];
+                              const allPossibleRoles = availableRoles.length > 0 
+                                ? [...new Set([...availableRoles, ...defaultRoles])].sort()
+                                : defaultRoles;
                               
                               return (
                                 <optgroup key={org.id} label={org.name} className="bg-[#2a2a2a]">
-                                  {rolesToShow.map((role) => {
+                                  {allPossibleRoles.map((role) => {
                                     const optionValue = `${org.id}:${role}`;
+                                    // Highlight custom roles (not in defaults)
+                                    const isCustomRole = !defaultRoles.includes(role);
                                     return (
                                       <option
                                         key={optionValue}
                                         value={optionValue}
-                                        className="bg-[#1a1a1a] text-white pl-4"
+                                        className={`bg-[#1a1a1a] text-white pl-4 ${isCustomRole ? 'font-semibold text-blue-300' : ''}`}
                                       >
-                                        {org.name} - {role}
+                                        {org.name} - {role} {isCustomRole ? '✨' : ''}
                                       </option>
                                     );
                                   })}
