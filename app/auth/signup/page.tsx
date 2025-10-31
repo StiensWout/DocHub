@@ -101,94 +101,94 @@ export default function SignUpPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium mb-2 text-gray-300">
-                  First Name
-                </label>
-                <div className="relative">
-                  <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    id="firstName"
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
-                    placeholder="John"
-                  />
+                  <div>
+                    <label htmlFor="firstName" className="block text-sm font-medium mb-2 text-gray-300">
+                      First Name
+                    </label>
+                    <div className="relative">
+                      <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        id="firstName"
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
+                        placeholder="John"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="lastName" className="block text-sm font-medium mb-2 text-gray-300">
+                      Last Name
+                    </label>
+                    <div className="relative">
+                      <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        id="lastName"
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
+                        placeholder="Doe"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium mb-2 text-gray-300">
-                  Last Name
-                </label>
-                <div className="relative">
-                  <User className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    id="lastName"
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
-                    placeholder="Doe"
-                  />
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium mb-2 text-gray-300">
+                    Email
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
+                      placeholder="you@example.com"
+                    />
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2 text-gray-300">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
-                  placeholder="you@example.com"
-                />
-              </div>
-            </div>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium mb-2 text-gray-300">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={8}
+                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-gray-400">
+                    Password must be at least 8 characters long
+                  </p>
+                </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2 text-gray-300">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
-                  placeholder="••••••••"
-                />
-              </div>
-              <p className="mt-1 text-xs text-gray-400">
-                Password must be at least 8 characters long
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Creating account...
-                </>
-              ) : (
-                "Create Account"
-              )}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
                 </button>
               </form>
             </>
