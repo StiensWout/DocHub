@@ -6,17 +6,21 @@ All notable changes and completed features in DocHub.
 
 ### ✨ Completed Features
 
-#### Microsoft SSO Only Authentication ✅
-- ✅ Adapted authentication system to use Microsoft SSO only
-- ✅ Removed email/password authentication
-- ✅ Removed Google and GitHub OAuth options
-- ✅ Updated sign-in page with Microsoft SSO button
+#### Provider-Agnostic SSO Authentication ✅
+- ✅ **Generic SSO System**: Provider-agnostic authentication architecture
+- ✅ **Organization-Based Auth**: Uses WorkOS Organizations for flexible provider switching
+- ✅ **Generic SSO Endpoint**: `/api/auth/sso` works with any SSO provider
+- ✅ **Provider Switching**: Change providers in WorkOS Dashboard without code changes
+- ✅ **Session Handling**: Supports both SSO profiles and User Management users
+- ✅ **Sign-in Page**: Generic UI that adapts to any provider
+- ✅ **Callback Handler**: `/auth/callback` route for SSO authentication
+- ✅ **Session Management**: Proper handling of SSO profiles vs User Management users
 - ✅ Sign-up page redirects to sign-in (SSO doesn't require separate sign-up)
-- ✅ Microsoft OAuth callback handler already implemented
-- **Status**: Ready for WorkOS Dashboard configuration
-- **Note**: Microsoft OAuth provider needs to be configured in WorkOS Dashboard
+- ✅ **Key Benefit**: Switch from test SSO to Microsoft (or any provider) by updating organization connection
+- **Status**: ✅ Fully functional with test SSO, ready for production provider
+- **See**: `docs/FEATURES/pending/auth-provider-switching.md` for migration guide
 
-#### WorkOS AuthKit Integration - Phase 1 ✅
+#### WorkOS SSO Integration - Phase 1 ✅
 - ✅ Installed and configured WorkOS Node.js SDK
 - ✅ Created WorkOS server-side client (`lib/workos/server.ts`)
 - ✅ Created WorkOS client-side utilities (`lib/workos/client.ts`)
@@ -41,13 +45,23 @@ All notable changes and completed features in DocHub.
 
 ### 🐛 Bug Fixes
 
-#### WorkOS Email Verification Fix
+#### SSO Callback Route Fix
+- ✅ Fixed 404 error on `/auth/callback` - created route handler at correct path
+- ✅ Updated callback to use `workos.sso.getProfileAndToken()` for SSO authentication
+- ✅ Improved error handling and logging in callback route
+- **Impact**: SSO authentication flow now completes successfully
+
+#### SSO Session Handling Fix
+- ✅ Fixed "User not found" error after SSO authentication
+- ✅ Changed from `userManagement.getUser()` to `sso.getProfile()` for SSO tokens
+- ✅ Added automatic fallback between SSO and User Management APIs
+- ✅ Proper handling of SSO profiles vs User Management users
+- **Impact**: Session retrieval now works correctly with SSO authentication
+
+#### WorkOS Email Verification Fix (Legacy)
 - ✅ Fixed `authenticateWithEmailVerificationCode` TypeError - method doesn't exist
 - ✅ Changed to correct method: `authenticateWithEmailVerification` with `code` parameter
-- ✅ Updated sign-up page to use verification codes instead of links (matches WorkOS default)
-- ✅ Added inline code verification form on sign-up page
-- ✅ Improved error handling for invalid/expired verification codes
-- **Impact**: Email verification now works correctly with 6-digit codes sent by WorkOS
+- **Note**: Email verification not currently used (SSO only)
 
 #### WorkOS Navigation Fix
 - ✅ Fixed runtime error when navigating from sign-in to sign-up page

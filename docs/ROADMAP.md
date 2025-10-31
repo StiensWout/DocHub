@@ -25,18 +25,18 @@ Planned features, enhancements, and improvements for DocHub. Organized by priori
 ## 🎯 Medium Term (Next 1-2 Months)
 
 ### Authentication & Authorization
-- [ ] **User Authentication** (WorkOS AuthKit) 🚧 Phase 1 Complete
-  - [x] WorkOS AuthKit integration (Phase 1)
-  - [x] Login/signup pages
-  - [x] Email/password authentication
-  - [x] Email verification with codes ✅
-  - [x] Social OAuth providers (Google, GitHub) - UI ready, needs provider setup
-  - [ ] Magic Link authentication
-  - [ ] Password reset flow
-  - [x] Session management
+- [x] **SSO Authentication (WorkOS)** ✅ Complete
+  - [x] WorkOS SSO integration (provider-agnostic)
+  - [x] Organization-based authentication
+  - [x] Generic SSO endpoint (`/api/auth/sso`)
+  - [x] Provider-agnostic sign-in page
+  - [x] SSO callback handler (`/auth/callback`)
+  - [x] Session management with SSO profiles
   - [x] Authentication middleware
   - [x] Client-side auth hooks
-  - [ ] **See**: `docs/FEATURES/pending/workos-authkit-integration.md` for detailed implementation plan
+  - [x] **Key Feature**: Switch providers without code changes - just update organization connection in WorkOS Dashboard
+  - [ ] **Future**: Magic Link, Password Reset (if needed)
+  - [ ] **See**: `docs/FEATURES/pending/workos-authkit-integration.md` and `docs/FEATURES/pending/auth-provider-switching.md`
 - [ ] **Role-Based Access Control**
   - [ ] Team membership management (using WorkOS Organizations)
   - [ ] Permission system (read/write/admin)
