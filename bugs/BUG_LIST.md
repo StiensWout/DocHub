@@ -411,6 +411,41 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 
 ---
 
+### 29. Custom WorkOS Roles Not Fully Displayed in Admin User Group Menu
+
+**Severity:** MEDIUM
+**Category:** Functionality / User Management
+**Status:** ⚠️ PARTIALLY ADDRESSED
+**Files:** `components/UserGroupManager.tsx`, `app/api/users/all/route.ts`, `lib/workos/organizations.ts`, `app/api/organizations/route.ts`
+
+#### Issues:
+- Admin menu to change user groups doesn't show all custom roles defined in WorkOS organizations
+- Custom roles are only extracted from existing user memberships
+- If a custom role exists in WorkOS but hasn't been assigned to any user yet, it won't appear in the dropdown
+- These custom roles are used to define teams in DocHub, so they should all be visible
+
+#### Impact:
+- **MEDIUM** - Admins cannot assign users to custom roles that haven't been used yet
+- Custom roles defined in WorkOS organization settings are not discoverable
+- Teams defined by custom roles cannot be properly managed
+
+#### Fix Required:
+- Investigate WorkOS API to fetch all available roles for an organization (not just assigned roles)
+- If WorkOS doesn't provide a direct API, consider:
+  - Creating a roles configuration that syncs with WorkOS
+  - Allowing manual role entry in addition to dropdown selection
+  - Fetching roles from WorkOS organization settings if available
+- Update UserGroupManager to display all roles defined at the organization level
+- Ensure roles used for team definition are properly fetched and displayed
+
+#### Progress:
+- ✅ Improved role extraction from existing memberships
+- ✅ Better handling of role objects vs strings
+- ✅ Custom roles are highlighted when displayed
+- ⚠️ Still need to fetch unassigned custom roles directly from WorkOS
+
+---
+
 ## 🟢 LOW PRIORITY ISSUES
 
 ### 15. Code Duplication
