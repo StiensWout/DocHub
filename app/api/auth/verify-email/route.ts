@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify email with code and authenticate using pending authentication token
-    const { user, accessToken, refreshToken } = await workos.userManagement.authenticateWithEmailVerificationCode({
+    // WorkOS uses authenticateWithEmailVerification with code parameter
+    const { user, accessToken, refreshToken } = await workos.userManagement.authenticateWithEmailVerification({
       code,
       pendingAuthenticationToken,
       clientId: process.env.NEXT_PUBLIC_WORKOS_CLIENT_ID!,
