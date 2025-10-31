@@ -453,36 +453,65 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 
 ---
 
-### Bug #26: User Role Management Not Saving to WorkOS and Local Database
-**Files:** `app/api/users/role/route.ts`, `lib/workos/organizations.ts`
+### Bug #26: User Role Management Not Saving to WorkOS and Local Database ✅ **COMPLETE**
+**Files:** `app/api/users/role/route.ts`, `lib/workos/organizations.ts`, `components/UserGroupManager.tsx`
 
-- [ ] Debug role update endpoint:
-  - [ ] Add comprehensive logging to `app/api/users/role/route.ts` POST handler
-  - [ ] Verify request body parameters (userId, role) are received correctly
-  - [ ] Check database update succeeds (line 82-99)
-  - [ ] Check WorkOS update succeeds (line 104-134)
-- [ ] Fix WorkOS role update:
-  - [ ] Verify `updateUserRoleInOrganization` function implementation
-  - [ ] Check WorkOS API credentials and permissions
-  - [ ] Ensure error handling captures and logs all failures
-  - [ ] Add rollback mechanism if WorkOS update fails after DB update
-- [ ] Fix admin UI:
-  - [ ] Verify admin UI calls correct API endpoint
-  - [ ] Check request payload format matches API expectations
-  - [ ] Add error display for failed role updates
-  - [ ] Add success confirmation after role update
-- [ ] Implement preferred behaviour:
-  - [ ] Fetch active roles from WorkOS
-  - [ ] Display selectable list of roles in admin UI
-  - [ ] Save to both WorkOS and local database
-  - [ ] Provide user feedback on save status
-- [ ] Test end-to-end:
+- [x] Debug role update endpoint: ✅ **Complete**
+  - [x] Add comprehensive logging to `app/api/users/role/route.ts` POST handler ✅ **Complete**
+  - [x] Verify request body parameters (userId, role) are received correctly ✅ **Complete**
+  - [x] Check database update succeeds (line 82-99) ✅ **Complete**
+  - [x] Check WorkOS update succeeds (line 104-134) ✅ **Complete**
+- [x] Fix WorkOS role update: ✅ **Complete**
+  - [x] Verify `updateUserRoleInOrganization` function implementation ✅ **Verified - correct**
+  - [x] Check WorkOS API credentials and permissions ✅ **Noted in logs**
+  - [x] Ensure error handling captures and logs all failures ✅ **Complete**
+  - [x] Add rollback mechanism if WorkOS update fails after DB update ✅ **Complete**
+- [x] Fix admin UI: ✅ **Complete**
+  - [x] Verify admin UI calls correct API endpoint ✅ **Verified - correct**
+  - [x] Check request payload format matches API expectations ✅ **Verified - correct**
+  - [x] Add error display for failed role updates ✅ **Complete**
+  - [x] Add success confirmation after role update ✅ **Complete**
+- [x] Implement preferred behaviour: ✅ **Complete**
+  - [x] Fetch active roles from WorkOS ✅ **Already implemented via getUserOrganizationMemberships**
+  - [x] Display selectable list of roles in admin UI ✅ **Already implemented**
+  - [x] Save to both WorkOS and local database ✅ **Complete with rollback**
+  - [x] Provide user feedback on save status ✅ **Complete**
+- [ ] Test end-to-end: ⚠️ **Requires testing**
   - [ ] Admin changes user role via UI
   - [ ] Verify role saved to database
   - [ ] Verify role saved to WorkOS
   - [ ] Verify UI updates reflect new role
 
-**Estimated Time:** 3-4 hours
+**Changes Made:**
+1. **Enhanced logging** throughout the POST handler:
+   - Request validation logging
+   - Database update logging with success/failure tracking
+   - WorkOS update progress logging for each organization
+   - Detailed error logging with context
+2. **Rollback mechanism**:
+   - Stores previous role before update
+   - Rolls back database if all WorkOS updates fail
+   - Handles both cases: user had previous role vs no previous role
+   - Critical error logging if rollback itself fails
+3. **Improved error handling**:
+   - Separate handling for partial failures (some orgs succeed, some fail)
+   - Detailed error messages with failure reasons
+   - Rollback status included in error responses
+4. **Enhanced admin UI**:
+   - Detailed success messages with organization update counts
+   - Detailed error messages with failure details and rollback status
+   - Warning messages for partial failures
+   - Better user feedback overall
+
+**Key Improvements:**
+- Database update now uses `.select()` to verify success
+- Previous role is fetched before update for rollback capability
+- WorkOS membership fetching disables cache for role updates (ensures fresh data)
+- All WorkOS updates are tracked individually with detailed logging
+- Partial failure handling (some orgs succeed, some fail) doesn't trigger rollback
+- Complete failure (all orgs fail) triggers automatic database rollback
+
+**Estimated Time:** ✅ **Complete** - 2 hours
 
 ---
 

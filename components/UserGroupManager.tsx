@@ -110,17 +110,39 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to set user role');
+        // Build error message with details
+        let errorMessage = data.error || 'Failed to set user role';
+        if (data.details) {
+          errorMessage += `\n\nDetails: ${data.details}`;
+        }
+        if (data.rollback) {
+          errorMessage += `\n\nRollback: ${data.rollback}`;
+        }
+        throw new Error(errorMessage);
       }
 
-      // Show success message
-      alert(`Role updated successfully! ${data.message || ''}`);
+      // Show success message with details
+      let successMessage = 'Role updated successfully!';
+      if (data.message) {
+        successMessage += `\n\n${data.message}`;
+      }
+      if (data.organizationsUpdated !== undefined) {
+        successMessage += `\n\nUpdated ${data.organizationsUpdated} WorkOS organization(s).`;
+      }
+      if (data.warning) {
+        successMessage += `\n\n⚠️ Warning: ${data.warning}`;
+      }
+      if (data.partialFailure) {
+        successMessage += '\n\n⚠️ Some WorkOS updates failed. Check logs for details.';
+      }
+      
+      alert(successMessage);
       
       // Refresh users to get updated data
       await loadUsers();
     } catch (error: any) {
       console.error('Error setting role:', error);
-      alert('Failed to set role: ' + error.message);
+      alert('Failed to set role:\n\n' + error.message);
     } finally {
       setSaving(false);
     }
