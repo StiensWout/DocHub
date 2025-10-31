@@ -167,23 +167,44 @@ export async function isUserInAdminOrganization(userId: string, cachedMembership
     // Use cached memberships if provided, otherwise fetch (will use cache)
     const memberships = cachedMemberships || await getUserOrganizationMemberships(userId, true);
     console.log(`[isUserInAdminOrganization] Found ${memberships.length} organization memberships:`, 
-      memberships.map(m => m.organizationName));
+      memberships.map(m => `${m.organizationName} (role: ${typeof m.role === 'string' ? m.role : JSON.stringify(m.role)})`));
     
-    const isAdmin = memberships.some(m => 
+    // Check 1: Is user in an organization named "admin"?
+    const isInAdminOrg = memberships.some(m => 
       m.organizationName.toLowerCase() === adminOrgName.toLowerCase()
     );
     
-    if (isAdmin) {
+    if (isInAdminOrg) {
       const matchingOrg = memberships.find(m => 
         m.organizationName.toLowerCase() === adminOrgName.toLowerCase()
       );
       console.log(`[isUserInAdminOrganization] ✅ User IS in admin organization: "${matchingOrg?.organizationName}"`);
-    } else {
-      console.log(`[isUserInAdminOrganization] ❌ User is NOT in admin organization. Expected: "${adminOrgName}"`);
-      console.log(`[isUserInAdminOrganization] User's organizations:`, memberships.map(m => m.organizationName));
+      return true;
     }
     
-    return isAdmin;
+    // Check 2: Does user have a role/team called "admin" in any organization?
+    // This is a fallback - if user has role "admin" anywhere, treat them as admin
+    for (const membership of memberships) {
+      let roleName = '';
+      if (membership.role) {
+        if (typeof membership.role === 'string') {
+          roleName = membership.role;
+        } else if (typeof membership.role === 'object') {
+          roleName = (membership.role as any).slug || (membership.role as any).name || (membership.role as any).id || '';
+        }
+      }
+      
+      if (roleName && roleName.toLowerCase() === 'admin') {
+        console.log(`[isUserInAdminOrganization] ✅ User has admin role/team in organization "${membership.organizationName}"`);
+        return true;
+      }
+    }
+    
+    console.log(`[isUserInAdminOrganization] ❌ User is NOT in admin organization or has admin role. Expected org: "${adminOrgName}"`);
+    console.log(`[isUserInAdminOrganization] User's organizations and roles:`, 
+      memberships.map(m => `${m.organizationName} (role: ${typeof m.role === 'string' ? m.role : JSON.stringify(m.role)})`));
+    
+    return false;
   } catch (error: any) {
     console.error('[isUserInAdminOrganization] Error checking admin organization membership:', error);
     return false;
