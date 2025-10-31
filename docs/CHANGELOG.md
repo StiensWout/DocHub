@@ -28,7 +28,7 @@ All notable changes and completed features in DocHub.
 - ✅ Created authentication API routes:
   - POST `/api/auth/signin` - Email/password authentication
   - POST `/api/auth/signup` - User registration
-  - GET `/api/auth/callback` - OAuth callback handler
+  - GET `/auth/callback` - OAuth callback handler
   - POST `/api/auth/signout` - Sign out endpoint
   - GET `/api/auth/session` - Session status check
 - ✅ Created authentication UI pages:

@@ -52,23 +52,28 @@ export async function GET(request: NextRequest) {
       .eq('application_id', appId);
 
     // If not admin, filter by user groups via document_access_groups
-    if (!userIsAdmin && userGroups.length > 0) {
-      // Get document IDs accessible to user's groups
-      const { data: accessibleDocs, error: accessError } = await supabaseAdmin
-        .from('document_access_groups')
-        .select('team_document_id')
-        .in('group_name', userGroups);
+    if (!userIsAdmin) {
+      if (userGroups.length > 0) {
+        // Get document IDs accessible to user's groups
+        const { data: accessibleDocs, error: accessError } = await supabaseAdmin
+          .from('document_access_groups')
+          .select('team_document_id')
+          .in('group_name', userGroups);
 
-      if (accessError) {
-        console.error('Error fetching accessible documents:', accessError);
-      }
+        if (accessError) {
+          console.error('Error fetching accessible documents:', accessError);
+        }
 
-      const accessibleDocIds = accessibleDocs?.map(d => d.team_document_id) || [];
-      
-      if (accessibleDocIds.length > 0) {
-        teamDocsQuery = teamDocsQuery.in('id', accessibleDocIds);
+        const accessibleDocIds = accessibleDocs?.map(d => d.team_document_id) || [];
+        
+        if (accessibleDocIds.length > 0) {
+          teamDocsQuery = teamDocsQuery.in('id', accessibleDocIds);
+        } else {
+          // User has groups but no accessible documents
+          teamDocsQuery = teamDocsQuery.eq('id', '00000000-0000-0000-0000-000000000000'); // Return nothing
+        }
       } else {
-        // User has no access to any team documents
+        // Non-admin user with no groups has no access to team documents
         teamDocsQuery = teamDocsQuery.eq('id', '00000000-0000-0000-0000-000000000000'); // Return nothing
       }
     }

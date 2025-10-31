@@ -175,7 +175,7 @@ export const REDIRECT_URI = process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI!;
 - ✅ `POST /api/auth/signin` - Authenticate user
 - ✅ `GET /api/auth/session` - Get current user session status
 - ✅ `POST /api/auth/signout` - Sign out user
-- ✅ `GET /api/auth/callback` - OAuth callback handler
+- ✅ `GET /auth/callback` - OAuth callback handler
 - ✅ `POST /api/auth/verify-email` - Verify email address with verification code
 
 **UI Components Implemented**: ✅
@@ -581,7 +581,7 @@ middleware.ts         # Next.js middleware for route protection
 - [x] Implement session management (`lib/auth/session.ts`) ✅
 - [x] Create sign-in page UI (`app/auth/signin/page.tsx`) ✅
 - [x] Create sign-up page UI (`app/auth/signup/page.tsx`) ✅
-- [x] Create OAuth callback handler (`app/api/auth/callback/route.ts`) ✅
+- [x] Create OAuth callback handler (`app/auth/callback/route.ts`) ✅
 - [x] Create session status API (`/api/auth/session`) ✅
 - [x] Create client-side auth hook (`hooks/useAuth.ts`) ✅
 - [x] Test email verification flow ✅
@@ -590,7 +590,7 @@ middleware.ts         # Next.js middleware for route protection
 - [ ] Implement Magic Link authentication
 - [ ] Configure Google OAuth (UI ready, needs WorkOS Dashboard config)
 - [ ] Configure GitHub OAuth (UI ready, needs WorkOS Dashboard config)
-- [x] Implement OAuth callback flow (`/api/auth/callback`) ✅
+- [x] Implement OAuth callback flow (`/auth/callback`) ✅
 - [ ] Test social login (requires provider configuration)
 
 ### Phase 4: Session & Protection ✅ COMPLETED

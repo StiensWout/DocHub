@@ -26,7 +26,7 @@ DocHub is configured to use **Microsoft SSO (Single Sign-On) only** for authenti
 
 - ✅ `app/auth/signin/page.tsx` - Microsoft SSO button only, removed email/password form
 - ✅ `app/auth/signup/page.tsx` - Redirects to sign-in (SSO doesn't need separate sign-up)
-- ✅ `app/api/auth/callback/route.ts` - Handles OAuth callback (already implemented)
+- ✅ `app/auth/callback/route.ts` - Handles OAuth callback (already implemented)
 
 ### Removed Features
 

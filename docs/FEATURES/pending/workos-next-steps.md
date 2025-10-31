@@ -56,7 +56,7 @@ The Microsoft SSO button is implemented on the sign-in page and ready for config
 **Files Created**:
 - `app/auth/signin/page.tsx` - Microsoft SSO button ready
 - `app/auth/signup/page.tsx` - Redirects to sign-in (SSO doesn't need separate sign-up)
-- `app/api/auth/callback/route.ts` - OAuth callback handler ready
+- `app/auth/callback/route.ts` - OAuth callback handler ready
 
 **Reference**: [Microsoft OAuth Setup Guide](https://workos.com/docs/authkit/social-login/microsoft)
 
