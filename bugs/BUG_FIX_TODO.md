@@ -515,6 +515,36 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 
 ---
 
+### Bug #29: Custom WorkOS Roles Not Fully Displayed in Admin User Group Menu
+**Files:** `components/UserGroupManager.tsx`, `app/api/users/all/route.ts`, `lib/workos/organizations.ts`, `app/api/organizations/route.ts`
+
+- [x] Improved role extraction from existing user memberships ✅ **Complete**
+- [x] Better handling of role objects vs strings ✅ **Complete**
+- [x] Display custom roles with visual indicators ✅ **Complete**
+- [ ] Investigate WorkOS API for fetching all available organization roles:
+  - [ ] Check if WorkOS provides API to list all roles for an organization
+  - [ ] Research WorkOS organization role management endpoints
+  - [ ] Determine if roles can be fetched without requiring existing assignments
+- [ ] Implement direct role fetching from WorkOS (if API available):
+  - [ ] Create endpoint to fetch all roles for a specific organization
+  - [ ] Update UserGroupManager to fetch roles per organization
+  - [ ] Merge fetched roles with extracted roles from memberships
+- [ ] Alternative approach if WorkOS doesn't provide role list API:
+  - [ ] Allow manual role entry in addition to dropdown
+  - [ ] Add role validation against WorkOS when assigning
+  - [ ] Consider caching organization roles in local database
+- [ ] Test with custom roles:
+  - [ ] Create custom role in WorkOS organization
+  - [ ] Verify it appears in dropdown even if not assigned to anyone
+  - [ ] Test assigning user to unassigned custom role
+  - [ ] Verify role assignment works correctly
+
+**Current Status:** ⚠️ **PARTIALLY ADDRESSED** - Roles are extracted from existing memberships, but unassigned custom roles may not appear.
+
+**Estimated Time:** 2-4 hours (depending on WorkOS API availability)
+
+---
+
 ### Bug #27: Admin Role Change Doesn't Revoke Document Access
 **Files:** `app/api/users/role/route.ts`, `app/api/documents/route.ts`, `components/DocumentViewer.tsx`, `app/page.tsx`
 

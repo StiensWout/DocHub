@@ -416,3 +416,102 @@
 {"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 14:22:54"}
 {"level":"debug","message":"[isAdmin] ✅ User user_01K8WJG016RNBNKRBJMTGM9EKC is admin via WorkOS organization","service":"dlwait","timestamp":"2025-10-31 14:22:54"}
 {"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-10-31 14:22:54"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:13"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:13"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-10-31 14:25:13"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:13"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-10-31 14:25:13"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:13"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:13"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-10-31 14:25:13"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-10-31 14:25:13"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-10-31 14:25:14"}
+{"0":"CDLE (role: admin)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-10-31 14:25:14"}
+{"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 14:25:14"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:18"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:19"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-10-31 14:25:19"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-10-31 14:25:19"}
+{"level":"debug","message":"[isAdmin] Checking WorkOS admin organization for user: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"level":"debug","message":"[isAdmin] Checking WorkOS admin organization for user: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"0":"CDLE (role: admin)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"level":"debug","message":"[isAdmin] ✅ User user_01K8WJG016RNBNKRBJMTGM9EKC is admin via WorkOS organization","service":"dlwait","timestamp":"2025-10-31 14:25:24"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"0":"CDLE (role: admin)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[isAdmin] ✅ User user_01K8WJG016RNBNKRBJMTGM9EKC is admin via WorkOS organization","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[isAdmin] Checking WorkOS admin organization for user: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"0":"CDLE (role: admin)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[isAdmin] ✅ User user_01K8WJG016RNBNKRBJMTGM9EKC is admin via WorkOS organization","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[isAdmin] Checking WorkOS admin organization for user: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:25"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"0":"CDLE (role: admin)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[isAdmin] ✅ User user_01K8WJG016RNBNKRBJMTGM9EKC is admin via WorkOS organization","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[isAdmin] Checking WorkOS admin organization for user: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"0":"CDLE (role: admin)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[isAdmin] ✅ User user_01K8WJG016RNBNKRBJMTGM9EKC is admin via WorkOS organization","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[isAdmin] Checking WorkOS admin organization for user: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"0":"CDLE (role: admin)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[isAdmin] ✅ User user_01K8WJG016RNBNKRBJMTGM9EKC is admin via WorkOS organization","service":"dlwait","timestamp":"2025-10-31 14:25:26"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"level":"debug","message":"[isAdmin] Checking WorkOS admin organization for user: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"0":"CDLE (role: admin)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"level":"debug","message":"[isAdmin] ✅ User user_01K8WJG016RNBNKRBJMTGM9EKC is admin via WorkOS organization","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"level":"debug","message":"[isAdmin] Checking WorkOS admin organization for user: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"0":"CDLE (role: admin)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"level":"debug","message":"[isAdmin] ✅ User user_01K8WJG016RNBNKRBJMTGM9EKC is admin via WorkOS organization","service":"dlwait","timestamp":"2025-10-31 14:25:27"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-10-31 14:25:28"}
+{"level":"debug","message":"[isAdmin] Checking WorkOS admin organization for user: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:28"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:28"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-10-31 14:25:28"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-10-31 14:25:28"}
+{"0":"CDLE (role: admin)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-10-31 14:25:28"}
+{"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 14:25:28"}
+{"level":"debug","message":"[isAdmin] ✅ User user_01K8WJG016RNBNKRBJMTGM9EKC is admin via WorkOS organization","service":"dlwait","timestamp":"2025-10-31 14:25:28"}
+{"level":"debug","message":"[isAdmin] Checking WorkOS admin organization for user: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:29"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-10-31 14:25:29"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-10-31 14:25:29"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-10-31 14:25:29"}
+{"0":"CDLE (role: admin)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-10-31 14:25:29"}
+{"level":"debug","message":"[isUserInAdminOrganization] ✅ User has admin role/team in organization \"CDLE\"","service":"dlwait","timestamp":"2025-10-31 14:25:29"}
+{"level":"debug","message":"[isAdmin] ✅ User user_01K8WJG016RNBNKRBJMTGM9EKC is admin via WorkOS organization","service":"dlwait","timestamp":"2025-10-31 14:25:29"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-10-31 14:25:29"}
