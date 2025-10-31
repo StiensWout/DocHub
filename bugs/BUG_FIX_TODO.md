@@ -387,19 +387,154 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 ## 🟡 MEDIUM PRIORITY - Plan for Next Sprint
 
 ### Bug #8: Excessive Console Logging
-**Files:** Multiple (411 instances)
+**Files:** Multiple (411 instances → ~240 remaining)
 
-- [ ] Choose logging library (winston, pino, or similar)
-- [ ] Install and configure logging library
-- [ ] Create logger utility module
-- [ ] Replace console.log/error systematically:
-  - [ ] API routes
-  - [ ] WorkOS operations
-  - [ ] Component error handlers
-- [ ] Add log levels (debug, info, warn, error)
-- [ ] Remove sensitive data from logs
-- [ ] Configure environment-based log levels
+- [x] Choose logging library (winston, pino, or similar) ✅ **Winston chosen**
+- [x] Install and configure logging library ✅ **Winston installed**
+- [x] Create logger utility module ✅ **lib/logger.ts created with sanitization**
+- [x] Replace console.log/error systematically:
+  - [x] API routes (tags, files, documents/tags) ✅ **Pattern established**
+  - [x] WorkOS operations (user-sync.ts, team-sync.ts) ✅ **Complete**
+  - [x] lib/supabase/search.ts ✅ **Complete**
+  - [ ] Remaining API routes (~55 instances in 17 files)
+  - [ ] Remaining lib files (~119 instances in 7 files)
+  - [ ] Component error handlers (client-side - keep console for now)
+- [x] Add log levels (debug, info, warn, error) ✅ **Implemented**
+- [x] Remove sensitive data from logs ✅ **Sanitization added**
+- [x] Configure environment-based log levels ✅ **Environment-based levels configured**
 - [ ] Test logging in dev and production
+
+**Progress:** ~170 instances replaced (41% complete). Pattern established - remaining can be systematically replaced following same approach.
+
+**Remaining Work:**
+- Replace console calls in remaining API routes (app/api/users/**, app/api/auth/**, etc.)
+- Replace console calls in remaining lib files (lib/workos/subgroups.ts, lib/auth/*, etc.)
+- Client-side components: Keep console for now (logger designed for server-side)
+
+**Estimated Time:** 2-3 hours remaining
+
+---
+
+### Bug #25: Tag Search Bar Not Refreshing After Tag Creation
+**Files:** `components/SearchBar.tsx`, `components/TagSelector.tsx`, `app/api/tags/route.ts`
+
+- [ ] Add tag refresh mechanism in `SearchBar.tsx`:
+  - [ ] Create callback/event mechanism to notify SearchBar when tags are created
+  - [ ] Refresh tags list after tag creation (re-fetch from `/api/tags`)
+  - [ ] Update `useEffect` dependency to reload tags when needed
+  - [ ] Consider using React Context or custom event for tag updates
+- [ ] Fix keyboard shortcut overlap:
+  - [ ] Remove keyboard shortcut hint (⌘K) or relocate it
+  - [ ] Ensure filter icon is not obscured by shortcut hint
+  - [ ] Consider making keyboard shortcut configurable
+  - [ ] Test keyboard shortcut and filter icon work independently
+- [ ] Test tag creation flow:
+  - [ ] Create new tag
+  - [ ] Verify tag appears in search bar immediately
+  - [ ] Verify tag appears in tag selector
+  - [ ] Verify no page reload required
+
+**Estimated Time:** 1-2 hours
+
+---
+
+### Bug #26: User Role Management Not Saving to WorkOS and Local Database
+**Files:** `app/api/users/role/route.ts`, `lib/workos/organizations.ts`
+
+- [ ] Debug role update endpoint:
+  - [ ] Add comprehensive logging to `app/api/users/role/route.ts` POST handler
+  - [ ] Verify request body parameters (userId, role) are received correctly
+  - [ ] Check database update succeeds (line 82-99)
+  - [ ] Check WorkOS update succeeds (line 104-134)
+- [ ] Fix WorkOS role update:
+  - [ ] Verify `updateUserRoleInOrganization` function implementation
+  - [ ] Check WorkOS API credentials and permissions
+  - [ ] Ensure error handling captures and logs all failures
+  - [ ] Add rollback mechanism if WorkOS update fails after DB update
+- [ ] Fix admin UI:
+  - [ ] Verify admin UI calls correct API endpoint
+  - [ ] Check request payload format matches API expectations
+  - [ ] Add error display for failed role updates
+  - [ ] Add success confirmation after role update
+- [ ] Implement preferred behaviour:
+  - [ ] Fetch active roles from WorkOS
+  - [ ] Display selectable list of roles in admin UI
+  - [ ] Save to both WorkOS and local database
+  - [ ] Provide user feedback on save status
+- [ ] Test end-to-end:
+  - [ ] Admin changes user role via UI
+  - [ ] Verify role saved to database
+  - [ ] Verify role saved to WorkOS
+  - [ ] Verify UI updates reflect new role
+
+**Estimated Time:** 3-4 hours
+
+---
+
+### Bug #27: Admin Role Change Doesn't Revoke Document Access
+**Files:** `app/api/users/role/route.ts`, `app/api/documents/route.ts`, `components/DocumentViewer.tsx`, `app/page.tsx`
+
+- [ ] Add role change detection:
+  - [ ] Implement session/permission refresh after role change
+  - [ ] Add client-side listener for role changes
+  - [ ] Clear cached document access on role change
+- [ ] Fix document access logic:
+  - [ ] Verify `app/api/documents/route.ts` re-checks permissions on each request
+  - [ ] Ensure document access is not cached client-side
+  - [ ] Add server-side permission validation
+- [ ] Implement redirect and refresh:
+  - [ ] Redirect to home page after role change (when admin changes another user)
+  - [ ] Clear selected document state
+  - [ ] Refresh document list with new permissions
+  - [ ] Force re-fetch user groups/permissions
+- [ ] Clear client-side state:
+  - [ ] Clear `selectedDocument` after role change
+  - [ ] Clear `documentList` and re-fetch with new permissions
+  - [ ] Clear cached user groups
+  - [ ] Invalidate document viewer state
+- [ ] Test access revocation:
+  - [ ] Admin opens document
+  - [ ] Admin changes user role to lower permission
+  - [ ] Verify user redirected to home page
+  - [ ] Verify document no longer accessible
+  - [ ] Verify document list shows only accessible documents
+
+**Estimated Time:** 2-3 hours
+
+---
+
+### Bug #28: No Distinction Between Global Admin and Entity Admin
+**Files:** `lib/auth/user-groups.ts`, `lib/workos/team-sync.ts`, `app/api/documents/route.ts`
+
+- [ ] Design admin role hierarchy:
+  - [ ] Define global admin vs entity admin requirements
+  - [ ] Design role structure in WorkOS
+  - [ ] Design role structure in local database
+  - [ ] Create migration plan for existing admins
+- [ ] Implement entity-scoped admin checking:
+  - [ ] Update `isAdmin()` to support optional entity parameter
+  - [ ] Create `isEntityAdmin(entityId: string)` function
+  - [ ] Create `isGlobalAdmin()` function
+  - [ ] Update `lib/auth/user-groups.ts` with new admin types
+- [ ] Update document access logic:
+  - [ ] Modify `app/api/documents/route.ts` to check entity admin scope
+  - [ ] Entity admin sees only their entity's documents
+  - [ ] Global admin sees all documents
+  - [ ] Update document filtering logic
+- [ ] Update WorkOS integration:
+  - [ ] Implement entity-level admin roles in WorkOS
+  - [ ] Update `lib/workos/team-sync.ts` to handle entity admins
+  - [ ] Sync entity admin roles from WorkOS to local DB
+- [ ] Update admin UI:
+  - [ ] Show appropriate entities based on admin type
+  - [ ] Global admin sees all entities
+  - [ ] Entity admin sees only their entity
+  - [ ] Update entity/team selection logic
+- [ ] Test access control:
+  - [ ] Global admin can access all entities
+  - [ ] Entity admin can only access their entity
+  - [ ] Verify document filtering works correctly
+  - [ ] Verify team/organization filtering works correctly
 
 **Estimated Time:** 4-6 hours
 

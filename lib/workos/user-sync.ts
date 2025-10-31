@@ -1,5 +1,6 @@
 import { workos } from './server';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { log } from '@/lib/logger';
 
 /**
  * WorkOS User Sync Utilities
@@ -42,13 +43,13 @@ export interface UserSettings {
  */
 export async function syncUserFromWorkOS(workosUserId: string): Promise<LocalUser | null> {
   try {
-    console.log(`[syncUserFromWorkOS] Syncing user: ${workosUserId}`);
+    log.debug(`[syncUserFromWorkOS] Syncing user: ${workosUserId}`);
     
     // Fetch user from WorkOS
     const workosUser = await workos.userManagement.getUser(workosUserId);
     
     if (!workosUser) {
-      console.warn(`[syncUserFromWorkOS] User ${workosUserId} not found in WorkOS`);
+      log.warn(`[syncUserFromWorkOS] User ${workosUserId} not found in WorkOS`);
       return null;
     }
     
@@ -75,18 +76,18 @@ export async function syncUserFromWorkOS(workosUserId: string): Promise<LocalUse
       .single();
     
     if (error) {
-      console.error(`[syncUserFromWorkOS] Error upserting user:`, error);
+      log.error(`[syncUserFromWorkOS] Error upserting user:`, error);
       throw error;
     }
     
-    console.log(`[syncUserFromWorkOS] ✅ Successfully synced user ${workosUserId}`);
+    log.info(`[syncUserFromWorkOS] ✅ Successfully synced user ${workosUserId}`);
     return data as LocalUser;
   } catch (error: any) {
-    console.error(`[syncUserFromWorkOS] Exception syncing user ${workosUserId}:`, error);
+    log.error(`[syncUserFromWorkOS] Exception syncing user ${workosUserId}:`, error);
     
     // Handle case where user might be SSO user (not in User Management)
     if (error.code === 'not_found' || error.message?.includes('not found')) {
-      console.log(`[syncUserFromWorkOS] User ${workosUserId} might be SSO user, skipping sync`);
+      log.debug(`[syncUserFromWorkOS] User ${workosUserId} might be SSO user, skipping sync`);
       return null;
     }
     
@@ -100,7 +101,7 @@ export async function syncUserFromWorkOS(workosUserId: string): Promise<LocalUse
  */
 export async function syncAllUsersFromWorkOS(): Promise<{ synced: number; errors: number }> {
   try {
-    console.log('[syncAllUsersFromWorkOS] Starting full user sync from WorkOS');
+    log.info('[syncAllUsersFromWorkOS] Starting full user sync from WorkOS');
     
     let synced = 0;
     let errors = 0;
@@ -117,7 +118,7 @@ export async function syncAllUsersFromWorkOS(): Promise<{ synced: number; errors
         break;
       }
       
-      console.log(`[syncAllUsersFromWorkOS] Fetched ${users.length} users from WorkOS`);
+      log.debug(`[syncAllUsersFromWorkOS] Fetched ${users.length} users from WorkOS`);
       
       // Sync each user
       for (const user of users) {
@@ -125,7 +126,7 @@ export async function syncAllUsersFromWorkOS(): Promise<{ synced: number; errors
           await syncUserFromWorkOS(user.id);
           synced++;
         } catch (error: any) {
-          console.error(`[syncAllUsersFromWorkOS] Error syncing user ${user.id}:`, error);
+          log.error(`[syncAllUsersFromWorkOS] Error syncing user ${user.id}:`, error);
           errors++;
         }
       }
@@ -133,10 +134,10 @@ export async function syncAllUsersFromWorkOS(): Promise<{ synced: number; errors
       cursor = nextCursor || undefined;
     } while (cursor);
     
-    console.log(`[syncAllUsersFromWorkOS] ✅ Sync complete: ${synced} synced, ${errors} errors`);
+    log.info(`[syncAllUsersFromWorkOS] ✅ Sync complete: ${synced} synced, ${errors} errors`);
     return { synced, errors };
   } catch (error: any) {
-    console.error('[syncAllUsersFromWorkOS] Exception during full sync:', error);
+    log.error('[syncAllUsersFromWorkOS] Exception during full sync:', error);
     throw error;
   }
 }
@@ -162,7 +163,7 @@ export async function getLocalUser(workosUserId: string): Promise<LocalUser | nu
     
     return data as LocalUser;
   } catch (error: any) {
-    console.error(`[getLocalUser] Error fetching user ${workosUserId}:`, error);
+    log.error(`[getLocalUser] Error fetching user ${workosUserId}:`, error);
     throw error;
   }
 }
@@ -183,7 +184,7 @@ export async function getAllLocalUsers(): Promise<LocalUser[]> {
     
     return (data || []) as LocalUser[];
   } catch (error: any) {
-    console.error('[getAllLocalUsers] Error fetching users:', error);
+    log.error('[getAllLocalUsers] Error fetching users:', error);
     throw error;
   }
 }
@@ -197,7 +198,7 @@ export async function updateUserSettings(
   settings: Record<string, any>
 ): Promise<UserSettings> {
   try {
-    console.log(`[updateUserSettings] Updating settings for user: ${workosUserId}`);
+    log.debug(`[updateUserSettings] Updating settings for user: ${workosUserId}`);
     
     // Get or create local user record
     let localUser = await getLocalUser(workosUserId);
@@ -234,15 +235,15 @@ export async function updateUserSettings(
       await workos.userManagement.updateUser(workosUserId, {
         metadata: settings,
       });
-      console.log(`[updateUserSettings] ✅ Synced settings to WorkOS for user ${workosUserId}`);
+      log.info(`[updateUserSettings] ✅ Synced settings to WorkOS for user ${workosUserId}`);
     } catch (workosError: any) {
       // Non-fatal - settings stored locally even if WorkOS sync fails
-      console.warn(`[updateUserSettings] Could not sync settings to WorkOS:`, workosError.message);
+      log.warn(`[updateUserSettings] Could not sync settings to WorkOS:`, workosError.message);
     }
     
     return data as UserSettings;
   } catch (error: any) {
-    console.error(`[updateUserSettings] Error updating user settings:`, error);
+    log.error(`[updateUserSettings] Error updating user settings:`, error);
     throw error;
   }
 }
@@ -268,7 +269,7 @@ export async function getUserSettings(workosUserId: string): Promise<UserSetting
     
     return data as UserSettings;
   } catch (error: any) {
-    console.error(`[getUserSettings] Error fetching settings for ${workosUserId}:`, error);
+    log.error(`[getUserSettings] Error fetching settings for ${workosUserId}:`, error);
     throw error;
   }
 }
@@ -288,7 +289,7 @@ export async function updateUserAndSyncToWorkOS(
   }
 ): Promise<LocalUser> {
   try {
-    console.log(`[updateUserAndSyncToWorkOS] Updating user ${workosUserId} and syncing to WorkOS`);
+    log.debug(`[updateUserAndSyncToWorkOS] Updating user ${workosUserId} and syncing to WorkOS`);
     
     // Update in WorkOS first (master source)
     const workosUpdates: any = {};
@@ -300,11 +301,11 @@ export async function updateUserAndSyncToWorkOS(
     
     try {
       await workos.userManagement.updateUser(workosUserId, workosUpdates);
-      console.log(`[updateUserAndSyncToWorkOS] ✅ Updated user in WorkOS`);
+      log.info(`[updateUserAndSyncToWorkOS] ✅ Updated user in WorkOS`);
     } catch (workosError: any) {
-      console.error(`[updateUserAndSyncToWorkOS] Error updating user in WorkOS:`, workosError);
+      log.error(`[updateUserAndSyncToWorkOS] Error updating user in WorkOS:`, workosError);
       // Continue to update local copy even if WorkOS update fails
-      console.warn(`[updateUserAndSyncToWorkOS] Continuing with local update despite WorkOS error`);
+      log.warn(`[updateUserAndSyncToWorkOS] Continuing with local update despite WorkOS error`);
     }
     
     // Update local database
@@ -327,10 +328,10 @@ export async function updateUserAndSyncToWorkOS(
       throw error;
     }
     
-    console.log(`[updateUserAndSyncToWorkOS] ✅ Updated local user record`);
+    log.info(`[updateUserAndSyncToWorkOS] ✅ Updated local user record`);
     return data as LocalUser;
   } catch (error: any) {
-    console.error(`[updateUserAndSyncToWorkOS] Exception updating user:`, error);
+    log.error(`[updateUserAndSyncToWorkOS] Exception updating user:`, error);
     throw error;
   }
 }

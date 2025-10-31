@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import type { Document } from "@/types";
+import { log } from "@/lib/logger";
 
 export interface DocumentSearchResult extends Document {
   appName: string;
@@ -488,7 +489,7 @@ export async function searchApplications(query: string): Promise<ApplicationSear
     .limit(10);
 
   if (error) {
-    console.error("Error searching applications:", error);
+    log.error("Error searching applications:", error);
     return [];
   }
 
@@ -553,7 +554,7 @@ export async function searchApplicationGroups(query: string): Promise<GroupSearc
     .limit(10);
 
   if (error) {
-    console.error("Error searching application groups:", error);
+    log.error("Error searching application groups:", error);
     return [];
   }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { log } from '@/lib/logger';
 
 /**
  * PUT /api/tags/[id]
@@ -82,7 +83,7 @@ export async function PUT(
       .single();
 
     if (error) {
-      console.error('Error updating tag:', error);
+      log.error('Error updating tag:', error);
       if (error.code === 'PGRST116') {
         return NextResponse.json(
           { error: 'Tag not found' },
@@ -97,7 +98,7 @@ export async function PUT(
 
     return NextResponse.json({ tag });
   } catch (error) {
-    console.error('Error in PUT /api/tags/[id]:', error);
+    log.error('Error in PUT /api/tags/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -137,7 +138,7 @@ export async function DELETE(
       .eq('id', tagId);
 
     if (error) {
-      console.error('Error deleting tag:', error);
+      log.error('Error deleting tag:', error);
       if (error.code === 'PGRST116') {
         return NextResponse.json(
           { error: 'Tag not found' },
@@ -152,7 +153,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in DELETE /api/tags/[id]:', error);
+    log.error('Error in DELETE /api/tags/[id]:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

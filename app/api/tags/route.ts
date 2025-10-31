@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { log } from '@/lib/logger';
 
 /**
  * GET /api/tags
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     const { data: tags, error } = await tagsQuery;
 
     if (error) {
-      console.error('Error fetching tags:', error);
+      log.error('Error fetching tags:', error);
       return NextResponse.json(
         { error: 'Failed to fetch tags' },
         { status: 500 }
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ tags: tags || [] });
   } catch (error) {
-    console.error('Error in GET /api/tags:', error);
+    log.error('Error in GET /api/tags:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating tag:', error);
+      log.error('Error creating tag:', error);
       return NextResponse.json(
         { error: 'Failed to create tag' },
         { status: 500 }
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ tag }, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/tags:', error);
+    log.error('Error in POST /api/tags:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

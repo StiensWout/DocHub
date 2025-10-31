@@ -8,6 +8,7 @@ import {
   validateStoragePath,
   MAX_FILE_SIZE,
 } from "@/lib/constants/file-validation";
+import { log } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -139,7 +140,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error("Storage upload error:", uploadError);
+      log.error("Storage upload error:", uploadError);
       return NextResponse.json(
         { error: "Failed to upload file to storage" },
         { status: 500 }
@@ -181,7 +182,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (dbError) {
-      console.error("Database insert error:", dbError);
+      log.error("Database insert error:", dbError);
       // Try to clean up uploaded file
       await supabaseAdmin.storage.from("documents").remove([storagePath]);
       return NextResponse.json(
@@ -199,7 +200,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("File upload error:", error);
+    log.error("File upload error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

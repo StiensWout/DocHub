@@ -271,6 +271,146 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 
 ---
 
+### 25. Tag Search Bar Not Refreshing After Tag Creation
+
+**Severity:** MEDIUM
+**Category:** Functionality / UI State Management
+**Status:** 🔴 ACTIVE
+**Files:** `components/SearchBar.tsx`, `components/TagSelector.tsx`, `app/api/tags/route.ts`
+
+#### Issues:
+- After creating a new tag and adding it to a document, the search bar doesn't show the new tag until page reload
+- Tags are loaded once in `SearchBar.tsx` useEffect (line 61-69) but not refreshed after tag creation
+- Tag creation happens in `TagSelector.tsx` or tag management UI, but `SearchBar` component doesn't subscribe to tag updates
+- Keyboard shortcut (⌘K) overlaps with filter icon - creates UX conflict
+- Keyboard shortcut hint displayed in search bar (line 478-484) conflicts with filter button placement
+
+#### Impact:
+- **MEDIUM** - Poor user experience, tags don't appear immediately after creation
+- Users may think tag creation failed
+- Keyboard shortcut overlap causes confusion and accessibility issues
+- Filter icon functionality may be obscured by keyboard shortcut hint
+
+#### Fix Required:
+- Add tag refresh mechanism in `SearchBar` component after tag creation
+- Consider using React context or event emitter to notify `SearchBar` when tags are created
+- Refresh tags list after successful tag creation via API callback
+- Remove or relocate keyboard shortcut hint to avoid overlap with filter icon
+- Consider making keyboard shortcut configurable or removing if it conflicts with filter UI
+
+---
+
+### 26. User Role Management Not Saving to WorkOS and Local Database
+
+**Severity:** HIGH
+**Category:** Functionality / Data Integrity
+**Status:** 🔴 ACTIVE
+**Files:** `app/api/users/role/route.ts`, `lib/workos/organizations.ts`, Admin user management UI
+
+#### Issues:
+- Adding roles to a user as admin is not working
+- Changes are not being saved to WorkOS
+- Changes are not being saved to local database
+- Admin role management UI may not be properly calling the update API
+- `updateUserRoleInOrganization` function may be failing silently
+
+#### Preferred Behaviour:
+- Show list of active roles in WorkOS
+- Allow admin to select from that list
+- Save the change to both WorkOS and local database
+- Provide feedback on save success/failure
+- Update user interface immediately after successful save
+
+#### Impact:
+- **HIGH** - Critical admin functionality broken
+- Cannot manage user roles and permissions
+- Security concern - incorrect role assignments
+- User access control may be compromised
+
+#### Fix Required:
+- Debug `app/api/users/role/route.ts` POST endpoint (lines 74-136)
+- Verify WorkOS API calls in `updateUserRoleInOrganization` function
+- Ensure database updates succeed before WorkOS updates
+- Add proper error handling and rollback mechanism
+- Verify admin UI is calling the correct API endpoint with correct parameters
+- Add logging to track where the save process fails
+- Test end-to-end: UI → API → WorkOS → Database
+
+---
+
+### 27. Admin Role Change Doesn't Revoke Document Access
+
+**Severity:** HIGH
+**Category:** Security / Access Control
+**Status:** 🔴 ACTIVE
+**Files:** `app/api/users/role/route.ts`, `app/api/documents/route.ts`, `components/DocumentViewer.tsx`, `app/page.tsx`
+
+#### Issues:
+- When admin changes a user's role, the user can still see documents they shouldn't have access to
+- Document access is checked when page loads but not re-checked after role changes
+- Admin can open a document, change role, and still see the document even if new role has no access
+- No session/access refresh after role change
+- Client-side state may be caching document access permissions
+
+#### Preferred Behaviour:
+- When admin changes a user's role, redirect to home page
+- Immediately check and enforce new role permissions
+- Only show documents the user has access to based on new role
+- Clear cached document access on role change
+- Refresh user groups/permissions immediately
+
+#### Impact:
+- **HIGH** - Security vulnerability
+- Users with downgraded roles retain access to unauthorized documents
+- Access control is bypassed through cached permissions
+- Potential data breach if sensitive documents remain accessible
+
+#### Fix Required:
+- Add role change listener in client components to refresh permissions
+- Clear document cache when role changes
+- Implement redirect to home page after role change (if admin changed another user)
+- Force re-authentication or permission refresh after role update
+- Update `app/api/documents/route.ts` to validate role changes affect document access
+- Clear client-side state (selectedDocument, documentList) after role change
+- Add server-side session invalidation on role change
+- Test: Change role → verify access revoked → verify redirect
+
+---
+
+### 28. No Distinction Between Global Admin and Entity Admin
+
+**Severity:** MEDIUM
+**Category:** Security / Access Control / Design
+**Status:** 🔴 ACTIVE
+**Files:** `lib/auth/user-groups.ts`, `lib/workos/team-sync.ts`, `app/api/documents/route.ts`, Admin UI
+
+#### Issues:
+- Currently no difference between global admin and entity admin
+- Global admin should have access to all files of all entities
+- Entity admin should only have access to files of their specific entity
+- Current admin check (`isAdmin`) treats all admins the same
+- No entity/team-scoped admin role implementation
+
+#### Impact:
+- **MEDIUM** - Access control design issue
+- Cannot implement entity-specific admin privileges
+- All admins have full system access regardless of entity
+- May violate organizational access control requirements
+- Cannot delegate entity-level administration
+
+#### Fix Required:
+- Design admin role hierarchy (global admin vs entity admin)
+- Implement entity/team-scoped admin checking
+- Update `isAdmin()` function to accept optional entity/team parameter
+- Create `isEntityAdmin(entityId)` function
+- Update document access logic to respect entity admin scope
+- Update WorkOS role structure to support entity-level admin roles
+- Modify admin UI to show appropriate entities based on admin type
+- Update API endpoints to check entity admin access where applicable
+- Add migration plan for existing admin users
+
+---
+
 ## 🟢 LOW PRIORITY ISSUES
 
 ### 15. Code Duplication

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { log } from '@/lib/logger';
 
 /**
  * GET /api/documents/[documentId]/tags
@@ -43,7 +44,7 @@ export async function GET(
       .eq('document_type', documentType);
 
     if (error) {
-      console.error('Error fetching document tags:', error);
+      log.error('Error fetching document tags:', error);
       return NextResponse.json(
         { error: 'Failed to fetch document tags' },
         { status: 500 }
@@ -55,7 +56,7 @@ export async function GET(
 
     return NextResponse.json({ tags });
   } catch (error) {
-    console.error('Error in GET /api/documents/[documentId]/tags:', error);
+    log.error('Error in GET /api/documents/[documentId]/tags:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -120,7 +121,7 @@ export async function POST(
       `);
 
     if (error) {
-      console.error('Error adding tags to document:', error);
+      log.error('Error adding tags to document:', error);
       return NextResponse.json(
         { error: 'Failed to add tags to document' },
         { status: 500 }
@@ -132,7 +133,7 @@ export async function POST(
 
     return NextResponse.json({ tags }, { status: 201 });
   } catch (error) {
-    console.error('Error in POST /api/documents/[documentId]/tags:', error);
+    log.error('Error in POST /api/documents/[documentId]/tags:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -181,7 +182,7 @@ export async function DELETE(
     const { error } = await deleteQuery;
 
     if (error) {
-      console.error('Error removing tags from document:', error);
+      log.error('Error removing tags from document:', error);
       return NextResponse.json(
         { error: 'Failed to remove tags from document' },
         { status: 500 }
@@ -190,7 +191,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error in DELETE /api/documents/[documentId]/tags:', error);
+    log.error('Error in DELETE /api/documents/[documentId]/tags:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
