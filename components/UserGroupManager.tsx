@@ -195,7 +195,8 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
                       <select
                         value={user.role}
                         onChange={(e) => handleSetRole(user.userId, e.target.value as 'admin' | 'user')}
-                        className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm"
+                        disabled={saving}
+                        className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
@@ -211,6 +212,29 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
                       </button>
                     </div>
                   </div>
+
+                  {/* WorkOS Organizations */}
+                  {user.organizations && user.organizations.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <div className="text-xs text-gray-400 mb-2">WorkOS Organizations:</div>
+                      <div className="flex flex-wrap gap-2">
+                        {user.organizations.map((org) => (
+                          <div
+                            key={org.id}
+                            className="px-2 py-1 bg-purple-500/20 border border-purple-500/50 rounded text-xs flex items-center gap-2"
+                          >
+                            <span className="font-medium">{org.name}</span>
+                            {org.role && (
+                              <span className="text-purple-300">({org.role})</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-2">
+                        💡 Role changes update both database and WorkOS organization membership
+                      </div>
+                    </div>
+                  )}
 
                   {/* Current Groups */}
                   <div className="flex flex-wrap gap-2 mt-2">
