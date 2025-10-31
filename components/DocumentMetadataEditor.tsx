@@ -114,16 +114,57 @@ export default function DocumentMetadataEditor({
         // Copy tags to new document
         if (selectedTags.length > 0) {
           const tagIds = selectedTags.map((tag) => tag.id);
-          await fetch(`/api/documents/${newDoc.id}/tags`, {
+          const tagResponse = await fetch(`/api/documents/${newDoc.id}/tags`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ tagIds, documentType }),
           });
+
+          if (!tagResponse.ok) {
+            // Rollback: Delete the newly created document
+            const tagError = await tagResponse.json().catch(() => ({ error: "Unknown error" }));
+            console.error("Error copying tags to new document:", tagError);
+            
+            const { error: rollbackError } = await supabase
+              .from(tableName)
+              .delete()
+              .eq("id", newDoc.id);
+
+            if (rollbackError) {
+              console.error("Error rolling back new document creation:", rollbackError);
+              toast.error("Failed to update document. Please try again or contact support.");
+            } else {
+              toast.error("Failed to copy tags to new document. Document update cancelled.");
+            }
+            return;
+          }
         }
 
         // Delete old document
-        await supabase.from(currentTable).delete().eq("id", document.id);
+        const { error: deleteError } = await supabase
+          .from(currentTable)
+          .delete()
+          .eq("id", document.id);
 
+        if (deleteError) {
+          // Rollback: Delete the newly created document (keep old one)
+          console.error("Error deleting old document:", deleteError);
+          
+          const { error: rollbackError } = await supabase
+            .from(tableName)
+            .delete()
+            .eq("id", newDoc.id);
+
+          if (rollbackError) {
+            console.error("Error rolling back new document creation:", rollbackError);
+            toast.error("Failed to delete old document. Please try again or contact support.");
+          } else {
+            toast.error("Failed to delete old document. Document update cancelled.");
+          }
+          return;
+        }
+
+        // All operations succeeded
         toast.success("Document updated successfully");
         onSave();
         onClose();

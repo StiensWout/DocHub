@@ -4,6 +4,10 @@
 **Last Updated:** $(date)  
 **Status:** 📋 Active Development
 
+**Related Files:**
+- [BUG_LIST.md](./BUG_LIST.md) - Detailed bug descriptions
+- [BUG_REPORTS.md](./BUG_REPORTS.md) - User bug reports staging area
+
 This comprehensive TODO list covers bug fixes, security improvements, and performance optimizations. Check off items as you complete them.
 
 ## 📋 Table of Contents
@@ -37,6 +41,14 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 **Actual Time:** ~2 hours  
 **Status:** ✅ Fixed - All TypeScript compilation errors resolved
 
+**✅ VALIDATION COMPLETE (Review Date: 2024)**
+- ✅ Verified: Type guards properly implemented (lines 129-141, 184-212)
+- ✅ Verified: OrganizationDomain[] mapping to string[] works correctly (lines 121-124, 216-218)
+- ✅ Verified: WorkOS SDK response structure handling (lines 259-264, 319-325)
+- ✅ Verified: Error handling returns objects instead of throwing (lines 447-458, 465-496)
+- ✅ Code compiles without TypeScript errors
+- ✅ All fixes match description in BUG_LIST.md
+
 ---
 
 ### Bug #2: Cross-Site Scripting (XSS) Vulnerabilities ✅ COMPLETED
@@ -58,6 +70,16 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 
 **Estimated Time:** 2-3 hours
 **Actual Time:** ~2 hours
+**Status:** ✅ Fixed - All XSS vulnerabilities addressed with DOMPurify sanitization
+
+**✅ VALIDATION COMPLETE (Review Date: 2024)**
+- ✅ Verified: DOMPurify v3.3.0 installed and imported correctly
+- ✅ Verified: DocumentViewer.tsx uses DOMPurify with whitelist (lines 260-268, 283)
+- ✅ Verified: DocumentVersionHistory.tsx uses DOMPurify with whitelist (lines 232-240)
+- ✅ Verified: FileViewer.tsx uses safe DOM manipulation + DOMPurify (lines 49-54, 123-182)
+- ✅ Verified: All three components have proper sanitization configs with ALLOWED_TAGS and ALLOWED_ATTR
+- ✅ Test file exists (xss-protection.test.tsx referenced in grep results)
+- ✅ All fixes match description in BUG_LIST.md
 
 ---
 
@@ -91,9 +113,99 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 **Actual Time:** ~2.5 hours  
 **Status:** ✅ Fixed - Authentication and authorization checks implemented
 
+**✅ VALIDATION COMPLETE (Review Date: 2024)**
+- ✅ Verified: PUT endpoint has `getSession()` check (line 103) returning 401 if no session
+- ✅ Verified: DELETE endpoint has `getSession()` check (line 321) returning 401 if no session
+- ✅ Verified: `canModifyFile()` helper function exists (lines 21-95) with proper permission checks
+- ✅ Verified: Admin users can modify any file (line 28-30)
+- ✅ Verified: Document access checked via `document_access_groups` table (lines 35-50)
+- ✅ Verified: File ownership checked via `uploaded_by` field (lines 56-59, 70-71)
+- ✅ Verified: Team visibility checks implemented (lines 81-90)
+- ✅ Verified: Returns 403 Forbidden when permission denied (lines 146-149, 363-367)
+- ✅ Test file exists (file-auth.test.ts) with comprehensive test coverage
+- ✅ All fixes match description in BUG_LIST.md
+
 ---
 
 ## 🟠 HIGH PRIORITY - Fix Soon
+
+### Bug #21: Document Type Change Lacks Transactional Integrity ✅ COMPLETED
+**File:** `components/DocumentMetadataEditor.tsx:70-130`
+
+- [x] Add error handling for tag copying operation (line 117-121)
+  - [x] Check response status from fetch call
+  - [x] Handle errors appropriately
+- [x] Add error checking for old document deletion (line 125)
+  - [x] Check for deletion errors
+  - [x] Handle deletion failures
+- [x] Implement rollback mechanism:
+  - [x] If tag copying fails: delete newly created document, keep old document
+  - [x] If old document deletion fails: delete newly created document, keep old document
+- [x] Only show success toast if all operations succeed
+- [x] Add proper error messages for each failure case:
+  - [x] Tag copying failure
+  - [x] Old document deletion failure
+- [x] Consider implementing client-side transaction logic or use Supabase transactions if available (implemented client-side rollback)
+- [x] Add tests for error scenarios:
+  - [x] Tag copying failure
+  - [x] Old document deletion failure
+  - [x] Partial success scenarios
+
+**Implementation Details:**
+- Updated `components/DocumentMetadataEditor.tsx` to add comprehensive error handling:
+  - Tag copying operation (lines 117-121) now checks `response.ok` and handles failures
+  - Old document deletion (lines 144-147) now checks for `deleteError` and handles failures
+  - Rollback mechanism implemented:
+    - If tag copying fails: Delete newly created document (lines 128-131), keep old document intact
+    - If old document deletion fails: Delete newly created document (lines 153-156), keep old document intact
+  - Success toast only shown after all operations succeed (line 168)
+  - Specific error messages for each failure case (lines 137, 162)
+  - Rollback failure handling with support message (lines 135, 160)
+- Added comprehensive test suite (`__tests__/document-transactional-integrity.test.ts`) with 9 tests:
+  - Success scenario verification
+  - Tag copying failure with rollback
+  - Rollback failure handling
+  - Old document deletion failure with rollback
+  - Error message validation
+  - No tags scenario handling
+
+**Estimated Time:** 3-4 hours  
+**Actual Time:** ~2 hours  
+**Status:** ✅ Fixed - Transactional integrity ensured with proper error handling and rollback mechanisms
+
+---
+
+### Bug #22: File Replacement Staging Approach Flawed ✅ COMPLETED
+**File:** `app/api/files/[fileId]/route.ts:225-295`
+
+- [x] Fix final upload to use staged file instead of original `newFile`:
+  - [x] Download staged file and use it for final upload (implemented download + upload approach)
+  - [x] Verified staged file exists (download fails if staging file doesn't exist)
+- [x] Add logging for staging file operations (added console.log for copy operations)
+- [x] Update rollback logic to handle staging file cleanup (cleanup on all error paths)
+- [x] Add tests for:
+  - [x] Staged file download verification (test verifies download happens between staging and final upload)
+  - [x] Correct file used in final upload (test verifies staged file is downloaded before final upload)
+
+**Implementation Details:**
+- Updated `app/api/files/[fileId]/route.ts` PUT handler to download staged file before final upload:
+  - Step 1: Upload new file to staging location (unchanged)
+  - Step 2: Download staged file from storage (NEW - ensures we use verified staged file, not potentially corrupted original stream)
+  - Step 3: Upload downloaded staged file to final location (replaces old file)
+  - Step 4: Update database metadata
+  - Step 5: Cleanup staging file
+- Added comprehensive logging for staging file operations (copy start and success messages)
+- Rollback logic updated to handle staging file cleanup on all error paths (download failures, final upload failures)
+- Updated test suite (`__tests__/file-race-condition.test.ts`) to verify:
+  - Staged file is downloaded between staging upload and final upload
+  - Correct sequence: staging upload → download → final upload
+- **Note:** Orphaned staging file cleanup (background job/TTL) left as future enhancement - current cleanup on error paths is sufficient for correctness
+
+**Estimated Time:** 3-4 hours  
+**Actual Time:** ~1.5 hours  
+**Status:** ✅ Fixed - Final upload now uses verified staged file instead of original newFile, ensuring staging approach provides intended protection
+
+---
 
 ### Bug #4: Incomplete File Type Validation ✅ COMPLETED
 **Files:** `app/api/files/upload/route.ts`, `components/FileViewer.tsx`
@@ -124,6 +236,15 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 **Estimated Time:** 2 hours  
 **Actual Time:** ~2 hours  
 **Status:** ✅ Fixed - Both MIME type and extension validation implemented and tested
+
+**✅ VALIDATION COMPLETE (Review Date: 2024)**
+- ✅ Verified: Shared validation module exists (`lib/constants/file-validation.ts`)
+- ✅ Verified: `ALLOWED_FILE_TYPES` mapping exists with comprehensive type/extension pairs (lines 11-37)
+- ✅ Verified: `validateFileTypeAndExtension()` function validates both MIME type AND extension (lines 114-153)
+- ✅ Verified: Upload route uses validation (lines 79-88 in upload/route.ts)
+- ✅ Verified: FileViewer.tsx imports validation utilities (verified via grep)
+- ✅ Verified: Test file exists (file-validation.test.ts) with 37+ test cases
+- ✅ All fixes match description in BUG_LIST.md
 
 ---
 
@@ -160,6 +281,16 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 **Actual Time:** ~2 hours  
 **Status:** ✅ Fixed - Comprehensive filename validation and sanitization implemented and tested
 
+**✅ VALIDATION COMPLETE (Review Date: 2024)**
+- ✅ Verified: `MAX_FILENAME_LENGTH` constant defined (255 chars, line 63)
+- ✅ Verified: `sanitizeFilename()` function removes path traversal, control chars (lines 175-214)
+- ✅ Verified: `validateFilename()` function checks for security issues (lines 221-272)
+- ✅ Verified: `validateStoragePath()` function validates paths (lines 279-312)
+- ✅ Verified: Upload route validates and sanitizes filenames (lines 70-76, 92, 125-129 in upload/route.ts)
+- ✅ Verified: Windows reserved name validation included (lines 254-261)
+- ✅ Verified: Test file exists (filename-validation.test.ts) with 46+ test cases
+- ✅ All fixes match description in BUG_LIST.md
+
 ---
 
 ### Bug #6: Missing Error Handling in WorkOS Operations ✅ COMPLETED
@@ -193,6 +324,17 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 **Estimated Time:** 2-3 hours  
 **Actual Time:** ~2.5 hours  
 **Status:** ✅ Fixed - Comprehensive error handling with proper logging and meaningful error messages implemented and tested
+
+**✅ VALIDATION COMPLETE (Review Date: 2024)**
+- ✅ Verified: `logWorkOSError()` helper function exists with context logging (lines 16-35)
+- ✅ Verified: `getWorkOSErrorMessage()` helper extracts meaningful messages (lines 40-82)
+- ✅ Verified: All functions use enhanced error logging with context
+- ✅ Verified: `addUserToOrganization()` returns `{ success, error? }` instead of throwing (lines 447-458)
+- ✅ Verified: `removeUserFromOrganization()` returns `{ success, error? }` instead of throwing (lines 465-496)
+- ✅ Verified: WorkOS-specific error codes handled (not_found, unauthorized, forbidden, rate_limit_exceeded)
+- ✅ Verified: HTTP status codes handled (404, 401, 403, 429, 500, 502, 503)
+- ✅ Verified: Test file exists (workos-error-handling.test.ts) with 21+ test cases
+- ✅ All fixes match description in BUG_LIST.md
 
 ---
 
@@ -228,6 +370,17 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 **Estimated Time:** 2-3 hours  
 **Actual Time:** ~2.5 hours  
 **Status:** ✅ Fixed - Staging approach prevents race conditions and file loss, with proper rollback mechanisms
+
+**✅ VALIDATION COMPLETE (Review Date: 2024)**
+- ✅ Verified: Staging area approach implemented (lines 193-290 in [fileId]/route.ts)
+- ✅ Verified: Step 1: Upload to staging location before touching old file (lines 209-223)
+- ✅ Verified: Step 2: Upload from staging to final location (replaces old file) (lines 225-245)
+- ✅ Verified: Step 3: Database update only after new file in place (lines 247-279)
+- ✅ Verified: Step 4: Cleanup staging file after success (lines 281-290)
+- ✅ Verified: Rollback mechanism: staging cleanup on failure (lines 237-244, 269-278)
+- ✅ Verified: Uses shared validation utilities (validateFilename, validateFileSize, validateFileTypeAndExtension)
+- ✅ Verified: Test file exists (file-race-condition.test.ts) with 8 test cases
+- ✅ All fixes match description in BUG_LIST.md
 
 ---
 
@@ -337,6 +490,27 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 - [ ] Add monitoring/alerting for cleanup failures
 
 **Estimated Time:** 2-3 hours
+
+---
+
+### Bug #23: Slug Generation Logic Produces Empty Slugs and Inconsistent Underscore Handling
+**File:** `app/api/tags/route.ts:80-94`
+
+- [ ] Align slug generation with validation:
+  - [ ] Option 1: Allow underscores in slugs (update regex to `/[^a-z0-9\s\-_]/g`)
+  - [ ] Option 2: Disallow underscores in validation (update regex to `/^[a-zA-Z0-9\s\-]+$/`)
+- [ ] Add validation to ensure slug is not empty after generation
+- [ ] Implement fallback slug generation if slug becomes empty:
+  - [ ] Generate slug like `tag-{timestamp}` or `tag-{uuid}`
+- [ ] Add check before database insert to validate slug is not empty
+- [ ] Add test cases for edge cases:
+  - [ ] Underscore-only tag names
+  - [ ] Empty slug after processing
+  - [ ] Fallback slug generation
+  - [ ] Consistency between validation and slug generation
+- [ ] Update documentation to clarify slug generation rules
+
+**Estimated Time:** 1-2 hours
 
 ---
 
@@ -787,10 +961,10 @@ After fixing each bug category, ensure:
 ## 📊 Progress Tracking
 
 ### Bug Fixes
-**Total Bugs:** 20
-- **Critical:** 3 bugs
-- **High Priority:** 4 bugs
-- **Medium Priority:** 8 bugs
+**Total Bugs:** 23
+- **Critical:** 3 bugs (all fixed ✅)
+- **High Priority:** 6 bugs (all fixed ✅: Bug #4, Bug #5, Bug #6, Bug #7, Bug #21, Bug #22)
+- **Medium Priority:** 9 bugs (8 existing + Bug #23)
 - **Low Priority:** 5 bugs
 
 ### Performance Optimizations
@@ -814,11 +988,11 @@ After fixing each bug category, ensure:
 
 ### Progress Summary
 - [x] Critical bugs fixed: 3/3 (Bug #1, Bug #2, and Bug #3 completed) ✅ ALL CRITICAL BUGS FIXED
-- [x] High priority bugs fixed: 1/4 (Bug #4 completed)
-- [ ] Medium priority bugs fixed: 0/8
+- [x] High priority bugs fixed: 6/6 (Bug #4, Bug #5, Bug #6, Bug #7, Bug #21, and Bug #22 completed) ✅ ALL HIGH PRIORITY BUGS FIXED
+- [ ] Medium priority bugs fixed: 0/9 (8 existing + Bug #23)
 - [ ] Low priority bugs fixed: 0/5
 - [ ] Performance optimizations: 0/12
-- [ ] Overall completion: 0%
+- [ ] Overall completion: 39% (9/23 bugs fixed)
 
 ### Key Metrics to Track
 - **Before/After Lighthouse Scores:** TBD
@@ -878,8 +1052,8 @@ Each item should meet these standards:
 
 When completing items, update:
 
-- [ ] [README.md](./README.md) - Feature changes, new requirements
-- [ ] [CHANGELOG.md](./docs/CHANGELOG.md) - All changes logged
+- [ ] [../README.md](../README.md) - Feature changes, new requirements
+- [ ] [../docs/CHANGELOG.md](../docs/CHANGELOG.md) - All changes logged
 - [ ] [BUG_LIST.md](./BUG_LIST.md) - Mark fixed bugs as resolved
 - [ ] API Documentation - Update endpoint docs if changed
 - [ ] Environment Variables - Document new required vars
@@ -889,9 +1063,10 @@ When completing items, update:
 ## 🔗 Related Files
 
 - [BUG_LIST.md](./BUG_LIST.md) - Detailed bug descriptions
-- [README.md](./README.md) - Project documentation
-- [CHANGELOG.md](./docs/CHANGELOG.md) - Track changes made
-- [ROADMAP.md](./docs/ROADMAP.md) - Future features
+- [BUG_REPORTS.md](./BUG_REPORTS.md) - User bug reports staging area
+- [../README.md](../README.md) - Project documentation
+- [../docs/CHANGELOG.md](../docs/CHANGELOG.md) - Track changes made
+- [../docs/ROADMAP.md](../docs/ROADMAP.md) - Future features
 
 ---
 

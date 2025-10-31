@@ -1,5 +1,6 @@
 import { workos } from './server';
 import { getCachedMemberships, setCachedMemberships } from './membership-cache';
+import { log } from '@/lib/logger';
 
 /**
  * WorkOS Error Types
@@ -31,7 +32,7 @@ function logWorkOSError(
     stack: error?.stack,
   };
 
-  console.error(`[WorkOS Error] ${operation}${contextStr ? ` (${contextStr})` : ''}:`, errorDetails);
+  log.error(`[WorkOS Error] ${operation}${contextStr ? ` (${contextStr})` : ''}:`, errorDetails);
 }
 
 /**
@@ -249,12 +250,12 @@ export async function getUserGroupsFromWorkOS(
   try {
     // If memberships are provided, use them directly (caching optimization)
     if (memberships && memberships.length > 0) {
-      console.log(`[getUserGroupsFromWorkOS] Using provided memberships (${memberships.length} memberships)`);
+      log.debug(`[getUserGroupsFromWorkOS] Using provided memberships (${memberships.length} memberships)`);
       return memberships.map(m => m.organizationName).filter(Boolean);
     }
 
     // Otherwise, fetch memberships (legacy behavior or when memberships not provided)
-    console.log(`[getUserGroupsFromWorkOS] Fetching memberships for userId: ${userId}`);
+    log.debug(`[getUserGroupsFromWorkOS] Fetching memberships for userId: ${userId}`);
     // WorkOS SDK returns { data: [] } structure for list operations
     const response = await workos.userManagement.listOrganizationMemberships({
       userId: userId,
@@ -291,7 +292,7 @@ export async function getUserGroupsFromWorkOS(
     return organizationNames.filter(Boolean);
   } catch (error: any) {
     if (error.code === 'not_found' || error.message?.includes('user')) {
-      console.log(`[getUserGroupsFromWorkOS] User ${userId} has no WorkOS organization memberships`);
+      log.debug(`[getUserGroupsFromWorkOS] User ${userId} has no WorkOS organization memberships`);
       return [];
     }
     logWorkOSError('getUserGroupsFromWorkOS', error, { userId });
@@ -308,12 +309,12 @@ export async function getUserOrganizationMemberships(userId: string, useCache: b
   if (useCache) {
     const cached = getCachedMemberships(userId);
     if (cached !== null) {
-      console.log(`[getUserOrganizationMemberships] ✅ Using cached memberships for userId: ${userId} (${cached.length} memberships)`);
+      log.debug(`[getUserOrganizationMemberships] ✅ Using cached memberships for userId: ${userId} (${cached.length} memberships)`);
       return cached;
     }
   }
   
-  console.log(`[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: ${userId}`);
+  log.debug(`[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: ${userId}`);
   
   try {
     // WorkOS SDK returns { data: [] } structure for list operations
@@ -325,7 +326,7 @@ export async function getUserOrganizationMemberships(userId: string, useCache: b
     const memberships = Array.isArray(response) ? response : (response?.data || []);
 
     if (!memberships || memberships.length === 0) {
-      console.log(`[getUserOrganizationMemberships] No organization memberships found for user ${userId}`);
+      log.debug(`[getUserOrganizationMemberships] No organization memberships found for user ${userId}`);
       // Cache empty result to avoid repeated checks
       if (useCache) {
         setCachedMemberships(userId, []);
@@ -333,10 +334,10 @@ export async function getUserOrganizationMemberships(userId: string, useCache: b
       return [];
     }
 
-    console.log(`[getUserOrganizationMemberships] Found ${memberships.length} raw memberships for user ${userId}`);
+    log.debug(`[getUserOrganizationMemberships] Found ${memberships.length} raw memberships for user ${userId}`);
 
     // Enrich with organization details
-    console.log(`[getUserOrganizationMemberships] Enriching memberships with organization details...`);
+    log.debug(`[getUserOrganizationMemberships] Enriching memberships with organization details...`);
     const enrichedMemberships = await Promise.all(
       memberships.map(async (membership, index) => {
         try {
@@ -428,7 +429,7 @@ export async function getUserOrganizationMemberships(userId: string, useCache: b
       setCachedMemberships(userId, enrichedMemberships);
     }
 
-    console.log(`[getUserOrganizationMemberships] ✅ Returning ${enrichedMemberships.length} enriched memberships (cached):`, 
+    log.debug(`[getUserOrganizationMemberships] ✅ Returning ${enrichedMemberships.length} enriched memberships (cached):`, 
       enrichedMemberships.map(m => `${m.organizationName} (${m.organizationId})`));
     return enrichedMemberships;
   } catch (error: any) {
@@ -505,7 +506,7 @@ export async function updateUserRoleInOrganization(
   newRole: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log(`[updateUserRoleInOrganization] Updating role for user ${userId} in org ${organizationId} to "${newRole}"`);
+    log.info(`[updateUserRoleInOrganization] Updating role for user ${userId} in org ${organizationId} to "${newRole}"`);
     
     // Get the user's organization memberships
     // WorkOS SDK returns { data: [] } structure for list operations
@@ -520,7 +521,7 @@ export async function updateUserRoleInOrganization(
     const membership = memberships?.find(m => m.organizationId === organizationId);
     
     if (!membership || !membership.id) {
-      console.log(`[updateUserRoleInOrganization] User is not a member of organization ${organizationId}`);
+      log.warn(`[updateUserRoleInOrganization] User is not a member of organization ${organizationId}`);
       return { success: false, error: 'User is not a member of this organization' };
     }
 
@@ -531,7 +532,7 @@ export async function updateUserRoleInOrganization(
       role: newRole,
     } as any);
 
-    console.log(`[updateUserRoleInOrganization] ✅ Successfully updated role to "${newRole}"`);
+    log.info(`[updateUserRoleInOrganization] ✅ Successfully updated role to "${newRole}"`);
     return { success: true };
   } catch (error: any) {
     logWorkOSError('updateUserRoleInOrganization', error, { 

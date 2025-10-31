@@ -85,11 +85,14 @@ const mockSupabaseAdmin = {
         return { error: null, data: { path } };
       }),
       download: jest.fn((path: string) => {
+        const operation = { type: 'download', path, bucket };
+        mockStorageOperations.push(operation);
+        
+        // Return a Blob-like object that can be converted to File
+        const mockBlob = new Blob(['mock file content'], { type: 'application/octet-stream' });
         return { 
           error: null, 
-          data: {
-            arrayBuffer: jest.fn(() => Promise.resolve(new ArrayBuffer(8))),
-          }
+          data: mockBlob,
         };
       }),
       remove: jest.fn((paths: string[]) => {
@@ -157,6 +160,20 @@ describe('File Race Condition Tests', () => {
       
       // Staging should happen before final
       expect(mockStorageOperations.indexOf(stagingUpload)).toBeLessThan(
+        mockStorageOperations.indexOf(finalUpload)
+      );
+      
+      // Verify that staged file is downloaded (not using original newFile)
+      const downloadOperations = mockStorageOperations.filter(op => op.type === 'download');
+      expect(downloadOperations.length).toBeGreaterThanOrEqual(1);
+      const stagingDownload = downloadOperations.find(op => op.path.includes('_staging_'));
+      expect(stagingDownload).toBeDefined();
+      
+      // Download should happen after staging upload but before final upload
+      expect(mockStorageOperations.indexOf(stagingUpload)).toBeLessThan(
+        mockStorageOperations.indexOf(stagingDownload)
+      );
+      expect(mockStorageOperations.indexOf(stagingDownload)).toBeLessThan(
         mockStorageOperations.indexOf(finalUpload)
       );
     });

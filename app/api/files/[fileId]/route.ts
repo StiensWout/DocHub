@@ -9,6 +9,7 @@ import {
   validateFilename,
   sanitizeFilename,
 } from "@/lib/constants/file-validation";
+import { log } from "@/lib/logger";
 
 /**
  * Check if a user has permission to modify/delete a file
@@ -38,7 +39,7 @@ async function canModifyFile(
       .eq("team_document_id", fileMetadata.document_id);
 
     if (error) {
-      console.error("Error checking document access:", error);
+      log.error("Error checking document access:", error);
       return false;
     }
 
@@ -215,34 +216,64 @@ export async function PUT(
       });
 
     if (stagingUploadError) {
-      console.error("Staging upload error:", stagingUploadError);
+      log.error("Staging upload error:", stagingUploadError);
       return NextResponse.json(
         { error: "Failed to upload new file" },
         { status: 500 }
       );
     }
 
-    // Step 2: Upload staging file to final location (replaces old file)
+    // Step 2: Copy staged file to final location (replaces old file)
     // This is the critical point - once this succeeds, old file is replaced
-    // We use the file we already have in memory (newFile) rather than downloading
+    // We use the staged file we just uploaded, not the original newFile
+    // This ensures we're using the verified staged file, not a potentially corrupted original stream
+    
+    log.info(`Copying staged file from ${stagingPath} to ${existingFile.file_path}`);
+    
+    // Download the staged file to use for final upload
+    // If staging file doesn't exist, download will fail and we'll rollback
+    const { data: stagedFileData, error: downloadError } = await supabaseAdmin.storage
+      .from(existingFile.storage_bucket)
+      .download(stagingPath);
+
+    if (downloadError || !stagedFileData) {
+      log.error("Failed to download staged file:", downloadError);
+      // Rollback: Remove staging file, old file is still intact
+      await supabaseAdmin.storage
+        .from(existingFile.storage_bucket)
+        .remove([stagingPath])
+        .catch(() => {});
+      return NextResponse.json(
+        { error: "Failed to retrieve staged file" },
+        { status: 500 }
+      );
+    }
+
+    // Convert Blob to File-like object for upload
+    const stagedFile = new File([stagedFileData], newFile.name, { type: newFile.type });
+    
+    // Upload the staged file to the final location (replaces old file)
     const { error: finalUploadError } = await supabaseAdmin.storage
       .from(existingFile.storage_bucket)
-      .upload(existingFile.file_path, newFile, {
+      .upload(existingFile.file_path, stagedFile, {
         contentType: newFile.type,
         upsert: true, // Overwrite old file
       });
 
     if (finalUploadError) {
-      console.error("Final upload error:", finalUploadError);
+      log.error("Final upload error:", finalUploadError);
       // Rollback: Remove staging file, old file is still intact
       await supabaseAdmin.storage
         .from(existingFile.storage_bucket)
-        .remove([stagingPath]);
+        .remove([stagingPath])
+        .catch(() => {});
       return NextResponse.json(
         { error: "Failed to replace file" },
         { status: 500 }
       );
     }
+
+    log.info(`Successfully copied staged file to ${existingFile.file_path}`);
 
     // Step 4: Update file metadata in database (now safe - new file is in place)
     const updateData: any = {
@@ -260,17 +291,17 @@ export async function PUT(
       .single();
 
     if (dbError) {
-      console.error("Database update error:", dbError);
+      log.error("Database update error:", dbError);
       // Rollback: Try to restore old file if possible
       // Note: We can't restore the old file content, but we can keep the metadata
       // In a real system, you might want to keep a backup or version
       // For now, we log the error - the new file is already in place
-      console.error("Warning: Database update failed but file was replaced. Manual intervention may be required.");
+      log.warn("Database update failed but file was replaced. Manual intervention may be required.");
       // Cleanup staging file
       await supabaseAdmin.storage
         .from(existingFile.storage_bucket)
         .remove([stagingPath])
-        .catch(err => console.error("Failed to cleanup staging:", err));
+        .catch(err => log.error("Failed to cleanup staging:", err));
       
       return NextResponse.json(
         { error: "Failed to update file metadata" },
@@ -284,7 +315,7 @@ export async function PUT(
       .remove([stagingPath]);
 
     if (stagingDeleteError) {
-      console.warn("Failed to clean up staging file:", stagingDeleteError);
+      log.warn("Failed to clean up staging file:", stagingDeleteError);
       // Non-critical: staging file cleanup failed, but operation succeeded
       // The staging file will be orphaned but won't affect functionality
     }
@@ -304,7 +335,7 @@ export async function PUT(
       { status: 200 }
     );
   } catch (error) {
-    console.error("File replace error:", error);
+    log.error("File replace error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -373,7 +404,7 @@ export async function DELETE(
       .remove([fileMetadata.file_path]);
 
     if (storageError) {
-      console.error("Storage delete error:", storageError);
+      log.error("Storage delete error:", storageError);
       // Continue to delete metadata even if storage delete fails
     }
 
@@ -384,7 +415,7 @@ export async function DELETE(
       .eq("id", fileId);
 
     if (dbError) {
-      console.error("Database delete error:", dbError);
+      log.error("Database delete error:", dbError);
       return NextResponse.json(
         { error: "Failed to delete file metadata" },
         { status: 500 }
@@ -396,7 +427,7 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.error("File delete error:", error);
+    log.error("File delete error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
