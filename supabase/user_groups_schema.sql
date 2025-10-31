@@ -37,25 +37,37 @@ CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role);
 CREATE INDEX IF NOT EXISTS idx_document_access_groups_doc_id ON document_access_groups(team_document_id);
 CREATE INDEX IF NOT EXISTS idx_document_access_groups_group_name ON document_access_groups(group_name);
 
--- Row Level Security is DISABLED for these tables
--- 
--- REASON: This application uses WorkOS for authentication, not Supabase Auth.
--- Supabase RLS policies rely on `auth.jwt() ->> 'user_id'` which only works with Supabase Auth.
--- 
+-- Enable Row Level Security for defense in depth
+-- NOTE: This application uses WorkOS for authentication, not Supabase Auth.
+-- RLS policies that rely on auth.jwt() won't work with WorkOS auth.
+-- We enable RLS with deny-all policies to protect against direct database access.
+-- All application access uses the service role client which bypasses RLS.
+ALTER TABLE user_groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE document_access_groups ENABLE ROW LEVEL SECURITY;
+
+-- Deny all public access to these sensitive tables
+-- Only the service role client (supabaseAdmin) can access these tables
+CREATE POLICY "Deny all access to user_groups" ON user_groups
+  FOR ALL USING (false) WITH CHECK (false);
+
+CREATE POLICY "Deny all access to user_roles" ON user_roles
+  FOR ALL USING (false) WITH CHECK (false);
+
+CREATE POLICY "Deny all access to document_access_groups" ON document_access_groups
+  FOR ALL USING (false) WITH CHECK (false);
+
 -- Authorization is handled at the application level:
 -- - All database access uses `supabaseAdmin` (service role) which bypasses RLS
 -- - Application-level authorization checks are performed using:
 --   - `getSession()` from `lib/auth/session.ts` (WorkOS session)
 --   - `isAdmin()` and `getUserGroups()` from `lib/auth/user-groups.ts`
 --   - API routes enforce authorization before database queries
--- 
--- This approach ensures:
--- - No RLS policy conflicts with WorkOS authentication
--- - Consistent authorization checks across all API endpoints
--- - Better control and flexibility for custom access logic
 --
--- NOTE: If you need to use a non-admin Supabase client in the future,
--- you should implement application-level authorization checks in your queries.
+-- The deny-all RLS policies provide defense in depth against:
+-- - Accidental use of non-service-role clients
+-- - Direct database access if credentials are compromised
+-- - Misconfiguration that might expose these tables
 
 -- Add updated_at triggers
 CREATE TRIGGER update_user_groups_updated_at BEFORE UPDATE ON user_groups

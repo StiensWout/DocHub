@@ -188,6 +188,8 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE teams (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
+  workos_organization_id TEXT, -- Maps to WorkOS organization ID (optional, for syncing)
+  parent_organization_id TEXT, -- References parent organization's WorkOS ID (for subgroups)
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -345,6 +347,7 @@ CREATE INDEX idx_user_roles_user_id ON user_roles(user_id);
 CREATE INDEX idx_user_roles_role ON user_roles(role);
 CREATE INDEX idx_document_access_groups_doc_id ON document_access_groups(team_document_id);
 CREATE INDEX idx_document_access_groups_group_name ON document_access_groups(group_name);
+CREATE INDEX idx_teams_workos_org_id ON teams(workos_organization_id);
 
 -- ============================================================================
 -- STEP 7: ENABLE ROW LEVEL SECURITY (RLS)
@@ -359,9 +362,13 @@ ALTER TABLE document_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_versions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_files ENABLE ROW LEVEL SECURITY;
 
--- NOTE: RLS is DISABLED for user_groups, user_roles, and document_access_groups
--- because the application uses WorkOS for authentication (not Supabase Auth)
--- Authorization is handled at the application level via API routes
+-- Enable RLS on user groups and roles tables (defense in depth)
+-- NOTE: We use WorkOS for authentication, not Supabase Auth, so RLS policies
+-- that rely on auth.jwt() won't work. However, we enable RLS with deny-all policies
+-- to protect against direct database access. The service role client bypasses RLS.
+ALTER TABLE user_groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE document_access_groups ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================================
 -- STEP 8: CREATE RLS POLICIES
@@ -421,6 +428,24 @@ CREATE POLICY "Allow public delete to team_documents" ON team_documents
 
 CREATE POLICY "Allow public delete to document_files" ON document_files
   FOR DELETE USING (true);
+
+-- ============================================================================
+-- SECURITY POLICIES: User groups, roles, and access control
+-- These tables contain sensitive information and should NOT be publicly accessible
+-- All access is through the service role client with application-level authorization
+-- ============================================================================
+
+-- Deny all access to user_groups table (only service role can access)
+CREATE POLICY "Deny all access to user_groups" ON user_groups
+  FOR ALL USING (false) WITH CHECK (false);
+
+-- Deny all access to user_roles table (only service role can access)
+CREATE POLICY "Deny all access to user_roles" ON user_roles
+  FOR ALL USING (false) WITH CHECK (false);
+
+-- Deny all access to document_access_groups table (only service role can access)
+CREATE POLICY "Deny all access to document_access_groups" ON document_access_groups
+  FOR ALL USING (false) WITH CHECK (false);
 
 -- ============================================================================
 -- STEP 9: CREATE TRIGGERS

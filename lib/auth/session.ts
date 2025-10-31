@@ -48,7 +48,27 @@ export async function getSession(): Promise<{ user: SessionUser; accessToken: st
       }
       
       try {
-        const user = await workos.userManagement.getUser(accessToken);
+        // For User Management tokens, we need to decode the JWT to get the user ID
+        // The token contains a 'sub' claim with the user ID
+        let userId: string | null = null;
+        
+        try {
+          // Decode JWT token (without verification - we trust WorkOS tokens)
+          const tokenParts = accessToken.split('.');
+          if (tokenParts.length === 3) {
+            const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+            userId = payload.sub; // 'sub' claim contains the user ID
+          }
+        } catch (decodeError: any) {
+          console.warn('Could not decode token to extract user ID:', decodeError.message);
+        }
+
+        if (!userId) {
+          throw new Error('Could not extract user ID from token');
+        }
+
+        // Get user by ID
+        const user = await workos.userManagement.getUser(userId);
         
         if (user) {
           return {

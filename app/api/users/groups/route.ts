@@ -43,6 +43,14 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/users/groups
  * Assign user to groups (admin only)
+ * 
+ * NOTE: If using WorkOS Organizations (WORKOS_USE_ORGANIZATIONS=true),
+ * groups are managed via WorkOS Organizations and should be updated
+ * through WorkOS Dashboard or Organization API. This endpoint will
+ * work in database fallback mode.
+ * 
+ * TODO: Add WorkOS Organization management support for adding/removing
+ * users from organizations programmatically.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -54,6 +62,19 @@ export async function POST(request: NextRequest) {
     const userIsAdmin = await isAdmin();
     if (!userIsAdmin) {
       return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
+    }
+
+    // Check if using WorkOS Organizations
+    const useWorkOSGroups = process.env.WORKOS_USE_ORGANIZATIONS === 'true';
+    
+    if (useWorkOSGroups) {
+      return NextResponse.json(
+        { 
+          error: 'Groups are managed via WorkOS Organizations. Please update organization memberships in WorkOS Dashboard or use the WorkOS Organizations API.',
+          hint: 'Use workos.organizations.createOrganizationMembership() to add users to organizations'
+        },
+        { status: 400 }
+      );
     }
 
     const body = await request.json();

@@ -8,8 +8,8 @@ export default function SignUpPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // SSO doesn't require a separate sign-up page
-    // Redirect to sign-in where users can authenticate with Microsoft
+    // Redirect to sign-in where users can authenticate with SSO or email/password
+    // Both SSO and email/password users can be in the same organization
     router.replace("/auth/signin");
   }, [router]);
 

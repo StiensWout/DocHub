@@ -12,6 +12,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // NOTE: Team sync happens during authentication (signin/callback endpoints)
+    // Not here, because /api/auth/session is called frequently and would cause
+    // unnecessary duplicate syncs. Teams are synced once per login.
+
     return NextResponse.json({
       authenticated: true,
       user: session.user,

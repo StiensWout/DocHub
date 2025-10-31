@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { workos } from '@/lib/workos/server';
+import { getUserGroups } from '@/lib/auth/user-groups';
 
 /**
  * SSO Callback Handler
@@ -60,6 +61,18 @@ export async function GET(request: NextRequest) {
         userId: user.id, 
         email: user.email 
       });
+    }
+
+    // Sync teams from WorkOS organizations immediately after authentication
+    // This ensures teams are created when user first logs in
+    if (process.env.WORKOS_USE_ORGANIZATIONS === 'true') {
+      try {
+        console.log(`[callback] Syncing teams for user ${user.id} after authentication`);
+        await getUserGroups(user.id);
+      } catch (syncError: any) {
+        // Log but don't fail the authentication flow
+        console.warn('[callback] Error syncing teams after auth:', syncError.message);
+      }
     }
 
     // Create a response that redirects to home

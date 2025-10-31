@@ -14,6 +14,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new user in WorkOS
+    // Note: This user can be added to organizations (same as SSO users)
+    // Organization membership is managed separately via WorkOS Dashboard or API
     const user = await workos.userManagement.createUser({
       email,
       password,
@@ -21,6 +23,22 @@ export async function POST(request: NextRequest) {
       lastName: lastName || undefined,
       emailVerified: false, // Will need email verification
     });
+
+    // Optional: If WORKOS_ORGANIZATION_ID is set, automatically add user to organization
+    // This allows email/password users to be in the same organization as SSO users
+    const organizationId = process.env.WORKOS_ORGANIZATION_ID;
+    if (organizationId) {
+      try {
+        await workos.userManagement.createOrganizationMembership({
+          userId: user.id,
+          organizationId: organizationId,
+        });
+        console.log(`✅ Added new user ${user.id} to organization ${organizationId}`);
+      } catch (orgError: any) {
+        // Log but don't fail - user can be added to org later via Dashboard
+        console.warn(`Could not auto-add user to organization: ${orgError.message}`);
+      }
+    }
 
     // Try to authenticate the newly created user
     // Note: If email verification is required, this will fail
