@@ -16,7 +16,11 @@ export async function middleware(request: NextRequest) {
   const sessionToken = request.cookies.get('wos-session')?.value;
 
   // If no session token and trying to access protected route, redirect to sign in
-  if (!sessionToken && pathname !== '/auth/signin' && pathname !== '/auth/signup') {
+  // Only protect specific routes, not the root initially (let client handle it)
+  const protectedRoutes = ['/documents', '/groups', '/api/files'];
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+
+  if (!sessionToken && isProtectedRoute) {
     const signInUrl = new URL('/auth/signin', request.url);
     signInUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(signInUrl);

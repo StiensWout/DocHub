@@ -47,12 +47,36 @@ export default function Home() {
   const [newDocumentAppId, setNewDocumentAppId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   
   // Recent documents hook
   const { recentDocuments, addRecentDocument } = useRecentDocuments();
   
   // Toast notifications
   const toast = useToast();
+
+  // Check authentication status on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/auth/session");
+        const data = await response.json();
+        
+        if (!data.authenticated) {
+          // Redirect to sign in if not authenticated
+          router.push("/auth/signin");
+          return;
+        }
+        
+        setAuthChecked(true);
+      } catch (error) {
+        console.error("Error checking auth:", error);
+        router.push("/auth/signin");
+      }
+    };
+    
+    checkAuth();
+  }, [router]);
 
   // Function to refresh documents without page reload
   const refreshDocuments = async () => {
@@ -319,6 +343,18 @@ export default function Home() {
       }
     }
   }, [recentDocuments, applications]);
+
+  // Don't render content until auth is checked
+  if (!authChecked) {
+    return (
+      <div className="bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite] text-blue-500"></div>
+          <p className="mt-4 text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#0a0a0a] flex">
