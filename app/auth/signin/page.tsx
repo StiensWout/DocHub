@@ -21,44 +21,38 @@ function SignInContent() {
     }
   }, [searchParams]);
 
-  const handleMicrosoftSignIn = () => {
+  const handleMicrosoftSignIn = async () => {
     try {
       setLoading(true);
       setError(null);
       
       // Check if client ID is available
-      const WORKOS_CLIENT_ID = requireWorkOSClientId();
-      
-      if (!WORKOS_CLIENT_ID) {
-        throw new Error('WorkOS Client ID is not configured. Please set NEXT_PUBLIC_WORKOS_CLIENT_ID in your environment variables.');
-      }
+      requireWorkOSClientId();
       
       if (!REDIRECT_URI) {
         throw new Error('Redirect URI is not configured. Please set NEXT_PUBLIC_WORKOS_REDIRECT_URI in your environment variables.');
       }
       
-      // WorkOS AuthKit authorize endpoint for social login
-      // Format: https://api.workos.com/user_management/authorize
-      const params = new URLSearchParams({
-        client_id: WORKOS_CLIENT_ID,
-        redirect_uri: REDIRECT_URI,
-        response_type: 'code',
-        provider: 'microsoft',
-      });
+      // Use server-side API to generate authorization URL
+      // This uses WorkOS SSO getAuthorizationUrl which is correct for Microsoft
+      const response = await fetch(`/api/auth/microsoft?redirect_uri=${encodeURIComponent(REDIRECT_URI)}`);
+      const data = await response.json();
       
-      const authUrl = `https://api.workos.com/user_management/authorize?${params.toString()}`;
+      if (!response.ok) {
+        throw new Error(data.error || data.details || 'Failed to initiate Microsoft SSO');
+      }
       
-      console.log('Redirecting to WorkOS:', {
-        url: authUrl,
-        clientId: WORKOS_CLIENT_ID.substring(0, 10) + '...',
-        redirectUri: REDIRECT_URI,
-      });
+      if (!data.url) {
+        throw new Error('No authorization URL returned from server');
+      }
       
-      // Redirect to WorkOS OAuth flow
-      window.location.href = authUrl;
+      console.log('Redirecting to Microsoft SSO:', data.url);
+      
+      // Redirect to Microsoft SSO
+      window.location.href = data.url;
     } catch (err: any) {
       console.error('Microsoft sign-in error:', err);
-      const errorMessage = err.message || 'OAuth configuration error. Please check your environment variables.';
+      const errorMessage = err.message || 'OAuth configuration error. Please check your environment variables and WorkOS Dashboard configuration.';
       setError(errorMessage);
       setLoading(false);
     }

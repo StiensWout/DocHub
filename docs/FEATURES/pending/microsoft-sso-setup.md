@@ -40,12 +40,16 @@ DocHub is configured to use **Microsoft SSO (Single Sign-On) only** for authenti
 
 ## WorkOS Dashboard Configuration
 
-### Step 1: Enable Microsoft Provider
+### Step 1: Create Microsoft SSO Connection
+
+**Important**: Microsoft SSO uses WorkOS SSO Connections, NOT Social Providers.
 
 1. Log in to [WorkOS Dashboard](https://dashboard.workos.com)
-2. Navigate to **User Management** → **Social Providers**
-3. Find **Microsoft** in the list
-4. Click **Enable** or **Configure**
+2. Navigate to **SSO** → **Connections** (NOT User Management → Social Providers)
+3. Click **Create Connection**
+4. Select **Microsoft Entra ID (Azure AD)** as the connection type
+5. Follow the setup wizard to configure your Microsoft Azure AD connection
+6. **Copy the Connection ID** after creation - you'll need this for environment variables
 
 ### Step 2: Configure Microsoft Azure AD App
 
