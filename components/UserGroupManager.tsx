@@ -27,12 +27,14 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [availableGroups, setAvailableGroups] = useState<string[]>([]);
+  const [availableOrganizations, setAvailableOrganizations] = useState<Array<{ id: string; name: string }>>([]);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [userGroups, setUserGroups] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
       loadUsers();
+      loadOrganizations();
     }
   }, [isOpen]);
 
@@ -48,10 +50,14 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
 
       setUsers(data.users || []);
       
-      // Extract unique groups from all users
+      // Extract unique groups from all users (for backward compatibility)
       const allGroups = new Set<string>();
       (data.users || []).forEach((user: User) => {
         user.groups.forEach(group => allGroups.add(group));
+        // Also add organizations as groups
+        if (user.organizations) {
+          user.organizations.forEach(org => allGroups.add(org.name));
+        }
       });
       setAvailableGroups(Array.from(allGroups).sort());
     } catch (error: any) {
@@ -61,9 +67,34 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
     }
   };
 
+  const loadOrganizations = async () => {
+    try {
+      const response = await fetch('/api/organizations');
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.warn('Failed to load organizations:', data.error);
+        return;
+      }
+
+      setAvailableOrganizations(data.organizations || []);
+    } catch (error: any) {
+      console.error('Error loading organizations:', error);
+    }
+  };
+
   const handleEditUser = (user: User) => {
     setEditingUser(user);
-    setUserGroups([...user.groups]);
+    // Get groups from both user.groups and user.organizations
+    const userGroupsList = [...user.groups];
+    if (user.organizations) {
+      user.organizations.forEach(org => {
+        if (!userGroupsList.includes(org.name)) {
+          userGroupsList.push(org.name);
+        }
+      });
+    }
+    setUserGroups(userGroupsList);
   };
 
   const handleSaveUser = async () => {
@@ -72,18 +103,90 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
     try {
       setSaving(true);
 
-      // Save groups
-      const groupsResponse = await fetch('/api/users/groups', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: editingUser.userId,
-          groups: userGroups,
-        }),
-      });
+      // Get current user's organizations (by name)
+      const currentOrgNames = editingUser.organizations 
+        ? editingUser.organizations.map(org => org.name)
+        : [];
 
-      if (!groupsResponse.ok) {
-        throw new Error('Failed to save user groups');
+      // Find organizations to add and remove
+      const orgsToAdd = userGroups.filter(orgName => !currentOrgNames.includes(orgName));
+      const orgsToRemove = currentOrgNames.filter(orgName => !userGroups.includes(orgName));
+
+      // Get organization IDs from names
+      const orgMap = new Map(availableOrganizations.map(org => [org.name, org.id]));
+      
+      const orgIdsToAdd = orgsToAdd
+        .map(name => ({ name, id: orgMap.get(name) }))
+        .filter(org => org.id) as Array<{ name: string; id: string }>;
+      
+      const orgIdsToRemove = orgsToRemove
+        .map(name => ({ name, id: orgMap.get(name) }))
+        .filter(org => org.id) as Array<{ name: string; id: string }>;
+
+      // Update WorkOS organization memberships
+      const updatePromises: Promise<any>[] = [];
+
+      // Add users to organizations
+      for (const org of orgIdsToAdd) {
+        updatePromises.push(
+          fetch('/api/organizations/membership', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: editingUser.userId,
+              organizationId: org.id,
+              action: 'add',
+            }),
+          })
+        );
+      }
+
+      // Remove users from organizations
+      for (const org of orgIdsToRemove) {
+        updatePromises.push(
+          fetch('/api/organizations/membership', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: editingUser.userId,
+              organizationId: org.id,
+              action: 'remove',
+            }),
+          })
+        );
+      }
+
+      // Execute all updates
+      const results = await Promise.allSettled(updatePromises);
+      
+      // Check for failures
+      const failures = results.filter(r => r.status === 'rejected' || 
+        (r.status === 'fulfilled' && !r.value.ok));
+      
+      if (failures.length > 0) {
+        const errorMessages: string[] = [];
+        for (const failure of failures) {
+          if (failure.status === 'rejected') {
+            errorMessages.push(`Failed: ${failure.reason}`);
+          } else {
+            try {
+              const errorData = await failure.value.json();
+              errorMessages.push(`Failed: ${errorData.error || 'Unknown error'}`);
+            } catch {
+              errorMessages.push(`Failed: Unknown error`);
+            }
+          }
+        }
+        
+        if (failures.length === results.length) {
+          // All failed
+          throw new Error(`Failed to update organization memberships:\n${errorMessages.join('\n')}`);
+        } else {
+          // Partial failure
+          alert(`⚠️ Some updates failed:\n${errorMessages.join('\n')}\n\nPlease check the current state and try again.`);
+        }
+      } else {
+        alert('✅ Organization memberships updated successfully!');
       }
 
       // Refresh users
@@ -92,7 +195,7 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
       setUserGroups([]);
     } catch (error: any) {
       console.error('Error saving user:', error);
-      alert('Failed to save user: ' + error.message);
+      alert('Failed to save user organizations:\n\n' + error.message);
     } finally {
       setSaving(false);
     }
@@ -148,22 +251,6 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
     }
   };
 
-  const toggleGroup = (groupName: string) => {
-    setUserGroups(prev => {
-      if (prev.includes(groupName)) {
-        return prev.filter(g => g !== groupName);
-      } else {
-        return [...prev, groupName];
-      }
-    });
-  };
-
-  const addNewGroup = (groupName: string) => {
-    if (groupName && !availableGroups.includes(groupName)) {
-      setAvailableGroups([...availableGroups, groupName].sort());
-      setUserGroups([...userGroups, groupName]);
-    }
-  };
 
   if (!isOpen) return null;
 
@@ -285,41 +372,39 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
                   {editingUser?.userId === user.userId && (
                     <div className="mt-4 p-4 bg-white/5 rounded-lg border border-blue-500/30">
                       <div className="mb-3">
-                        <label className="text-sm font-semibold mb-2 block">Assign Groups</label>
-                        <div className="flex flex-wrap gap-2">
-                          {availableGroups.map((group) => (
-                            <button
-                              key={group}
-                              onClick={() => toggleGroup(group)}
-                              className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
-                                userGroups.includes(group)
-                                  ? 'bg-blue-500/30 border-blue-500 text-blue-300'
-                                  : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
-                              }`}
-                            >
-                              {group}
-                            </button>
-                          ))}
+                        <label className="text-sm font-semibold mb-2 block">Assign WorkOS Organizations</label>
+                        <select
+                          multiple
+                          value={userGroups}
+                          onChange={(e) => {
+                            const selectedGroups = Array.from(e.target.selectedOptions, option => option.value);
+                            setUserGroups(selectedGroups);
+                          }}
+                          className="w-full min-h-[200px] px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                          size={Math.min(availableOrganizations.length, 8)}
+                        >
+                          {availableOrganizations.length === 0 ? (
+                            <option disabled>No organizations available. Create organizations in WorkOS first.</option>
+                          ) : (
+                            availableOrganizations.map((org) => (
+                              <option
+                                key={org.id}
+                                value={org.name}
+                                className="bg-[#1a1a1a] text-white"
+                              >
+                                {org.name}
+                              </option>
+                            ))
+                          )}
+                        </select>
+                        <div className="mt-2 text-xs text-gray-400">
+                          Hold Ctrl/Cmd to select multiple organizations
                         </div>
                         <div className="mt-3 flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="Add new group name"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                const input = e.target as HTMLInputElement;
-                                if (input.value.trim()) {
-                                  addNewGroup(input.value.trim());
-                                  input.value = '';
-                                }
-                              }
-                            }}
-                            className="flex-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm"
-                          />
                           <button
                             onClick={handleSaveUser}
-                            disabled={saving}
-                            className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 rounded-lg text-sm flex items-center gap-2 disabled:opacity-50"
+                            disabled={saving || availableOrganizations.length === 0}
+                            className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 rounded-lg text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {saving ? (
                               <>
