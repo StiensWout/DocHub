@@ -37,74 +37,25 @@ CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role);
 CREATE INDEX IF NOT EXISTS idx_document_access_groups_doc_id ON document_access_groups(team_document_id);
 CREATE INDEX IF NOT EXISTS idx_document_access_groups_group_name ON document_access_groups(group_name);
 
--- Enable Row Level Security
-ALTER TABLE user_groups ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE document_access_groups ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies
--- Users can see their own groups and roles
-CREATE POLICY "Users can view their own groups" ON user_groups
-  FOR SELECT USING (auth.jwt() ->> 'user_id' = user_id::text);
-
-CREATE POLICY "Users can view their own role" ON user_roles
-  FOR SELECT USING (auth.jwt() ->> 'user_id' = user_id::text);
-
--- Admins can see all
-CREATE POLICY "Admins can view all user groups" ON user_groups
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM user_roles ur 
-      WHERE ur.user_id = (auth.jwt() ->> 'user_id')::text 
-      AND ur.role = 'admin'
-    )
-  );
-
-CREATE POLICY "Admins can manage user groups" ON user_groups
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM user_roles ur 
-      WHERE ur.user_id = (auth.jwt() ->> 'user_id')::text 
-      AND ur.role = 'admin'
-    )
-  );
-
-CREATE POLICY "Admins can view all user roles" ON user_roles
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM user_roles ur 
-      WHERE ur.user_id = (auth.jwt() ->> 'user_id')::text 
-      AND ur.role = 'admin'
-    )
-  );
-
--- Users can view document access groups for documents they have access to
-CREATE POLICY "Users can view document access groups" ON document_access_groups
-  FOR SELECT USING (
-    -- Admin can see all
-    EXISTS (
-      SELECT 1 FROM user_roles ur 
-      WHERE ur.user_id = (auth.jwt() ->> 'user_id')::text 
-      AND ur.role = 'admin'
-    )
-    OR
-    -- User has access if they're in the group
-    EXISTS (
-      SELECT 1 FROM user_groups ug
-      WHERE ug.user_id = (auth.jwt() ->> 'user_id')::text
-      AND ug.group_name = document_access_groups.group_name
-    )
-  );
-
--- Admins can manage document access groups
-CREATE POLICY "Admins can manage document access groups" ON document_access_groups
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM user_roles ur 
-      WHERE ur.user_id = (auth.jwt() ->> 'user_id')::text 
-      AND ur.role = 'admin'
-    )
-  );
+-- Row Level Security is DISABLED for these tables
+-- 
+-- REASON: This application uses WorkOS for authentication, not Supabase Auth.
+-- Supabase RLS policies rely on `auth.jwt() ->> 'user_id'` which only works with Supabase Auth.
+-- 
+-- Authorization is handled at the application level:
+-- - All database access uses `supabaseAdmin` (service role) which bypasses RLS
+-- - Application-level authorization checks are performed using:
+--   - `getSession()` from `lib/auth/session.ts` (WorkOS session)
+--   - `isAdmin()` and `getUserGroups()` from `lib/auth/user-groups.ts`
+--   - API routes enforce authorization before database queries
+-- 
+-- This approach ensures:
+-- - No RLS policy conflicts with WorkOS authentication
+-- - Consistent authorization checks across all API endpoints
+-- - Better control and flexibility for custom access logic
+--
+-- NOTE: If you need to use a non-admin Supabase client in the future,
+-- you should implement application-level authorization checks in your queries.
 
 -- Add updated_at triggers
 CREATE TRIGGER update_user_groups_updated_at BEFORE UPDATE ON user_groups

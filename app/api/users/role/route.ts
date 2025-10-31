@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
-import { isAdmin } from '@/lib/auth/user-groups';
+import { isAdmin, getUserRole } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
 
 /**
@@ -39,15 +39,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Otherwise return current user's role
-    const role = await isAdmin(session.user.id) ? 'admin' : 'user';
-    
-    const { data } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', session.user.id)
-      .single();
+    const role = await getUserRole(session.user.id);
 
-    return NextResponse.json({ role: data?.role || 'user' });
+    return NextResponse.json({ role });
   } catch (error: any) {
     console.error('Error getting user role:', error);
     return NextResponse.json(
