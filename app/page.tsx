@@ -167,6 +167,7 @@ function HomeContent() {
       ]);
       
       // Filter teams based on user's groups (unless admin)
+      // Admin users see all teams, regular users see only their teams
       let filteredTeams = allTeamsData;
       if (!adminStatus) {
         try {
@@ -191,6 +192,10 @@ function HomeContent() {
           // On error, show no teams to be safe
           filteredTeams = [];
         }
+      } else {
+        // Admin: Show all teams (no filtering needed)
+        console.log('[page] Admin user detected - showing all teams:', allTeamsData.length);
+        filteredTeams = allTeamsData;
       }
       
       setTeams(filteredTeams);

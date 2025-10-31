@@ -160,6 +160,9 @@ export async function getUserGroups(userId: string): Promise<string[]> {
 
 /**
  * Check if user is admin
+ * 
+ * When WORKOS_USE_ORGANIZATIONS=true, checks WorkOS organization memberships
+ * Otherwise, checks database user_roles table
  */
 export async function isAdmin(userId?: string): Promise<boolean> {
   try {
@@ -167,7 +170,23 @@ export async function isAdmin(userId?: string): Promise<boolean> {
     if (!session) return false;
 
     const targetUserId = userId || session.user.id;
+    const useWorkOSGroups = process.env.WORKOS_USE_ORGANIZATIONS === 'true';
 
+    // If using WorkOS Organizations, check admin organization membership
+    if (useWorkOSGroups) {
+      try {
+        const isInAdminOrg = await isUserInAdminOrganization(targetUserId);
+        if (isInAdminOrg) {
+          return true;
+        }
+        // Fall through to database check as backup
+      } catch (error: any) {
+        console.warn('Error checking WorkOS admin organization, falling back to database:', error.message);
+        // Fall through to database check
+      }
+    }
+
+    // Database role check (fallback or when not using WorkOS Organizations)
     const { data, error } = await supabaseAdmin
       .from('user_roles')
       .select('role')
@@ -192,6 +211,9 @@ export async function isAdmin(userId?: string): Promise<boolean> {
 
 /**
  * Get user's role
+ * 
+ * When WORKOS_USE_ORGANIZATIONS=true, checks WorkOS organization memberships
+ * Otherwise, checks database user_roles table
  */
 export async function getUserRole(userId?: string): Promise<'admin' | 'user'> {
   try {
@@ -199,7 +221,23 @@ export async function getUserRole(userId?: string): Promise<'admin' | 'user'> {
     if (!session) return 'user';
 
     const targetUserId = userId || session.user.id;
+    const useWorkOSGroups = process.env.WORKOS_USE_ORGANIZATIONS === 'true';
 
+    // If using WorkOS Organizations, check admin organization membership
+    if (useWorkOSGroups) {
+      try {
+        const isInAdminOrg = await isUserInAdminOrganization(targetUserId);
+        if (isInAdminOrg) {
+          return 'admin';
+        }
+        // Fall through to database check as backup
+      } catch (error: any) {
+        console.warn('Error checking WorkOS admin organization, falling back to database:', error.message);
+        // Fall through to database check
+      }
+    }
+
+    // Database role check (fallback or when not using WorkOS Organizations)
     const { data, error } = await supabaseAdmin
       .from('user_roles')
       .select('role')
