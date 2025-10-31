@@ -1,6 +1,5 @@
-# Bug Fix & Performance Optimization TODO List
+# Project TODO List
 
-**Based on:** [BUG_LIST.md](./BUG_LIST.md)  
 **Last Updated:** $(date)  
 **Status:** 📋 Active Development
 
@@ -8,14 +7,16 @@
 - [BUG_LIST.md](./BUG_LIST.md) - Detailed bug descriptions
 - [BUG_REPORTS.md](./BUG_REPORTS.md) - User bug reports staging area
 
-This comprehensive TODO list covers bug fixes, security improvements, and performance optimizations. Check off items as you complete them.
+This comprehensive TODO list covers bug fixes, optimizations, infrastructure improvements, and all development tasks. Check off items as you complete them.
 
 ## 📋 Table of Contents
 
-- [🔴 Critical Priority](#-critical-priority---fix-immediately)
-- [🟠 High Priority](#-high-priority---fix-soon)
-- [🟡 Medium Priority](#-medium-priority---plan-for-next-sprint)
-- [🟢 Low Priority](#-low-priority---technical-debt)
+- [🔴 Critical Priority - Fix Immediately](#-critical-priority---fix-immediately)
+- [🟠 High Priority - Fix Soon](#-high-priority---fix-soon)
+- [🟡 Medium Priority - Plan for Next Sprint](#-medium-priority---plan-for-next-sprint)
+- [🟢 Low Priority - Technical Debt](#-low-priority---technical-debt)
+- [🏗️ Infrastructure & DevOps](#️-infrastructure--devops)
+- [🎨 Rebranding & Migration](#-rebranding--migration)
 - [⚡ Performance Optimizations](#-performance-optimizations)
 - [🧪 Testing](#-testing-checklist)
 - [📊 Progress Tracking](#-progress-tracking)
@@ -756,6 +757,149 @@ This comprehensive TODO list covers bug fixes, security improvements, and perfor
 
 ---
 
+## 🏗️ INFRASTRUCTURE & DEVOPS
+
+### Task #1: Upgrade Framework/Packages to Latest Versions
+**Priority:** 🟡 MEDIUM
+**Category:** Infrastructure / Security
+**Files:** `package.json`, All dependencies
+
+- [ ] Audit current package versions:
+  - [ ] Review all dependencies in `package.json`
+  - [ ] Check for security vulnerabilities (`npm audit`)
+  - [ ] Identify packages with major version updates available
+- [ ] Create upgrade plan:
+  - [ ] Group packages by update complexity (major/minor/patch)
+  - [ ] Identify breaking changes in major updates
+  - [ ] Plan testing strategy for each upgrade
+- [ ] Upgrade packages incrementally:
+  - [ ] Start with patch updates (lowest risk)
+  - [ ] Then minor updates (moderate risk)
+  - [ ] Finally major updates (requires testing)
+- [ ] Critical packages to review:
+  - [ ] Next.js (currently ^14.2.0)
+  - [ ] React & React-DOM (currently ^18.3.0)
+  - [ ] TypeScript (currently ^5.5.0)
+  - [ ] @workos-inc/node (currently ^7.72.1)
+  - [ ] @supabase/supabase-js (currently ^2.39.0)
+  - [ ] Winston (currently ^3.18.3)
+- [ ] Ensure stable user experience after upgrade:
+  - [ ] Test all major features after each upgrade
+  - [ ] Verify authentication flow
+  - [ ] Verify file upload/download
+  - [ ] Verify document editing
+  - [ ] Check for breaking changes in dependencies
+- [ ] Update documentation:
+  - [ ] Document version changes in CHANGELOG
+  - [ ] Update README with new requirements
+
+**Estimated Time:** 4-6 hours
+**Risk Level:** Medium - Requires thorough testing
+
+---
+
+### Task #2: Database Installation/Upgrade/Migration Flow
+**Priority:** 🟡 MEDIUM
+**Category:** Infrastructure / DevOps
+**Files:** `scripts/`, Database schema files
+
+- [ ] Create fresh database installation script:
+  - [ ] Script to create all tables from scratch
+  - [ ] Script to insert initial seed data
+  - [ ] Script to set up indexes and constraints
+  - [ ] Document required environment variables
+- [ ] Create database validation script:
+  - [ ] Script to check current database schema version
+  - [ ] Compare current schema with expected schema
+  - [ ] Identify missing tables, columns, indexes
+  - [ ] Generate migration plan
+- [ ] Create migration system:
+  - [ ] Script to dynamically validate database schema
+  - [ ] Auto-detect required changes for new version
+  - [ ] Apply migrations incrementally
+  - [ ] Rollback capability for failed migrations
+  - [ ] Migration logging/tracking
+- [ ] Investigate alternative database types:
+  - [ ] Research PostgreSQL alternatives (if applicable)
+  - [ ] Assess compatibility with Supabase
+  - [ ] Evaluate migration effort
+  - [ ] Document findings
+
+**Estimated Time:** 6-8 hours
+**Risk Level:** Medium - Critical for deployment
+
+---
+
+### Task #3: Versioning System Implementation
+**Priority:** 🟡 MEDIUM
+**Category:** Infrastructure / DevOps
+**Files:** `package.json`, Version display component, CI/CD configs
+
+- [ ] Set up semantic versioning:
+  - [ ] Define version format (SemVer: MAJOR.MINOR.PATCH)
+  - [ ] Initialize version in `package.json` (currently 0.1.0)
+  - [ ] Create versioning strategy document
+- [ ] Display version in application:
+  - [ ] Add version component to UI (footer or debug panel)
+  - [ ] Display version in admin/settings area
+  - [ ] Include version in API responses (optional)
+  - [ ] Make version easily accessible for debugging
+- [ ] Implement release management:
+  - [ ] Create release workflow/process
+  - [ ] Combine features/sprints into versioned releases
+  - [ ] Set priority list for version releases
+  - [ ] Create CHANGELOG.md with version history
+- [ ] Deployment improvements:
+  - [ ] Document production deployment process
+  - [ ] Create deployment scripts/automation
+  - [ ] Set up environment-specific configurations
+  - [ ] Create rollback procedures
+  - [ ] Document staging/production workflow
+
+**Estimated Time:** 4-6 hours
+**Risk Level:** Low
+
+---
+
+## 🎨 REBRANDING & MIGRATION
+
+### Task #4: GitHub Migration - DLWait to DocHub Rebranding
+**Priority:** 🟠 HIGH (Before public release)
+**Category:** Rebranding / Migration
+**Files:** All files (global search/replace), GitHub settings, Local directory
+
+- [ ] Prepare for GitHub repository migration:
+  - [ ] Audit all references to "DLWait" / "dlwait" in codebase
+  - [ ] Create migration checklist
+  - [ ] Document all locations that need updating
+- [ ] Update codebase branding:
+  - [ ] Replace "dlwait" with "dochub" in package.json
+  - [ ] Update all file references
+  - [ ] Update all string references in code
+  - [ ] Update environment variable names if needed
+  - [ ] Update documentation and README
+- [ ] Update GitHub repository:
+  - [ ] Rename repository from dlwait to dochub (or create new repo)
+  - [ ] Update repository description
+  - [ ] Update repository topics/tags
+  - [ ] Update GitHub Pages if applicable
+  - [ ] Update webhook URLs if any
+- [ ] Local directory migration:
+  - [ ] Create migration script for local directory rename
+  - [ ] Update all absolute path references
+  - [ ] Update git remote URLs
+  - [ ] Update local development setup instructions
+- [ ] Update external references:
+  - [ ] Update CI/CD pipeline references
+  - [ ] Update deployment scripts
+  - [ ] Update documentation sites
+  - [ ] Update any external integrations
+
+**Estimated Time:** 2-4 hours
+**Risk Level:** Medium - Requires careful coordination
+
+---
+
 ## 🟢 LOW PRIORITY - Technical Debt
 
 ### Bug #15: Code Duplication
@@ -1203,11 +1347,16 @@ After fixing each bug category, ensure:
 ## 📊 Progress Tracking
 
 ### Bug Fixes
-**Total Bugs:** 23
+**Total Bugs:** 29
 - **Critical:** 3 bugs (all fixed ✅)
 - **High Priority:** 6 bugs (all fixed ✅: Bug #4, Bug #5, Bug #6, Bug #7, Bug #21, Bug #22)
-- **Medium Priority:** 9 bugs (8 existing + Bug #23)
-- **Low Priority:** 5 bugs
+- **Medium Priority:** 10 bugs (Bug #8 ✅, Bug #9, Bug #10, Bug #11, Bug #12, Bug #13, Bug #14, Bug #23, Bug #24, Bug #25 ✅, Bug #26 ✅, Bug #27, Bug #28, Bug #29 ⚠️)
+- **Low Priority:** 5 bugs (Bug #15, Bug #16, Bug #17, Bug #18, Bug #19, Bug #20)
+
+### Infrastructure & DevOps Tasks
+**Total Tasks:** 4
+- **High Priority:** 1 task (Task #4: GitHub Migration/Rebranding)
+- **Medium Priority:** 3 tasks (Task #1: Package Upgrades, Task #2: Database Migrations, Task #3: Versioning)
 
 ### Performance Optimizations
 **Total Performance Items:** 12
@@ -1224,17 +1373,19 @@ After fixing each bug category, ensure:
 - **Monitoring:** Performance tracking setup
 
 ### Time Estimates
-- **Bug Fixes:** ~60-80 hours
+- **Bug Fixes:** ~70-90 hours
+- **Infrastructure & DevOps:** ~16-22 hours
 - **Performance Optimizations:** ~35-45 hours
-- **Total Estimated Time:** ~95-125 hours
+- **Total Estimated Time:** ~121-157 hours
 
 ### Progress Summary
 - [x] Critical bugs fixed: 3/3 (Bug #1, Bug #2, and Bug #3 completed) ✅ ALL CRITICAL BUGS FIXED
 - [x] High priority bugs fixed: 6/6 (Bug #4, Bug #5, Bug #6, Bug #7, Bug #21, and Bug #22 completed) ✅ ALL HIGH PRIORITY BUGS FIXED
-- [ ] Medium priority bugs fixed: 0/9 (8 existing + Bug #23)
+- [ ] Medium priority bugs fixed: 3/14 (Bug #8 ✅, Bug #25 ✅, Bug #26 ✅)
 - [ ] Low priority bugs fixed: 0/5
+- [ ] Infrastructure & DevOps tasks: 0/4
 - [ ] Performance optimizations: 0/12
-- [ ] Overall completion: 39% (9/23 bugs fixed)
+- [ ] Overall completion: 31% (12/38 total tasks)
 
 ### Key Metrics to Track
 - **Before/After Lighthouse Scores:** TBD
