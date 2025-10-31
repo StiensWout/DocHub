@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session';
 import { isAdmin, getAllUsers } from '@/lib/auth/user-groups';
 import { getUserOrganizationMemberships } from '@/lib/workos/organizations';
 import { getAllLocalUsers } from '@/lib/workos/user-sync';
+import { log } from '@/lib/logger';
 
 /**
  * GET /api/users/all
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
           try {
             memberships = await getUserOrganizationMemberships(user.userId, true);
           } catch (error: any) {
-            console.warn(`Could not fetch memberships for user ${user.userId}:`, error.message);
+            log.warn(`Could not fetch memberships for user ${user.userId}:`, error.message);
           }
 
           return {
@@ -51,14 +52,37 @@ export async function GET(request: NextRequest) {
             emailVerified: localUser?.email_verified || false,
             profilePictureUrl: localUser?.profile_picture_url,
             lastSyncedAt: localUser?.last_synced_at,
-            organizations: memberships.map(m => ({
-              id: m.organizationId,
-              name: m.organizationName,
-              role: typeof m.role === 'string' ? m.role : (m.role as any)?.slug || (m.role as any)?.name || '',
-            })),
+            organizations: memberships.map(m => {
+              // Extract role properly - handle both string and object
+              let roleValue = '';
+              if (m.role) {
+                if (typeof m.role === 'string') {
+                  roleValue = m.role;
+                } else if (typeof m.role === 'object') {
+                  // Try to extract slug, name, or id from role object
+                  roleValue = (m.role as any)?.slug || (m.role as any)?.name || (m.role as any)?.id || '';
+                  // If still empty, try to stringify
+                  if (!roleValue) {
+                    try {
+                      roleValue = JSON.stringify(m.role);
+                    } catch {
+                      roleValue = String(m.role);
+                    }
+                  }
+                } else {
+                  roleValue = String(m.role);
+                }
+              }
+              
+              return {
+                id: m.organizationId,
+                name: m.organizationName,
+                role: roleValue,
+              };
+            }),
           };
         } catch (error: any) {
-          console.error(`Error enriching user ${user.userId}:`, error);
+          log.error(`Error enriching user ${user.userId}:`, error);
           return user;
         }
       })
@@ -66,7 +90,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ users: enrichedUsers });
   } catch (error: any) {
-    console.error('Error getting all users:', error);
+    log.error('Error getting all users:', error);
     return NextResponse.json(
       { error: 'Failed to get users' },
       { status: 500 }

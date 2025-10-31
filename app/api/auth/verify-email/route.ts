@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { workos } from '@/lib/workos/server';
+import { log } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error: any) {
-    console.error('Email verification error:', error);
+    log.error('Email verification error:', error);
     
     if (error.status === 400 || error.status === 401) {
       return NextResponse.json(

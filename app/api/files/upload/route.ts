@@ -1,29 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
-
-// Maximum file size: 50MB
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
-
-// Allowed file types
-const ALLOWED_FILE_TYPES = [
-  // Documents
-  "application/pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // DOCX
-  "application/msword", // DOC
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // XLSX
-  "application/vnd.ms-excel", // XLS
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation", // PPTX
-  "application/vnd.ms-powerpoint", // PPT
-  "text/plain", // TXT
-  "text/markdown", // MD
-  // Images
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-  "image/svg+xml",
-];
+import {
+  validateFileTypeAndExtension,
+  validateFileSize,
+  validateFilename,
+  sanitizeFilename,
+  validateStoragePath,
+  MAX_FILE_SIZE,
+} from "@/lib/constants/file-validation";
+import { log } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
@@ -74,24 +59,39 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
+    const sizeValidation = validateFileSize(file.size);
+    if (!sizeValidation.valid) {
       return NextResponse.json(
-        { error: `File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit` },
+        { error: sizeValidation.error },
         { status: 400 }
       );
     }
 
-    // Validate file type
-    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+    // Validate filename for security issues (path traversal, length, etc.)
+    const filenameValidation = validateFilename(file.name);
+    if (!filenameValidation.valid) {
       return NextResponse.json(
-        { error: "File type not allowed" },
+        { error: filenameValidation.error },
         { status: 400 }
       );
     }
 
-    // Generate unique file path
+    // Validate file type and extension
+    const typeValidation = validateFileTypeAndExtension(
+      file.name,
+      file.type
+    );
+    if (!typeValidation.valid) {
+      return NextResponse.json(
+        { error: typeValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Sanitize and generate unique file path
     const fileId = crypto.randomUUID();
-    const fileName = `${fileId}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+    const sanitizedFilename = sanitizeFilename(file.name);
+    const fileName = `${fileId}_${sanitizedFilename}`;
     
     // Build storage path based on upload type
     let storagePath: string;
@@ -122,6 +122,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate final storage path structure
+    const pathValidation = validateStoragePath(storagePath);
+    if (!pathValidation.valid) {
+      return NextResponse.json(
+        { error: pathValidation.error },
+        { status: 400 }
+      );
+    }
+
     // Upload file to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from("documents")
@@ -131,7 +140,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error("Storage upload error:", uploadError);
+      log.error("Storage upload error:", uploadError);
       return NextResponse.json(
         { error: "Failed to upload file to storage" },
         { status: 500 }
@@ -173,7 +182,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (dbError) {
-      console.error("Database insert error:", dbError);
+      log.error("Database insert error:", dbError);
       // Try to clean up uploaded file
       await supabaseAdmin.storage.from("documents").remove([storagePath]);
       return NextResponse.json(
@@ -191,7 +200,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("File upload error:", error);
+    log.error("File upload error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session';
 import { getUserOrganizationMemberships } from '@/lib/workos/organizations';
 import { isUserInAdminOrganization } from '@/lib/workos/team-sync';
 import { isAdmin, getUserRole } from '@/lib/auth/user-groups';
+import { log } from '@/lib/logger';
 
 /**
  * GET /api/debug/admin-status
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Error checking admin status:', error);
+    log.error('Error checking admin status:', error);
     return NextResponse.json(
       { error: 'Failed to check admin status', details: error.message },
       { status: 500 }

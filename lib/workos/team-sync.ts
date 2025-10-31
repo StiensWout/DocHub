@@ -2,6 +2,7 @@ import { workos } from './server';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { getUserOrganizationMemberships, getOrganization } from './organizations';
 import { getUserSubgroupsInOrganization, ensureSubgroupTeam } from './subgroups';
+import { log } from '@/lib/logger';
 
 /**
  * Team sync utilities
@@ -16,11 +17,11 @@ import { getUserSubgroupsInOrganization, ensureSubgroupTeam } from './subgroups'
  * Creates the team if it doesn't exist, returns existing team if it does
  */
 export async function ensureTeamForOrganization(organizationName: string, organizationId?: string): Promise<string | null> {
-  console.log(`[ensureTeamForOrganization] Checking team for org: name="${organizationName}", id="${organizationId}"`);
+  log.debug(`[ensureTeamForOrganization] Checking team for org: name="${organizationName}", id="${organizationId}"`);
   
   try {
     // First, check if team already exists by name
-    console.log(`[ensureTeamForOrganization] Checking if team "${organizationName}" already exists`);
+    log.debug(`[ensureTeamForOrganization] Checking if team "${organizationName}" already exists`);
     const { data: existingTeam, error: checkError } = await supabaseAdmin
       .from('teams')
       .select('id, name, workos_organization_id')
@@ -28,30 +29,30 @@ export async function ensureTeamForOrganization(organizationName: string, organi
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
-      console.error(`[ensureTeamForOrganization] Error checking for existing team:`, checkError);
+      log.error(`[ensureTeamForOrganization] Error checking for existing team:`, checkError);
     }
 
     if (existingTeam) {
-      console.log(`[ensureTeamForOrganization] Team "${organizationName}" already exists with ID: ${existingTeam.id}`);
+      log.debug(`[ensureTeamForOrganization] Team "${organizationName}" already exists with ID: ${existingTeam.id}`);
       // Team exists - update workos_organization_id if provided and different
       if (organizationId && existingTeam.workos_organization_id !== organizationId) {
-        console.log(`[ensureTeamForOrganization] Updating workos_organization_id from ${existingTeam.workos_organization_id} to ${organizationId}`);
+        log.debug(`[ensureTeamForOrganization] Updating workos_organization_id from ${existingTeam.workos_organization_id} to ${organizationId}`);
         const { error: updateError } = await supabaseAdmin
           .from('teams')
           .update({ workos_organization_id: organizationId })
           .eq('id', existingTeam.id);
         
         if (updateError) {
-          console.error(`[ensureTeamForOrganization] Error updating workos_organization_id:`, updateError);
+          log.error(`[ensureTeamForOrganization] Error updating workos_organization_id:`, updateError);
         } else {
-          console.log(`[ensureTeamForOrganization] Successfully updated workos_organization_id`);
+          log.debug(`[ensureTeamForOrganization] Successfully updated workos_organization_id`);
         }
       }
       return existingTeam.id;
     }
 
     // Team doesn't exist - create it
-    console.log(`[ensureTeamForOrganization] Team "${organizationName}" does not exist, creating new team`);
+    log.debug(`[ensureTeamForOrganization] Team "${organizationName}" does not exist, creating new team`);
     const { data: newTeam, error } = await supabaseAdmin
       .from('teams')
       .insert({
@@ -62,8 +63,8 @@ export async function ensureTeamForOrganization(organizationName: string, organi
       .single();
 
     if (error) {
-      console.error(`[ensureTeamForOrganization] Error creating team "${organizationName}":`, error);
-      console.error(`[ensureTeamForOrganization] Error details:`, {
+      log.error(`[ensureTeamForOrganization] Error creating team "${organizationName}":`, error);
+      log.error(`[ensureTeamForOrganization] Error details:`, {
         code: error.code,
         message: error.message,
         details: error.details,
@@ -72,11 +73,11 @@ export async function ensureTeamForOrganization(organizationName: string, organi
       return null;
     }
 
-    console.log(`[ensureTeamForOrganization] ✅ Created team "${organizationName}" (ID: ${newTeam.id}) for WorkOS organization ${organizationId || 'N/A'}`);
+    log.info(`[ensureTeamForOrganization] ✅ Created team "${organizationName}" (ID: ${newTeam.id}) for WorkOS organization ${organizationId || 'N/A'}`);
     return newTeam.id;
   } catch (error: any) {
-    console.error(`[ensureTeamForOrganization] Exception creating team "${organizationName}":`, error);
-    console.error(`[ensureTeamForOrganization] Exception stack:`, error.stack);
+    log.error(`[ensureTeamForOrganization] Exception creating team "${organizationName}":`, error);
+    log.error(`[ensureTeamForOrganization] Exception stack:`, error.stack);
     return null;
   }
 }
@@ -89,32 +90,32 @@ export async function ensureTeamForOrganization(organizationName: string, organi
  * @param cachedMemberships - Optional cached memberships to avoid redundant API calls
  */
 export async function syncTeamsFromUserOrganizations(userId: string, cachedMemberships?: any[]): Promise<string[]> {
-  console.log(`[syncTeamsFromUserOrganizations] Starting sync for userId: ${userId}`);
+  log.debug(`[syncTeamsFromUserOrganizations] Starting sync for userId: ${userId}`);
   
   try {
     // Get user's organization memberships (use cache or cached parameter)
     const memberships = cachedMemberships || await getUserOrganizationMemberships(userId, true);
-    console.log(`[syncTeamsFromUserOrganizations] Found ${memberships?.length || 0} organization memberships:`, 
+    log.debug(`[syncTeamsFromUserOrganizations] Found ${memberships?.length || 0} organization memberships:`, 
       memberships?.map(m => `${m.organizationName} (${m.organizationId})`));
     
     if (!memberships || memberships.length === 0) {
-      console.log(`[syncTeamsFromUserOrganizations] No organization memberships found for user ${userId}`);
+      log.debug(`[syncTeamsFromUserOrganizations] No organization memberships found for user ${userId}`);
       return [];
     }
 
     const teamIds: string[] = [];
 
     // For each organization membership, ensure a team exists
-    console.log(`[syncTeamsFromUserOrganizations] Processing ${memberships.length} organization memberships`);
+    log.debug(`[syncTeamsFromUserOrganizations] Processing ${memberships.length} organization memberships`);
     for (let i = 0; i < memberships.length; i++) {
       const membership = memberships[i];
-      console.log(`[syncTeamsFromUserOrganizations] Processing membership ${i + 1}/${memberships.length}: ${membership.organizationName} (${membership.organizationId})`);
+      log.debug(`[syncTeamsFromUserOrganizations] Processing membership ${i + 1}/${memberships.length}: ${membership.organizationName} (${membership.organizationId})`);
       
       try {
         // Get organization details to ensure we have the name
         const org = await getOrganization(membership.organizationId);
         if (!org) {
-          console.warn(`[syncTeamsFromUserOrganizations] Organization ${membership.organizationId} not found, skipping`);
+          log.warn(`[syncTeamsFromUserOrganizations] Organization ${membership.organizationId} not found, skipping`);
           continue;
         }
 
@@ -129,27 +130,27 @@ export async function syncTeamsFromUserOrganizations(userId: string, cachedMembe
         // Create teams ONLY for subgroups (not the parent org)
         for (const subgroup of subgroups) {
           if (subgroup.isSubgroup) {
-            console.log(`[syncTeamsFromUserOrganizations] Creating subgroup team: "${subgroup.name}"`);
+            log.debug(`[syncTeamsFromUserOrganizations] Creating subgroup team: "${subgroup.name}"`);
             const subgroupTeamId = await ensureSubgroupTeam(subgroup.name, membership.organizationId, org.name);
             if (subgroupTeamId) {
-              console.log(`[syncTeamsFromUserOrganizations] ✅ Subgroup team created/found: ${subgroupTeamId} for "${subgroup.name}"`);
+              log.debug(`[syncTeamsFromUserOrganizations] ✅ Subgroup team created/found: ${subgroupTeamId} for "${subgroup.name}"`);
               teamIds.push(subgroupTeamId);
             }
           }
         }
         
-        console.log(`[syncTeamsFromUserOrganizations] Organization "${org.name}" serves as parent - teams are subgroups only`);
+        log.debug(`[syncTeamsFromUserOrganizations] Organization "${org.name}" serves as parent - teams are subgroups only`);
       } catch (error: any) {
-        console.error(`[syncTeamsFromUserOrganizations] Error syncing team for organization ${membership.organizationId}:`, error);
-        console.error(`[syncTeamsFromUserOrganizations] Error stack:`, error.stack);
+        log.error(`[syncTeamsFromUserOrganizations] Error syncing team for organization ${membership.organizationId}:`, error);
+        log.error(`[syncTeamsFromUserOrganizations] Error stack:`, error.stack);
       }
     }
 
-    console.log(`[syncTeamsFromUserOrganizations] ✅ Sync complete. Created/found ${teamIds.length} teams:`, teamIds);
+    log.info(`[syncTeamsFromUserOrganizations] ✅ Sync complete. Created/found ${teamIds.length} teams:`, teamIds);
     return teamIds;
   } catch (error: any) {
-    console.error(`[syncTeamsFromUserOrganizations] Exception syncing teams from user organizations:`, error);
-    console.error(`[syncTeamsFromUserOrganizations] Exception stack:`, error.stack);
+    log.error(`[syncTeamsFromUserOrganizations] Exception syncing teams from user organizations:`, error);
+    log.error(`[syncTeamsFromUserOrganizations] Exception stack:`, error.stack);
     return [];
   }
 }
@@ -161,12 +162,12 @@ export async function syncTeamsFromUserOrganizations(userId: string, cachedMembe
 export async function isUserInAdminOrganization(userId: string, cachedMemberships?: any[]): Promise<boolean> {
   try {
     const adminOrgName = process.env.WORKOS_ADMIN_ORGANIZATION_NAME || 'admin';
-    console.log(`[isUserInAdminOrganization] Checking admin status for user ${userId}`);
-    console.log(`[isUserInAdminOrganization] Looking for organization name: "${adminOrgName}" (case-insensitive)`);
+    log.debug(`[isUserInAdminOrganization] Checking admin status for user ${userId}`);
+    log.debug(`[isUserInAdminOrganization] Looking for organization name: "${adminOrgName}" (case-insensitive)`);
     
     // Use cached memberships if provided, otherwise fetch (will use cache)
     const memberships = cachedMemberships || await getUserOrganizationMemberships(userId, true);
-    console.log(`[isUserInAdminOrganization] Found ${memberships.length} organization memberships:`, 
+    log.debug(`[isUserInAdminOrganization] Found ${memberships.length} organization memberships:`, 
       memberships.map(m => `${m.organizationName} (role: ${typeof m.role === 'string' ? m.role : JSON.stringify(m.role)})`));
     
     // Check 1: Is user in an organization named "admin"?
@@ -178,10 +179,10 @@ export async function isUserInAdminOrganization(userId: string, cachedMembership
       const matchingOrg = memberships.find(m => 
         m.organizationName.toLowerCase() === adminOrgName.toLowerCase()
       );
-      console.log(`[isUserInAdminOrganization] ✅ User IS in admin organization: "${matchingOrg?.organizationName}"`);
+      log.debug(`[isUserInAdminOrganization] ✅ User IS in admin organization: "${matchingOrg?.organizationName}"`);
       return true;
     }
-    
+
     // Check 2: Does user have a role/team called "admin" in any organization?
     // This is a fallback - if user has role "admin" anywhere, treat them as admin
     for (const membership of memberships) {
@@ -195,18 +196,18 @@ export async function isUserInAdminOrganization(userId: string, cachedMembership
       }
       
       if (roleName && roleName.toLowerCase() === 'admin') {
-        console.log(`[isUserInAdminOrganization] ✅ User has admin role/team in organization "${membership.organizationName}"`);
+        log.debug(`[isUserInAdminOrganization] ✅ User has admin role/team in organization "${membership.organizationName}"`);
         return true;
       }
     }
     
-    console.log(`[isUserInAdminOrganization] ❌ User is NOT in admin organization or has admin role. Expected org: "${adminOrgName}"`);
-    console.log(`[isUserInAdminOrganization] User's organizations and roles:`, 
+    log.debug(`[isUserInAdminOrganization] ❌ User is NOT in admin organization or has admin role. Expected org: "${adminOrgName}"`);
+    log.debug(`[isUserInAdminOrganization] User's organizations and roles:`, 
       memberships.map(m => `${m.organizationName} (role: ${typeof m.role === 'string' ? m.role : JSON.stringify(m.role)})`));
     
     return false;
   } catch (error: any) {
-    console.error('[isUserInAdminOrganization] Error checking admin organization membership:', error);
+    log.error('[isUserInAdminOrganization] Error checking admin organization membership:', error);
     return false;
   }
 }
@@ -275,7 +276,7 @@ export async function getUserAccessibleTeams(userId: string): Promise<Array<{ id
       return (teams || []).map(t => ({ id: t.id, name: t.name }));
     }
   } catch (error: any) {
-    console.error('Error getting user accessible teams:', error);
+    log.error('Error getting user accessible teams:', error);
     return [];
   }
 }

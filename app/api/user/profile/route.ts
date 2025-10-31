@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session';
 import { getUserGroups, getUserRole, isAdmin } from '@/lib/auth/user-groups';
 import { getUserOrganizationMemberships } from '@/lib/workos/organizations';
 import { workos } from '@/lib/workos/server';
+import { log } from '@/lib/logger';
 
 /**
  * GET /api/user/profile
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
         createdAt: createdAtStr,
       };
     } catch (error: any) {
-      console.error('Error fetching user from WorkOS:', error);
+      log.error('Error fetching user from WorkOS:', error);
       // Fallback to session data
       userDetails = {
         id: session.user.id,
@@ -98,7 +99,7 @@ export async function GET(request: NextRequest) {
       }),
     });
   } catch (error: any) {
-    console.error('Error getting user profile:', error);
+    log.error('Error getting user profile:', error);
     return NextResponse.json(
       { error: 'Failed to get user profile' },
       { status: 500 }

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
+import { log } from "@/lib/logger";
 
 export interface DocumentTemplate {
   id: string;
@@ -20,7 +21,7 @@ export async function getTemplates(appId?: string): Promise<DocumentTemplate[]> 
   const { data, error } = await query;
 
   if (error) {
-    console.error("Error fetching templates:", error);
+    log.error("Error fetching templates:", error);
     return [];
   }
 

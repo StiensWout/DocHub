@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { getUserOrganizationMemberships } from '@/lib/workos/organizations';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { log } from '@/lib/logger';
 
 /**
  * GET /api/user/organizations
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
       organizations: organizationsWithTeams,
     });
   } catch (error: any) {
-    console.error('Error getting user organizations:', error);
+    log.error('Error getting user organizations:', error);
     return NextResponse.json(
       { error: 'Failed to get user organizations' },
       { status: 500 }

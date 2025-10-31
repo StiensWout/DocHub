@@ -17,6 +17,12 @@ interface User {
   }>;
 }
 
+interface OrganizationWithRoles {
+  id: string;
+  name: string;
+  roles: string[]; // Available roles in this organization
+}
+
 interface UserGroupManagerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -27,12 +33,15 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [availableGroups, setAvailableGroups] = useState<string[]>([]);
+  const [availableOrganizations, setAvailableOrganizations] = useState<Array<{ id: string; name: string }>>([]);
+  const [availableRoles, setAvailableRoles] = useState<string[]>([]); // Available roles across all organizations
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [userGroups, setUserGroups] = useState<string[]>([]);
+  const [userGroups, setUserGroups] = useState<string[]>([]); // Format: "orgId:role" or "orgName" for backward compatibility
 
   useEffect(() => {
     if (isOpen) {
       loadUsers();
+      loadOrganizations();
     }
   }, [isOpen]);
 
@@ -48,12 +57,37 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
 
       setUsers(data.users || []);
       
-      // Extract unique groups from all users
+      // Extract unique groups from all users (for backward compatibility)
       const allGroups = new Set<string>();
       (data.users || []).forEach((user: User) => {
         user.groups.forEach(group => allGroups.add(group));
+        // Also add organizations as groups
+        if (user.organizations) {
+          user.organizations.forEach(org => allGroups.add(org.name));
+        }
       });
       setAvailableGroups(Array.from(allGroups).sort());
+      
+      // Extract unique roles from all users' organization memberships
+      const allRoles = new Set<string>();
+      (data.users || []).forEach((user: User) => {
+        if (user.organizations) {
+          user.organizations.forEach(org => {
+            if (org.role) {
+              // Handle both string and object roles
+              const roleStr = typeof org.role === 'string' ? org.role : String(org.role);
+              if (roleStr && roleStr.trim() !== '' && roleStr !== 'undefined' && roleStr !== 'null' && roleStr !== '[object Object]') {
+                allRoles.add(roleStr.trim());
+              }
+            }
+          });
+        }
+      });
+      
+      // Log extracted roles for debugging
+      console.log('Extracted roles from memberships:', Array.from(allRoles));
+      
+      setAvailableRoles(Array.from(allRoles).sort());
     } catch (error: any) {
       console.error('Error loading users:', error);
     } finally {
@@ -61,9 +95,45 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
     }
   };
 
+  const loadOrganizations = async () => {
+    try {
+      const response = await fetch('/api/organizations');
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.warn('Failed to load organizations:', data.error);
+        return;
+      }
+
+      setAvailableOrganizations(data.organizations || []);
+      
+      // Reload users to ensure we have the latest roles (roles are extracted from users)
+      // This ensures we capture all custom roles from existing memberships
+      await loadUsers();
+    } catch (error: any) {
+      console.error('Error loading organizations:', error);
+    }
+  };
+
   const handleEditUser = (user: User) => {
     setEditingUser(user);
-    setUserGroups([...user.groups]);
+    // Get organization+role combinations from user.organizations
+    // Format: "orgId:role" or fallback to "orgName:role"
+    const userGroupsList: string[] = [];
+    if (user.organizations) {
+      user.organizations.forEach(org => {
+        const role = org.role || 'member'; // Default role if not specified
+        // Use format "orgId:role" for precise matching
+        userGroupsList.push(`${org.id}:${role}`);
+      });
+    }
+    // Also include legacy groups for backward compatibility
+    user.groups.forEach(group => {
+      if (!userGroupsList.includes(group)) {
+        userGroupsList.push(group);
+      }
+    });
+    setUserGroups(userGroupsList);
   };
 
   const handleSaveUser = async () => {
@@ -72,18 +142,160 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
     try {
       setSaving(true);
 
-      // Save groups
-      const groupsResponse = await fetch('/api/users/groups', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: editingUser.userId,
-          groups: userGroups,
-        }),
+      // Parse userGroups which are in format "orgId:role"
+      const selectedMemberships = userGroups
+        .filter(g => g.includes(':'))
+        .map(g => {
+          const [orgId, role] = g.split(':');
+          return { orgId, role };
+        })
+        .filter(m => m.orgId && m.role);
+
+      // Get current user's memberships in format "orgId:role"
+      const currentMemberships = editingUser.organizations 
+        ? editingUser.organizations.map(org => ({
+            orgId: org.id,
+            role: org.role || 'member',
+          }))
+        : [];
+
+      // Create maps for easier comparison
+      const selectedMap = new Map(
+        selectedMemberships.map(m => [`${m.orgId}:${m.role}`, m])
+      );
+      const currentMap = new Map(
+        currentMemberships.map(m => [`${m.orgId}:${m.role}`, m])
+      );
+
+      // Find memberships to add (in selected but not current)
+      const membershipsToAdd = selectedMemberships.filter(
+        m => !currentMap.has(`${m.orgId}:${m.role}`)
+      );
+
+      // Find memberships to remove (in current but not selected)
+      // Also find memberships to update (same org but different role)
+      const membershipsToRemove: Array<{ orgId: string; role: string }> = [];
+      const membershipsToUpdate: Array<{ orgId: string; oldRole: string; newRole: string }> = [];
+
+      currentMemberships.forEach(current => {
+        const key = `${current.orgId}:${current.role}`;
+        const selected = selectedMap.get(key);
+        
+        if (!selected) {
+          // Check if user still has this org with a different role
+          const orgStillExists = selectedMemberships.some(m => m.orgId === current.orgId);
+          
+          if (orgStillExists) {
+            // Find the new role for this org
+            const newMembership = selectedMemberships.find(m => m.orgId === current.orgId);
+            if (newMembership) {
+              membershipsToUpdate.push({
+                orgId: current.orgId,
+                oldRole: current.role,
+                newRole: newMembership.role,
+              });
+            }
+          } else {
+            // User is being removed from this org entirely
+            membershipsToRemove.push(current);
+          }
+        }
       });
 
-      if (!groupsResponse.ok) {
-        throw new Error('Failed to save user groups');
+      // Update WorkOS organization memberships
+      const updatePromises: Promise<any>[] = [];
+
+      // Remove old memberships first (to avoid conflicts)
+      for (const membership of membershipsToRemove) {
+        updatePromises.push(
+          fetch('/api/organizations/membership', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: editingUser.userId,
+              organizationId: membership.orgId,
+              action: 'remove',
+            }),
+          })
+        );
+      }
+
+      // Update role changes (remove old, add new)
+      for (const update of membershipsToUpdate) {
+        // Remove old membership
+        updatePromises.push(
+          fetch('/api/organizations/membership', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: editingUser.userId,
+              organizationId: update.orgId,
+              action: 'remove',
+            }),
+          })
+        );
+        // Add with new role
+        updatePromises.push(
+          fetch('/api/organizations/membership', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: editingUser.userId,
+              organizationId: update.orgId,
+              action: 'add',
+              role: update.newRole,
+            }),
+          })
+        );
+      }
+
+      // Add new memberships (with roles)
+      for (const membership of membershipsToAdd) {
+        updatePromises.push(
+          fetch('/api/organizations/membership', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: editingUser.userId,
+              organizationId: membership.orgId,
+              action: 'add',
+              role: membership.role,
+            }),
+          })
+        );
+      }
+
+      // Execute all updates
+      const results = await Promise.allSettled(updatePromises);
+      
+      // Check for failures
+      const failures = results.filter(r => r.status === 'rejected' || 
+        (r.status === 'fulfilled' && !r.value.ok));
+      
+      if (failures.length > 0) {
+        const errorMessages: string[] = [];
+        for (const failure of failures) {
+          if (failure.status === 'rejected') {
+            errorMessages.push(`Failed: ${failure.reason}`);
+          } else {
+            try {
+              const errorData = await failure.value.json();
+              errorMessages.push(`Failed: ${errorData.error || 'Unknown error'}`);
+            } catch {
+              errorMessages.push(`Failed: Unknown error`);
+            }
+          }
+        }
+        
+        if (failures.length === results.length) {
+          // All failed
+          throw new Error(`Failed to update organization memberships:\n${errorMessages.join('\n')}`);
+        } else {
+          // Partial failure
+          alert(`⚠️ Some updates failed:\n${errorMessages.join('\n')}\n\nPlease check the current state and try again.`);
+        }
+      } else {
+        alert('✅ Organization memberships updated successfully!');
       }
 
       // Refresh users
@@ -92,7 +304,7 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
       setUserGroups([]);
     } catch (error: any) {
       console.error('Error saving user:', error);
-      alert('Failed to save user: ' + error.message);
+      alert('Failed to save user organizations:\n\n' + error.message);
     } finally {
       setSaving(false);
     }
@@ -110,38 +322,44 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to set user role');
+        // Build error message with details
+        let errorMessage = data.error || 'Failed to set user role';
+        if (data.details) {
+          errorMessage += `\n\nDetails: ${data.details}`;
+        }
+        if (data.rollback) {
+          errorMessage += `\n\nRollback: ${data.rollback}`;
+        }
+        throw new Error(errorMessage);
       }
 
-      // Show success message
-      alert(`Role updated successfully! ${data.message || ''}`);
+      // Show success message with details
+      let successMessage = 'Role updated successfully!';
+      if (data.message) {
+        successMessage += `\n\n${data.message}`;
+      }
+      if (data.organizationsUpdated !== undefined) {
+        successMessage += `\n\nUpdated ${data.organizationsUpdated} WorkOS organization(s).`;
+      }
+      if (data.warning) {
+        successMessage += `\n\n⚠️ Warning: ${data.warning}`;
+      }
+      if (data.partialFailure) {
+        successMessage += '\n\n⚠️ Some WorkOS updates failed. Check logs for details.';
+      }
+      
+      alert(successMessage);
       
       // Refresh users to get updated data
       await loadUsers();
     } catch (error: any) {
       console.error('Error setting role:', error);
-      alert('Failed to set role: ' + error.message);
+      alert('Failed to set role:\n\n' + error.message);
     } finally {
       setSaving(false);
     }
   };
 
-  const toggleGroup = (groupName: string) => {
-    setUserGroups(prev => {
-      if (prev.includes(groupName)) {
-        return prev.filter(g => g !== groupName);
-      } else {
-        return [...prev, groupName];
-      }
-    });
-  };
-
-  const addNewGroup = (groupName: string) => {
-    if (groupName && !availableGroups.includes(groupName)) {
-      setAvailableGroups([...availableGroups, groupName].sort());
-      setUserGroups([...userGroups, groupName]);
-    }
-  };
 
   if (!isOpen) return null;
 
@@ -263,41 +481,57 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
                   {editingUser?.userId === user.userId && (
                     <div className="mt-4 p-4 bg-white/5 rounded-lg border border-blue-500/30">
                       <div className="mb-3">
-                        <label className="text-sm font-semibold mb-2 block">Assign Groups</label>
-                        <div className="flex flex-wrap gap-2">
-                          {availableGroups.map((group) => (
-                            <button
-                              key={group}
-                              onClick={() => toggleGroup(group)}
-                              className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
-                                userGroups.includes(group)
-                                  ? 'bg-blue-500/30 border-blue-500 text-blue-300'
-                                  : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
-                              }`}
-                            >
-                              {group}
-                            </button>
-                          ))}
+                        <label className="text-sm font-semibold mb-2 block">Assign WorkOS Organizations & Roles</label>
+                        <select
+                          multiple
+                          value={userGroups}
+                          onChange={(e) => {
+                            const selectedGroups = Array.from(e.target.selectedOptions, option => option.value);
+                            setUserGroups(selectedGroups);
+                          }}
+                          className="w-full min-h-[200px] px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                          size={Math.min(availableOrganizations.length * (availableRoles.length + 1), 10)}
+                        >
+                          {availableOrganizations.length === 0 ? (
+                            <option disabled>No organizations available. Create organizations in WorkOS first.</option>
+                          ) : (
+                            availableOrganizations.map((org) => {
+                              // Show organization with all available roles
+                              // Get roles that are actually used, plus common defaults
+                              const defaultRoles = ['admin', 'member', 'user'];
+                              const allPossibleRoles = availableRoles.length > 0 
+                                ? [...new Set([...availableRoles, ...defaultRoles])].sort()
+                                : defaultRoles;
+                              
+                              return (
+                                <optgroup key={org.id} label={org.name} className="bg-[#2a2a2a]">
+                                  {allPossibleRoles.map((role) => {
+                                    const optionValue = `${org.id}:${role}`;
+                                    // Highlight custom roles (not in defaults)
+                                    const isCustomRole = !defaultRoles.includes(role);
+                                    return (
+                                      <option
+                                        key={optionValue}
+                                        value={optionValue}
+                                        className={`bg-[#1a1a1a] text-white pl-4 ${isCustomRole ? 'font-semibold text-blue-300' : ''}`}
+                                      >
+                                        {org.name} - {role} {isCustomRole ? '✨' : ''}
+                                      </option>
+                                    );
+                                  })}
+                                </optgroup>
+                              );
+                            })
+                          )}
+                        </select>
+                        <div className="mt-2 text-xs text-gray-400">
+                          Hold Ctrl/Cmd to select multiple organization+role combinations
                         </div>
                         <div className="mt-3 flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="Add new group name"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                const input = e.target as HTMLInputElement;
-                                if (input.value.trim()) {
-                                  addNewGroup(input.value.trim());
-                                  input.value = '';
-                                }
-                              }
-                            }}
-                            className="flex-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm"
-                          />
                           <button
                             onClick={handleSaveUser}
-                            disabled={saving}
-                            className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 rounded-lg text-sm flex items-center gap-2 disabled:opacity-50"
+                            disabled={saving || availableOrganizations.length === 0}
+                            className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 rounded-lg text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {saving ? (
                               <>

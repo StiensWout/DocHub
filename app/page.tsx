@@ -86,6 +86,7 @@ function HomeContent() {
         
         setAuthChecked(true);
       } catch (error) {
+        // Client-side: use console.error for now (logger may not work in browser)
         console.error("Error checking auth:", error);
         router.push("/auth/signin");
       }
@@ -157,6 +158,7 @@ function HomeContent() {
           setIsUserAdmin(adminStatus);
         }
       } catch (error) {
+        // Client-side: use console.error for now
         console.error('Error checking admin status:', error);
       }
       
@@ -188,12 +190,14 @@ function HomeContent() {
             }
           }
         } catch (error) {
+          // Client-side: use console.error for now
           console.error('Error fetching user groups:', error);
           // On error, show no teams to be safe
           filteredTeams = [];
         }
       } else {
         // Admin: Show all teams (no filtering needed)
+        // Client-side: use console.log for debug info
         console.log('[page] Admin user detected - showing all teams:', allTeamsData.length);
         filteredTeams = allTeamsData;
       }
@@ -636,10 +640,10 @@ function HomeContent() {
               }}
               onVersionRestored={async () => {
                 await refreshDocuments();
-                // Update selected document if it was restored
+                // Update selected document if it was restored/updated
                 if (selectedDocument) {
                   const allDocs = await getAllDocumentsForApp(selectedTeamId, selectedDocumentAppId);
-                  const updatedDoc = allDocs.find((d) => d.id === selectedDocument.id);
+                  const updatedDoc = allDocs.find((d) => d.id === selectedDocument.id && d.type === selectedDocument.type);
                   if (updatedDoc) {
                     setSelectedDocument(updatedDoc);
                   }
@@ -869,8 +873,29 @@ function HomeContent() {
             setShowNewDocumentDialog(false);
             setNewDocumentAppId("");
           }}
-          onCreated={async () => {
+          onCreated={async (createdDoc) => {
+            // Refresh documents to include the newly created one
             await refreshDocuments();
+            
+            // Find the newly created document from the refreshed list
+            const allDocs = await getAllDocumentsForApp(selectedTeamId, createdDoc.appId);
+            const newDoc = allDocs.find((d) => d.id === createdDoc.id && d.type === createdDoc.type);
+            
+            if (newDoc) {
+              // Find the application name
+              const app = applications.find((a) => a.id === createdDoc.appId);
+              const appName = app?.name || "";
+              
+              // Automatically select and open the newly created document
+              setSelectedDocument(newDoc);
+              setSelectedDocumentAppName(appName);
+              setSelectedDocumentAppId(createdDoc.appId);
+              setSelectedApp(createdDoc.appId);
+              
+              toast.success("Document created successfully");
+            } else {
+              toast.success("Document created successfully");
+            }
           }}
         />
       )}

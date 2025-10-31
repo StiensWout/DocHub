@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/auth/user-groups';
 import { syncAllUsersFromWorkOS, syncUserFromWorkOS } from '@/lib/workos/user-sync';
+import { log } from '@/lib/logger';
 
 /**
  * POST /api/users/sync
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     if (userId) {
       // Sync single user
-      console.log(`[POST /api/users/sync] Syncing single user: ${userId}`);
+      log.debug(`[POST /api/users/sync] Syncing single user: ${userId}`);
       const user = await syncUserFromWorkOS(userId);
       
       if (!user) {
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
       });
     } else if (full) {
       // Sync all users
-      console.log('[POST /api/users/sync] Starting full user sync');
+      log.info('[POST /api/users/sync] Starting full user sync');
       const result = await syncAllUsersFromWorkOS();
       
       return NextResponse.json({
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error: any) {
-    console.error('Error syncing users:', error);
+    log.error('Error syncing users:', error);
     return NextResponse.json(
       { error: `Failed to sync users: ${error.message}` },
       { status: 500 }
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
 
     if (trigger) {
       // Trigger full sync
-      console.log('[GET /api/users/sync] Triggering full sync');
+      log.info('[GET /api/users/sync] Triggering full sync');
       const result = await syncAllUsersFromWorkOS();
       
       return NextResponse.json({
@@ -105,7 +106,7 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error: any) {
-    console.error('Error in sync endpoint:', error);
+    log.error('Error in sync endpoint:', error);
     return NextResponse.json(
       { error: `Failed: ${error.message}` },
       { status: 500 }

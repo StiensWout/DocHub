@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { log } from "@/lib/logger";
 
 // Load environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -20,28 +21,28 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
  * Run this once to populate the database with mock data
  */
 export async function seedDatabase() {
-  console.log("🌱 Starting database seed...\n");
+  log.info("🌱 Starting database seed...\n");
   
   // First, verify tables exist
   const tableNames = ['teams', 'applications', 'base_documents', 'team_documents', 'document_templates', 'document_versions'];
-  console.log("🔍 Checking if tables exist...");
+  log.info("🔍 Checking if tables exist...");
   
   for (const tableName of tableNames) {
     const { error } = await supabaseAdmin.from(tableName).select('*').limit(1);
     if (error && error.code === 'PGRST205') {
-      console.error(`\n❌ ERROR: Table '${tableName}' does not exist in the database!`);
-      console.error("\n📝 Please run the database schema first:");
-      console.error("1. Go to Supabase Dashboard: https://supabase.com/dashboard");
-      console.error("2. Select your project");
-      console.error("3. Go to SQL Editor");
-      console.error(`4. Copy and paste the contents of supabase/schema.sql`);
-      console.error("5. Click 'Run'");
-      console.error("\nThen run 'bun run seed' again.\n");
+      log.error(`\n❌ ERROR: Table '${tableName}' does not exist in the database!`);
+      log.error("\n📝 Please run the database schema first:");
+      log.error("1. Go to Supabase Dashboard: https://supabase.com/dashboard");
+      log.error("2. Select your project");
+      log.error("3. Go to SQL Editor");
+      log.error(`4. Copy and paste the contents of supabase/schema.sql`);
+      log.error("5. Click 'Run'");
+      log.error("\nThen run 'bun run seed' again.\n");
       throw new Error(`Database tables not found. Please run supabase/schema.sql first.`);
     }
   }
   
-  console.log("✅ All tables exist!\n");
+  log.info("✅ All tables exist!\n");
 
   // Insert applications (test applications)
   const applications = [
@@ -59,16 +60,16 @@ export async function seedDatabase() {
     },
   ];
 
-  console.log("📦 Inserting applications...");
+  log.info("📦 Inserting applications...");
   for (const app of applications) {
     const { error } = await supabaseAdmin
       .from("applications")
       .upsert(app, { onConflict: "id" });
 
     if (error) {
-      console.error(`  ❌ Error inserting application ${app.id}:`, error.message);
+      log.error(`  ❌ Error inserting application ${app.id}:`, error.message);
     } else {
-      console.log(`  ✅ ${app.name}`);
+      log.info(`  ✅ ${app.name}`);
     }
   }
 
@@ -239,18 +240,18 @@ export async function seedDatabase() {
     },
   ];
 
-  console.log("\n📄 Inserting base documents...");
+  log.info("\n📄 Inserting base documents...");
   let baseDocCount = 0;
   for (const doc of baseDocuments) {
     const { error } = await supabaseAdmin.from("base_documents").insert(doc);
 
     if (error) {
-      console.error(`  ❌ Error inserting base document "${doc.title}":`, error.message);
+      log.error(`  ❌ Error inserting base document "${doc.title}":`, error.message);
     } else {
       baseDocCount++;
     }
   }
-  console.log(`  ✅ Inserted ${baseDocCount}/${baseDocuments.length} base documents`);
+  log.info(`  ✅ Inserted ${baseDocCount}/${baseDocuments.length} base documents`);
 
   // Insert teams (check if they exist first to avoid duplicates)
   const teams = [
@@ -259,7 +260,7 @@ export async function seedDatabase() {
     { name: "Support" },
   ];
 
-  console.log("\n👥 Inserting teams...");
+  log.info("\n👥 Inserting teams...");
   // Create a mapping of team names to IDs for safe lookup
   const teamNameToIdMap = new Map<string, string>();
   for (const team of teams) {
@@ -272,7 +273,7 @@ export async function seedDatabase() {
 
     if (existing) {
       teamNameToIdMap.set(team.name, existing.id);
-      console.log(`  ✓ Team "${team.name}" already exists (skipping)`);
+      log.info(`  ✓ Team "${team.name}" already exists (skipping)`);
     } else {
       const { data, error } = await supabaseAdmin
         .from("teams")
@@ -281,10 +282,10 @@ export async function seedDatabase() {
         .single();
 
       if (error) {
-        console.error(`  ❌ Error inserting team "${team.name}":`, error.message);
+        log.error(`  ❌ Error inserting team "${team.name}":`, error.message);
       } else if (data) {
         teamNameToIdMap.set(team.name, data.id);
-        console.log(`  ✅ Created "${team.name}"`);
+        log.info(`  ✅ Created "${team.name}"`);
       }
     }
   }
@@ -482,18 +483,18 @@ export async function seedDatabase() {
     );
   }
 
-  console.log("\n📝 Inserting team documents...");
+  log.info("\n📝 Inserting team documents...");
   let teamDocCount = 0;
   for (const doc of teamDocuments) {
     const { error } = await supabaseAdmin.from("team_documents").insert(doc);
 
     if (error) {
-      console.error(`  ❌ Error inserting team document "${doc.title}":`, error.message);
+      log.error(`  ❌ Error inserting team document "${doc.title}":`, error.message);
     } else {
       teamDocCount++;
     }
   }
-  console.log(`  ✅ Inserted ${teamDocCount}/${teamDocuments.length} team documents`);
+  log.info(`  ✅ Inserted ${teamDocCount}/${teamDocuments.length} team documents`);
 
   // Insert document templates
   const templates = [
@@ -667,7 +668,7 @@ export async function seedDatabase() {
     },
   ];
 
-  console.log("\n📋 Inserting document templates...");
+  log.info("\n📋 Inserting document templates...");
   let templateCount = 0;
   for (const template of templates) {
     // Check if template already exists
@@ -678,26 +679,27 @@ export async function seedDatabase() {
       .maybeSingle();
 
     if (existing) {
-      console.log(`  ✓ Template "${template.name}" already exists (skipping)`);
+      log.info(`  ✓ Template "${template.name}" already exists (skipping)`);
       templateCount++;
     } else {
       const { error } = await supabaseAdmin.from("document_templates").insert(template);
 
       if (error) {
-        console.error(`  ❌ Error inserting template "${template.name}":`, error.message);
+        log.error(`  ❌ Error inserting template "${template.name}":`, error.message);
       } else {
         templateCount++;
-        console.log(`  ✅ Created "${template.name}"`);
+        log.info(`  ✅ Created "${template.name}"`);
       }
     }
   }
-  console.log(`  ✅ Inserted ${templateCount}/${templates.length} templates`);
+  log.info(`  ✅ Inserted ${templateCount}/${templates.length} templates`);
 
-  console.log("\n🎉 Database seeded successfully!");
-  console.log(`\n📊 Summary:`);
-  console.log(`   • ${applications.length} applications`);
-  console.log(`   • ${baseDocCount} base documents`);
-  console.log(`   • ${teamNameToIdMap.size} teams`);
-  console.log(`   • ${teamDocCount} team documents`);
-  console.log(`   • ${templateCount} document templates`);
+  log.info("\n🎉 Database seeded successfully!");
+  log.info(`\n📊 Summary:`);
+  log.info(`   • ${applications.length} applications`);
+  log.info(`   • ${baseDocCount} base documents`);
+  log.info(`   • ${teamNameToIdMap.size} teams`);
+  log.info(`   • ${teamDocCount} team documents`);
+  log.info(`   • ${templateCount} document templates`);
 }
+

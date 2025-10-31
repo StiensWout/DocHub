@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/auth/user-groups';
 import { updateUserAndSyncToWorkOS, syncUserFromWorkOS } from '@/lib/workos/user-sync';
+import { log } from '@/lib/logger';
 
 /**
  * POST /api/users/update
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Error updating user:', error);
+    log.error('Error updating user:', error);
     return NextResponse.json(
       { error: `Failed to update user: ${error.message}` },
       { status: 500 }
@@ -112,7 +113,7 @@ export async function PUT(request: NextRequest) {
       user,
     });
   } catch (error: any) {
-    console.error('Error syncing user:', error);
+    log.error('Error syncing user:', error);
     return NextResponse.json(
       { error: `Failed to sync user: ${error.message}` },
       { status: 500 }
