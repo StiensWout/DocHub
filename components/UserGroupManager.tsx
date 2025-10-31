@@ -74,11 +74,19 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
         if (user.organizations) {
           user.organizations.forEach(org => {
             if (org.role) {
-              allRoles.add(org.role);
+              // Handle both string and object roles
+              const roleStr = typeof org.role === 'string' ? org.role : String(org.role);
+              if (roleStr && roleStr.trim() !== '' && roleStr !== 'undefined' && roleStr !== 'null' && roleStr !== '[object Object]') {
+                allRoles.add(roleStr.trim());
+              }
             }
           });
         }
       });
+      
+      // Log extracted roles for debugging
+      console.log('Extracted roles from memberships:', Array.from(allRoles));
+      
       setAvailableRoles(Array.from(allRoles).sort());
     } catch (error: any) {
       console.error('Error loading users:', error);

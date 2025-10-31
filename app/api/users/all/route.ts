@@ -52,11 +52,34 @@ export async function GET(request: NextRequest) {
             emailVerified: localUser?.email_verified || false,
             profilePictureUrl: localUser?.profile_picture_url,
             lastSyncedAt: localUser?.last_synced_at,
-            organizations: memberships.map(m => ({
-              id: m.organizationId,
-              name: m.organizationName,
-              role: typeof m.role === 'string' ? m.role : (m.role as any)?.slug || (m.role as any)?.name || '',
-            })),
+            organizations: memberships.map(m => {
+              // Extract role properly - handle both string and object
+              let roleValue = '';
+              if (m.role) {
+                if (typeof m.role === 'string') {
+                  roleValue = m.role;
+                } else if (typeof m.role === 'object') {
+                  // Try to extract slug, name, or id from role object
+                  roleValue = (m.role as any)?.slug || (m.role as any)?.name || (m.role as any)?.id || '';
+                  // If still empty, try to stringify
+                  if (!roleValue) {
+                    try {
+                      roleValue = JSON.stringify(m.role);
+                    } catch {
+                      roleValue = String(m.role);
+                    }
+                  }
+                } else {
+                  roleValue = String(m.role);
+                }
+              }
+              
+              return {
+                id: m.organizationId,
+                name: m.organizationName,
+                role: roleValue,
+              };
+            }),
           };
         } catch (error: any) {
           log.error(`Error enriching user ${user.userId}:`, error);
