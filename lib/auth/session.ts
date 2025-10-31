@@ -12,6 +12,8 @@ export interface SessionUser {
 /**
  * Get the current user session from WorkOS
  * Returns null if no valid session exists
+ * 
+ * Supports both SSO (organization-based) and User Management authentication
  */
 export async function getSession(): Promise<{ user: SessionUser; accessToken: string } | null> {
   try {
@@ -22,25 +24,56 @@ export async function getSession(): Promise<{ user: SessionUser; accessToken: st
       return null;
     }
 
-    // Get user from the access token
-    // The access token contains user information
-    const user = await workos.userManagement.getUser(accessToken);
-
-    if (!user) {
-      return null;
+    // Try SSO profile first (for organization-based SSO)
+    try {
+      const profile = await workos.sso.getProfile({ accessToken });
+      
+      if (profile) {
+        return {
+          user: {
+            id: profile.id,
+            email: profile.email || '',
+            firstName: profile.firstName || undefined,
+            lastName: profile.lastName || undefined,
+            profilePictureUrl: undefined, // SSO profiles don't have profilePictureUrl
+          },
+          accessToken,
+        };
+      }
+    } catch (ssoError: any) {
+      // If SSO fails, try User Management (for email/password or social OAuth)
+      // Only log if it's not a "wrong token type" error
+      if (ssoError.code !== 'invalid_token' && ssoError.message?.includes('token')) {
+        console.log('Token is not SSO token, trying User Management...');
+      }
+      
+      try {
+        const user = await workos.userManagement.getUser(accessToken);
+        
+        if (user) {
+          return {
+            user: {
+              id: user.id,
+              email: user.email,
+              firstName: user.firstName || undefined,
+              lastName: user.lastName || undefined,
+              profilePictureUrl: user.profilePictureUrl || undefined,
+            },
+            accessToken,
+          };
+        }
+      } catch (userMgmtError: any) {
+        // Neither SSO nor User Management worked
+        console.error('Failed to get user from both SSO and User Management:', {
+          ssoError: ssoError.message,
+          userMgmtError: userMgmtError.message,
+        });
+        return null;
+      }
     }
 
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName || undefined,
-        lastName: user.lastName || undefined,
-        profilePictureUrl: user.profilePictureUrl || undefined,
-      },
-      accessToken,
-    };
-  } catch (error) {
+    return null;
+  } catch (error: any) {
     console.error('Error getting session:', error);
     return null;
   }
