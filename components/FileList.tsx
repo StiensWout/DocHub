@@ -32,11 +32,7 @@ export default function FileList({
   const [showApplicationFiles, setShowApplicationFiles] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadFiles();
-  }, [documentId, documentType, applicationId, teamId]);
-
-  const loadFiles = async () => {
+  const loadFiles = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -61,7 +57,11 @@ export default function FileList({
     } finally {
       setLoading(false);
     }
-  };
+  }, [documentId, documentType, applicationId, teamId]);
+
+  useEffect(() => {
+    loadFiles();
+  }, [loadFiles]);
 
   const handleDelete = async (fileId: string) => {
     if (!confirm("Are you sure you want to delete this file?")) {

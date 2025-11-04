@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
@@ -141,9 +143,11 @@ export default function ProfilePage() {
           <div className="flex items-start gap-6 mb-8 pb-8 border-b border-white/10">
             <div className="relative">
               {profile.user.profilePictureUrl ? (
-                <img
+                <Image
                   src={profile.user.profilePictureUrl}
                   alt={fullName || profile.user.email}
+                  width={96}
+                  height={96}
                   className="w-24 h-24 rounded-full border-2 border-blue-500"
                 />
               ) : (

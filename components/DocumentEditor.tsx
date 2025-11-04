@@ -115,7 +115,7 @@ export default function DocumentEditor({
         setIsUploadingImage(false);
       }
     };
-  }, [editor, appId]);
+  }, [editor, appId, toast]);
 
   const handleSave = async () => {
     if (!editor || !document) return;

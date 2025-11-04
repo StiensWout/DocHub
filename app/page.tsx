@@ -291,7 +291,7 @@ function HomeContent() {
   useEffect(() => {
     if (!selectedTeamId || applications.length === 0) return;
     refreshDocuments();
-  }, [selectedTeamId, applications]);
+  }, [selectedTeamId, applications, refreshDocuments]);
 
   // Track document views for recent documents
   useEffect(() => {
@@ -596,7 +596,7 @@ function HomeContent() {
           <div className="mb-12">
             <h2 className="text-4xl font-bold mb-3">Welcome back!</h2>
             <p className="text-gray-400 text-lg mb-6">
-              Manage and access all your team's documentation in one place.
+              Manage and access all your team&apos;s documentation in one place.
             </p>
             <p className="text-gray-500 text-sm">
               Use the sidebar to navigate between teams and applications, or search for documents using the search bar above.

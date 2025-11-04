@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useState, useEffect, useRef } from "react";
 import { X, Download, ZoomIn, ZoomOut, Maximize2, Loader2, Edit, Save } from "lucide-react";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -500,9 +502,11 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
             </div>
           ) : isImage && fileUrl ? (
             <div className="flex items-center justify-center h-full">
-              <img
+              <Image
                 src={fileUrl}
                 alt={file.file_name}
+                width={800}
+                height={600}
                 className="max-w-full max-h-full object-contain"
                 style={{ maxHeight: "calc(95vh - 120px)" }}
               />

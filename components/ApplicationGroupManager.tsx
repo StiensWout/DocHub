@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, Plus, Edit2, Trash2, Layers } from "lucide-react";
 import {
   getApplicationGroups,
@@ -42,13 +42,7 @@ export default function ApplicationGroupManager({
   const [isSaving, setIsSaving] = useState(false);
   const toast = useToast();
 
-  useEffect(() => {
-    if (isOpen) {
-      loadGroups();
-    }
-  }, [isOpen]);
-
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
     setLoading(true);
     try {
       const groupsData = await getApplicationGroups();
@@ -59,7 +53,13 @@ export default function ApplicationGroupManager({
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadGroups();
+    }
+  }, [isOpen, loadGroups]);
 
   const handleCreateGroup = async () => {
     if (!formData.name.trim()) {
