@@ -1,6 +1,6 @@
 "use client";
 
-import { getVersionDisplay, getVersionInfo } from "@/lib/version";
+import { getVersionInfo } from "@/lib/version";
 
 /**
  * Version display component
