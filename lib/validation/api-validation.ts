@@ -82,7 +82,7 @@ export function validateUUID(
  * @param value - The input to validate; leading/trailing whitespace will be trimmed
  * @param allowedValues - Array of permitted string values
  * @param fieldName - Field name used in generated error messages
- * @returns `{ valid: true, value: T }` with the trimmed value when the input is one of `allowedValues`; `{ valid: false, error: string }` describing the validation failure otherwise
+ * @returns `{ valid: true, value: T }` containing the trimmed allowed value on success; `{ valid: false, error: string }` describing the validation failure otherwise
  */
 export function validateEnum<T extends string>(
   value: string | null | undefined,

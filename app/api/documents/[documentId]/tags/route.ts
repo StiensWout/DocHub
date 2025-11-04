@@ -179,14 +179,10 @@ export async function POST(
 }
 
 /**
- * Remove one or more tag associations from a document.
+ * Delete tag associations for a document, optionally restricting the deletion to a provided list of tag IDs.
  *
- * Validates authentication, the `documentId` UUID, the optional `type` query enum (defaults to `base`),
- * and an optional `tagIds` query containing a comma-separated list of tag UUIDs. If `tagIds` is provided,
- * only those tag associations are removed; otherwise all tags for the document and type are removed.
- *
- * @param params.documentId - The UUID of the document to modify
- * @returns A JSON object `{ success: true }` on success. On failure returns a JSON error message with an appropriate HTTP status (`401` for unauthorized, `400` for validation errors, `500` for server/database errors).
+ * @param params.documentId - The UUID of the document whose tag associations will be removed
+ * @returns A JSON object `{ success: true }` when the deletion succeeds
  */
 export async function DELETE(
   request: NextRequest,
