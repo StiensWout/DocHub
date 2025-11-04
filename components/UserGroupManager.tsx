@@ -41,33 +41,6 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
   const [userGroups, setUserGroups] = useState<string[]>([]); // Format: "orgId:role" or "orgName" for backward compatibility
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadUsers();
-      loadOrganizations();
-      // Get current user ID for role change detection
-      fetch('/api/users/role')
-        .then(res => res.json())
-        .then(data => {
-          // Get current user from session (we'll need to fetch this differently)
-          // For now, we'll check userId from the role response or fetch user info
-          fetch('/api/auth/session')
-            .then(res => res.json())
-            .then(sessionData => {
-              if (sessionData?.user?.id) {
-                setCurrentUserId(sessionData.user.id);
-              }
-            })
-            .catch(() => {
-              // Fallback: try to get from users list after it loads
-            });
-        })
-        .catch(() => {
-          // Fallback: will be set when users load
-        });
-    }
-  }, [isOpen, loadOrganizations, loadUsers]);
-
   const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
@@ -117,6 +90,33 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadUsers();
+      loadOrganizations();
+      // Get current user ID for role change detection
+      fetch('/api/users/role')
+        .then(res => res.json())
+        .then(data => {
+          // Get current user from session (we'll need to fetch this differently)
+          // For now, we'll check userId from the role response or fetch user info
+          fetch('/api/auth/session')
+            .then(res => res.json())
+            .then(sessionData => {
+              if (sessionData?.user?.id) {
+                setCurrentUserId(sessionData.user.id);
+              }
+            })
+            .catch(() => {
+              // Fallback: try to get from users list after it loads
+            });
+        })
+        .catch(() => {
+          // Fallback: will be set when users load
+        });
+    }
+  }, [isOpen, loadOrganizations, loadUsers]);
 
   const loadOrganizations = useCallback(async () => {
     try {
