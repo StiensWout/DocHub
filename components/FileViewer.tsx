@@ -10,6 +10,8 @@ import DOMPurify from "dompurify";
 import { isMimeTypeAllowed, getFileExtension } from "@/lib/constants/file-validation";
 import type { DocumentFile } from "@/types";
 import { supabase } from "@/lib/supabase/client";
+// Import PDF config to ensure worker is configured early
+import "@/lib/pdf-config";
 
 // Dynamically import react-pdf to avoid SSR issues
 // Configure worker before importing components to prevent Object.defineProperty errors
