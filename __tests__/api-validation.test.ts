@@ -399,7 +399,7 @@ describe('API Validation Tests', () => {
       test('should reject empty array', () => {
         const result = validateUUIDArray([], 'tagIds');
         expect(result.valid).toBe(false);
-        expect(result.error).toBe('tagIds array cannot be empty');
+        expect(result.error).toBe('tagIds must contain at least 1 element(s)');
       });
 
       test('should reject array with invalid UUID', () => {
