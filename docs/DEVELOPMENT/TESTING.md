@@ -2,6 +2,8 @@
 
 This document tracks testing procedures, validation results, and known issues for DocHub.
 
+> **Note**: See [Testing README](TESTING_README.md) for test suite documentation and configuration.
+
 ## ✅ Validation Results
 
 **Last Test Run**: After comprehensive documentation overhaul  

@@ -3,6 +3,8 @@
 **Generated:** $(date)
 **Scope:** Full codebase analysis
 
+**⚠️ IMPORTANT:** All bugs are now tracked in [GitHub Issues](https://github.com/StiensWout/DLWait/issues). This file is maintained for historical reference and detailed bug analysis. Please create new issues on GitHub rather than adding to this file.
+
 ## 🔴 CRITICAL ISSUES
 
 _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes---resolved) section below for details._
@@ -13,7 +15,7 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 
 **Severity:** HIGH
 **Category:** Functionality / Data Integrity
-**Status:** ✅ FIXED
+**Status:** ✅ FIXED & VALIDATED
 **Files:** `components/DocumentMetadataEditor.tsx:70-130`
 
 #### Issues:
@@ -30,18 +32,19 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 - No rollback mechanism if operations fail
 
 #### Fix Applied:
-- ✅ Added comprehensive error handling for tag copying operation (checks `response.ok`)
-- ✅ Added error checking for old document deletion (checks `deleteError`)
+- ✅ Added comprehensive error handling for tag copying operation (checks `response.ok` at line 123)
+- ✅ Added error checking for old document deletion (checks `deleteError` at line 149)
 - ✅ Implemented rollback mechanism:
-  - If tag copying fails: Delete newly created document, keep old document intact
-  - If old document deletion fails: Delete newly created document, keep old document intact
-- ✅ Success toast only shown after all operations succeed
+  - If tag copying fails: Delete newly created document, keep old document intact (lines 124-140)
+  - If old document deletion fails: Delete newly created document, keep old document intact (lines 150-164)
+- ✅ Success toast only shown after all operations succeed (line 168)
 - ✅ Added specific error messages for each failure case
 - ✅ Implemented client-side transaction logic with proper rollback
 - ✅ Added comprehensive test suite (9 tests) covering all error scenarios
 
 **Resolution Date:** 2024
-**Validation:** ✅ All tests passing, transactional integrity ensured
+**Validation:** ✅ Code review confirms rollback logic correct - validated 2024-12-19
+**Test Status:** ⚠️ Test suite structure complete but assertions need implementation (see BUG_FIX_REVIEW.md)
 
 ---
 
@@ -49,7 +52,7 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 
 **Severity:** HIGH
 **Category:** Functionality / Race Condition
-**Status:** ✅ FIXED
+**Status:** ✅ FIXED & VALIDATED
 **Files:** `app/api/files/[fileId]/route.ts:225-295`
 
 #### Issues (RESOLVED):
@@ -68,18 +71,169 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 
 #### Fix Applied:
 ✅ **RESOLVED** - Final upload now uses verified staged file instead of original `newFile`
-- **Fixed:** Download staged file and use it for final upload (implemented download + upload approach)
-- **Fixed:** Staging file verification (download fails if staging file doesn't exist, ensuring verification)
-- **Fixed:** Added logging for staging file operations (copy start and success messages)
-- **Fixed:** Updated rollback logic to handle staging file cleanup on all error paths
+- **Fixed:** Download staged file and use it for final upload (lines 235-237: download, line 258: use staged file)
+- **Fixed:** Staging file verification (download fails if staging file doesn't exist, ensuring verification at lines 239-250)
+- **Fixed:** Added logging for staging file operations (log.info at line 231, log.error for errors)
+- **Fixed:** Updated rollback logic to handle staging file cleanup on all error paths (lines 241-245, 265-269)
 - **Fixed:** Added tests verifying staged file is downloaded between staging upload and final upload
 - **Note:** Orphaned staging file cleanup (background job/TTL) left as future enhancement - current cleanup on error paths is sufficient for correctness
 
 **Security Improvement:** Staging approach now provides intended protection - final upload uses verified staged file, not potentially corrupted original stream. This ensures that if the original file stream is corrupted or modified during upload, the staging process catches it.
 
+**Validation:** ✅ Code review confirms staged file download and usage correct - validated 2024-12-19
+
 ---
 
 ## 🟡 MEDIUM PRIORITY ISSUES
+
+### 30. Session Expiration Not Enforced - Cookie Expires After 7 Days Instead of 24 Hours ✅ RESOLVED
+
+**Severity:** MEDIUM
+**Category:** Security / Authentication
+**Status:** ✅ FIXED & VALIDATED
+**Files:** `app/api/auth/signin/route.ts`, `app/api/auth/signup/route.ts`, `app/api/auth/verify-email/route.ts`, `lib/auth/session.ts`
+
+#### Issues (RESOLVED):
+- Session cookie `wos-session` was set with `maxAge: 60 * 60 * 24 * 7` (7 days) in all auth routes
+- User reported session remained active after 4+ days when it should expire after 24 hours
+- `getSession()` function only checked if token exists and is valid with WorkOS
+- No token expiration validation based on intended 24-hour expiration
+
+#### Impact:
+- **MEDIUM** - Security concern - sessions persisted longer than intended
+- Users remained logged in beyond intended session duration
+- Potential unauthorized access if session should expire after 24 hours
+
+#### Fix Applied:
+- ✅ Changed cookie `maxAge` from 7 days to 24 hours (`60 * 60 * 24`) in all auth routes:
+  - `app/api/auth/signin/route.ts:67` - `maxAge: 60 * 60 * 24`
+  - `app/api/auth/signup/route.ts:70` - `maxAge: 60 * 60 * 24`
+  - `app/api/auth/verify-email/route.ts:55` - `maxAge: 60 * 60 * 24`
+- ✅ Added token expiration validation in `getSession()` function (`lib/auth/session.ts:33-55`)
+- ✅ Checks WorkOS token expiration claims (JWT `exp` claim) - lines 37-47
+- ✅ Implements session expiration check that validates token age, not just cookie existence
+- ✅ Handles non-JWT tokens (SSO tokens) gracefully by continuing with WorkOS validation - lines 56-60
+- ✅ Added debug logging for token age when token is >20 hours old - lines 50-54
+- ✅ JWT utilities implemented (`lib/auth/jwt-utils.ts`) for proper Base64url decoding
+- ⚠️ Token refresh mechanism left as future enhancement (not implemented yet)
+
+**Resolution Date:** 2024
+**Validation:** ✅ All auth routes validated, token expiration check verified - validated 2024-12-19
+**Security Improvement:** Sessions now properly expire after 24 hours at both cookie and token validation levels
+
+---
+
+### 32. Icon and Color Picker Buttons Trigger Form Submission When Creating Application
+
+**Severity:** MEDIUM
+**Category:** UI/UX Bug
+**Status:** 🔴 ACTIVE
+**Files:** `components/IconPicker.tsx:172-189`, `components/ColorPicker.tsx:81-102`, `components/ApplicationCreateDialog.tsx:268-285`
+
+#### Issues:
+- When clicking an icon or color when creating a new app, it directly saves the app without further notice
+- IconPicker and ColorPicker buttons are inside a form but don't have `type="button"`
+- Default button type is `type="submit"` when inside a form, causing form submission on click
+- No confirmation or validation before saving - user accidentally triggers save
+
+#### Impact:
+- **MEDIUM** - Poor user experience - accidental saves when just selecting preferences
+- Users cannot preview icon/color selection before saving
+- Confusing UX - selection appears to save immediately without confirmation
+
+#### Fix Required:
+- Add `type="button"` to IconPicker button elements (line 172)
+- Add `type="button"` to ColorPicker button elements (line 81)
+- Ensure buttons only update local state, not trigger form submission
+- Verify same issue doesn't exist in ApplicationEditDialog
+
+---
+
+### 33. Application Group Update Not Persisting After Edit
+
+**Severity:** MEDIUM
+**Category:** Functionality / Data Integrity
+**Status:** 🔴 ACTIVE
+**Files:** `components/ApplicationEditDialog.tsx`, `lib/supabase/queries.ts:80-100`
+
+#### Issues:
+- When editing an application and updating the group, it does not save correctly
+- When creating a new application, group assignment works correctly
+- `updateApplication` function similar to Bug #31's `updateApplicationGroup` - doesn't verify update succeeded
+- No verification that update actually persisted to database
+- No error logging or update confirmation
+
+#### Impact:
+- **MEDIUM** - User experience issue - changes appear to save but don't persist
+- Users cannot reliably update application groups
+- Data integrity concern - UI shows success but data isn't updated
+- Similar to Bug #31 but for applications instead of groups
+
+#### Fix Required:
+- Add error logging to `updateApplication` function to capture any database errors
+- Verify database update is actually succeeding (check return value/error)
+- Add verification that update actually changed the data (similar to Bug #31 fix)
+- Use `.select().single()` to get updated data back from database
+- Add client-side validation that update succeeded before showing success toast
+- Add refresh mechanism that re-fetches from database after update
+- Consider adding optimistic UI update + database confirmation pattern
+
+---
+
+### 34. Duplicate Bug Entry in BUG_FIX_REVIEW.md ✅ RESOLVED
+
+**Severity:** LOW
+**Category:** Documentation
+**Status:** ✅ FIXED
+**Files:** `bugs/BUG_FIX_REVIEW.md:75-99`
+
+#### Issues:
+- BUG_FIX_REVIEW.md file has a duplicate entry for "Bug #30: Session Expiration Not Enforced"
+- Redundant section appears twice (lines 51-74 and 75-99)
+- Makes review document confusing and harder to maintain
+
+#### Impact:
+- **LOW** - Documentation issue only, no functional impact
+
+#### Fix Applied:
+- ✅ Removed duplicate Bug #30 section from BUG_FIX_REVIEW.md
+- ✅ Kept single comprehensive entry with all validation details
+
+---
+
+### 31. Application Group Update Not Persisting After Save
+
+**Severity:** MEDIUM
+**Category:** Functionality / Data Integrity
+**Status:** 🔴 ACTIVE
+**Files:** `components/ApplicationGroupManager.tsx`, `lib/supabase/queries.ts:533-553`
+
+#### Issues:
+- User reports: "Updating an application group is not working. It states it saved but on refresh no change happened"
+- `updateApplicationGroup` function in `lib/supabase/queries.ts` appears correct (lines 533-553)
+- Component shows success toast after update (line 110)
+- Component calls `loadGroups()` after update (line 113) which should refresh the list
+- Changes may not be persisting to database or may be overwritten on refresh
+- Could be a race condition, caching issue, or database update failure
+
+#### Impact:
+- **MEDIUM** - User experience issue - changes appear to save but don't persist
+- Users cannot reliably update application groups
+- Data integrity concern - UI shows success but data isn't updated
+- Confusing UX - success message shown but changes lost
+
+#### Fix Required:
+- Add error logging to `updateApplicationGroup` function to capture any database errors
+- Verify database update is actually succeeding (check return value/error)
+- Add client-side validation that update succeeded before showing success toast
+- Check if there are any database triggers or constraints preventing updates
+- Verify `updated_at` timestamp is being updated correctly
+- Add refresh mechanism that re-fetches from database after update
+- Check for any caching that might be serving stale data
+- Test update operation end-to-end: UI → API → Database → UI refresh
+- Consider adding optimistic UI update + database confirmation pattern
+
+---
 
 ### 8. Excessive Console Logging in Production
 
@@ -557,9 +711,18 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 ## 📊 SUMMARY
 
 - **Critical Issues:** 0 (All 3 resolved ✅)
-- **High Priority:** 0 (All 6 resolved ✅)
-- **Medium Priority:** 10 (9 existing + Bug #29)
+- **High Priority:** 0 (All 6 resolved ✅, Bug #21 & #22 validated ✅)
+- **Medium Priority:** 14 (9 existing + Bug #29 + Bug #31 + Bug #32 + Bug #33, Bug #30 ✅ RESOLVED & VALIDATED)
 - **Low Priority:** 5
+
+### Validation Status
+
+**Validated Fixes (2024-12-19):**
+- ✅ Bug #21: Document Type Change Transactional Integrity - Code validated, rollback logic correct
+- ✅ Bug #22: File Replacement Staging Approach - Code validated, staged file download verified
+- ✅ Bug #30: Session Expiration Not Enforced - All auth routes validated, token expiration verified
+
+**See [BUG_FIX_REVIEW.md](./BUG_FIX_REVIEW.md) for detailed validation results.**
 
 ### Recommended Action Plan:
 

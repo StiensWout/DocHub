@@ -1,6 +1,6 @@
 # Test Suite
 
-This directory contains automated tests for the DLWait application.
+This directory contains automated tests for the DocHub application.
 
 ## Test Files
 

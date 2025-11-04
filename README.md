@@ -46,7 +46,7 @@ A beautiful, dark-mode documentation manager built with Next.js 14, TypeScript, 
 1. **Clone the repository:**
    ```bash
    git clone <repository-url>
-   cd DLWait
+   cd DLWait  # Note: Repository may be renamed to DocHub in the future
    ```
 
 2. **Install dependencies:**
@@ -85,7 +85,7 @@ A beautiful, dark-mode documentation manager built with Next.js 14, TypeScript, 
    - Go to Supabase Dashboard → Storage
    - Create a bucket named `documents`
    - Set it to **Public**
-   - Configure storage policies (see `docs/RICH_TEXT_EDITOR.md` for details)
+   - Configure storage policies (see `docs/FEATURES/guides/rich-text-editor.md` for details)
 
 6. **Seed the database with sample data:**
    ```bash
@@ -112,13 +112,13 @@ A beautiful, dark-mode documentation manager built with Next.js 14, TypeScript, 
 Comprehensive documentation is available in the `docs/` directory:
 
 - **[docs/README.md](docs/README.md)** - Complete documentation index
-- **[docs/QUICK_START.md](docs/QUICK_START.md)** - Quick setup guide
-- **[docs/SETUP.md](docs/SETUP.md)** - Detailed setup instructions
-- **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Developer guide
-- **[docs/COMPLETED.md](docs/COMPLETED.md)** - List of completed features
+- **[docs/INDEX.md](docs/INDEX.md)** - Documentation index and navigation
+- **[docs/GETTING_STARTED/INSTALLATION.md](docs/GETTING_STARTED/INSTALLATION.md)** - Installation guide
+- **[docs/GETTING_STARTED/CONFIGURATION.md](docs/GETTING_STARTED/CONFIGURATION.md)** - Configuration guide
+- **[docs/DEVELOPMENT/GUIDE.md](docs/DEVELOPMENT/GUIDE.md)** - Developer guide
+- **[docs/DEVELOPMENT/TESTING.md](docs/DEVELOPMENT/TESTING.md)** - Testing and validation
 - **[docs/ROADMAP.md](docs/ROADMAP.md)** - Product roadmap
-- **[docs/TESTING.md](docs/TESTING.md)** - Testing and validation
-- **[docs/RICH_TEXT_EDITOR.md](docs/RICH_TEXT_EDITOR.md)** - Rich text editor setup
+- **[docs/FEATURES/guides/rich-text-editor.md](docs/FEATURES/guides/rich-text-editor.md)** - Rich text editor guide
 
 ## 🛠️ Tech Stack
 
@@ -194,7 +194,7 @@ DocHub features a full-featured rich text editor powered by Tiptap:
 - **Tables**: Create and edit tables
 - **Blockquotes**: Format quotes
 
-See `docs/RICH_TEXT_EDITOR.md` for detailed setup and usage instructions.
+See `docs/FEATURES/guides/rich-text-editor.md` for detailed setup and usage instructions.
 
 ## 📋 Template System
 
@@ -242,7 +242,7 @@ bun run check-db     # Check database connection and tables
 **Images not uploading:**
 - Ensure `documents` bucket exists in Supabase Storage
 - Verify bucket is set to Public
-- Check storage policies are configured (see `docs/RICH_TEXT_EDITOR.md`)
+- Check storage policies are configured (see `docs/FEATURES/guides/rich-text-editor.md`)
 
 **Templates not showing:**
 - Ensure `document_templates` table exists
@@ -254,7 +254,7 @@ bun run check-db     # Check database connection and tables
 - Verify environment variables are correct
 - Ensure Supabase project is accessible
 
-See `docs/QUICK_START.md` for more troubleshooting tips.
+See `docs/TROUBLESHOOTING.md` for more troubleshooting tips.
 
 ## 🤝 Contributing
 

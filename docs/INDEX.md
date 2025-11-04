@@ -28,6 +28,7 @@
 - **[Installation](GETTING_STARTED/INSTALLATION.md)** - Local development setup
 - **[Configuration](GETTING_STARTED/CONFIGURATION.md)** - Environment variables and settings
 - **[Supabase Setup](GETTING_STARTED/SUPABASE_SETUP.md)** - Database configuration
+- **[User Groups Setup](GETTING_STARTED/USER_GROUPS_SETUP.md)** - User groups and access control setup
 - **[Admin Setup](ADMIN_SETUP.md)** - Configure admin access
 
 ### Setup & Configuration
@@ -43,7 +44,8 @@
 ### Development
 - **[Development Guide](DEVELOPMENT/GUIDE.md)** - Contributing and development workflow
 - **[Testing Guide](DEVELOPMENT/TESTING.md)** - Testing strategies and practices
-- **[WorkOS Implementation](DEVELOPMENT/WORKOS.md)** - WorkOS SSO details
+- **[Test Suite Documentation](DEVELOPMENT/TESTING_README.md)** - Test suite setup and configuration
+- **[API Testing Guide](DEVELOPMENT/TESTING_API.md)** - Testing API endpoints with Postman
 
 ### Features
 
@@ -68,6 +70,11 @@
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 - **[FAQ](FAQ.md)** - Frequently asked questions
 
+### Project Management
+- **Bug Tracking:** All bugs are tracked in [GitHub Issues](https://github.com/StiensWout/DLWait/issues)
+- **Task Management:** Tasks are tracked in [GitHub Projects](https://github.com/StiensWout/DLWait/projects)
+- **Historical Project Management:** Archived in `docs/archive/bugs/` (migrated to GitHub)
+
 ---
 
 ## 🎯 What You're Looking For
@@ -84,6 +91,7 @@
 | **Contribute code** | [Development Guide](DEVELOPMENT/GUIDE.md) |
 | **See what's planned** | [Roadmap](ROADMAP.md) |
 | **Report/fix bugs** | [Troubleshooting](TROUBLESHOOTING.md) |
+| **Track tasks/bugs** | [GitHub Issues](https://github.com/StiensWout/DLWait/issues) or [GitHub Projects](https://github.com/StiensWout/DLWait/projects) |
 | **Understand a feature** | [Features Directory](FEATURES/) |
 
 ---
@@ -103,7 +111,8 @@ docs/
 ├── GETTING_STARTED/            # Setup guides
 │   ├── INSTALLATION.md
 │   ├── CONFIGURATION.md
-│   └── SUPABASE_SETUP.md
+│   ├── SUPABASE_SETUP.md
+│   └── USER_GROUPS_SETUP.md
 │
 ├── SETUP/                      # Configuration guides
 │   ├── WORKOS.md
@@ -118,7 +127,8 @@ docs/
 ├── DEVELOPMENT/                # Developer resources
 │   ├── GUIDE.md
 │   ├── TESTING.md
-│   └── WORKOS.md
+│   ├── TESTING_README.md
+│   └── TESTING_API.md
 │
 └── FEATURES/                   # Feature documentation
     ├── AUTHENTICATION.md
@@ -128,7 +138,12 @@ docs/
     ├── FILES.md
     ├── guides/
     └── pending/
-```
+
+docs/archive/bugs/              # Archived project management (migrated to GitHub)
+    ├── README.md               # Historical project management overview
+    ├── TODO.md                 # Historical task list
+    ├── GITHUB_PROJECTS_SYNC.md # Historical GitHub Projects integration guide
+    └── BUG_LIST.md             # Historical bug list
 
 ---
 
