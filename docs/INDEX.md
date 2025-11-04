@@ -71,8 +71,8 @@
 - **[FAQ](FAQ.md)** - Frequently asked questions
 
 ### Project Management
-- **Bug Tracking:** All bugs are tracked in [GitHub Issues](https://github.com/StiensWout/DLWait/issues)
-- **Task Management:** Tasks are tracked in [GitHub Projects](https://github.com/StiensWout/DLWait/projects)
+- **Bug Tracking:** All bugs are tracked in [GitHub Issues](https://github.com/StiensWout/DocHub/issues)
+- **Task Management:** Tasks are tracked in [GitHub Projects](https://github.com/StiensWout/DocHub/projects)
 - **Historical Project Management:** Archived in `docs/archive/bugs/` (migrated to GitHub)
 
 ---
@@ -91,7 +91,7 @@
 | **Contribute code** | [Development Guide](DEVELOPMENT/GUIDE.md) |
 | **See what's planned** | [Roadmap](ROADMAP.md) |
 | **Report/fix bugs** | [Troubleshooting](TROUBLESHOOTING.md) |
-| **Track tasks/bugs** | [GitHub Issues](https://github.com/StiensWout/DLWait/issues) or [GitHub Projects](https://github.com/StiensWout/DLWait/projects) |
+| **Track tasks/bugs** | [GitHub Issues](https://github.com/StiensWout/DocHub/issues) or [GitHub Projects](https://github.com/StiensWout/DocHub/projects) |
 | **Understand a feature** | [Features Directory](FEATURES/) |
 
 ---

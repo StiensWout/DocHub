@@ -6,11 +6,11 @@
 
 ## Overview
 
-This document investigates CI/CD pipeline options for the DLWait/DocHub project and provides recommendations for a basic, viable setup that's not too hard to implement and maintain.
+This document investigates CI/CD pipeline options for the DocHub project and provides recommendations for a basic, viable setup that's not too hard to implement and maintain.
 
 ## Current State
 
-- ✅ **Repository:** GitHub (StiensWout/DLWait)
+- ✅ **Repository:** GitHub (StiensWout/DocHub)
 - ✅ **Project Type:** Next.js 14 + TypeScript
 - ✅ **Test Framework:** Jest with coverage reporting
 - ✅ **Package Manager:** Bun (primary), npm/node (fallback)
@@ -193,7 +193,7 @@ jobs:
 1. **Install GitGuardian GitHub App:**
    - Visit [GitGuardian GitHub App](https://github.com/apps/gitguardian)
    - Click "Install" and authorize access to repository
-   - Select repository: `StiensWout/DLWait`
+   - Select repository: `StiensWout/DocHub`
 
 2. **Configure Monitoring:**
    - GitGuardian automatically scans commits and PRs for secrets
@@ -248,7 +248,7 @@ Add to `.github/workflows/ci.yml`:
    - Authorize Cursor to access repositories
 
 3. **Enable Bugbot:**
-   - Select repository: `StiensWout/DLWait`
+   - Select repository: `StiensWout/DocHub`
    - Enable automatic reviews on PRs
 
 4. **Configure Preferences (Optional):**
