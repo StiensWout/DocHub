@@ -21,9 +21,10 @@ import ApplicationCard from "@/components/ApplicationCard";
 import UserGroupManager from "@/components/UserGroupManager";
 import OrganizationDisplay from "@/components/OrganizationDisplay";
 import { useRecentDocuments } from "@/hooks/useRecentDocuments";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/components/Toast";
 import { supabase } from "@/lib/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import VersionDisplay from "@/components/VersionDisplay";
 import type { ApplicationWithDocs, Team, Application, Document, BreadcrumbItem, ApplicationGroup } from "@/types";
 import type { SearchResult, DocumentSearchResult } from "@/lib/supabase/search";
 
@@ -911,7 +912,17 @@ function HomeContent() {
             )}
           </div>
         )}
-      </main>
+        </main>
+        
+        {/* Footer with Version */}
+        <footer className="border-t border-white/10 bg-black/20 py-4 px-6">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <VersionDisplay variant="compact" />
+            <div className="text-xs text-gray-500">
+              DocHub - Documentation Manager
+            </div>
+          </div>
+        </footer>
       </div>
       {/* End Main Content */}
 

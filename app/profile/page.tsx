@@ -14,9 +14,11 @@ import {
   ArrowLeft,
   Loader2,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Settings
 } from "lucide-react";
 import Link from "next/link";
+import VersionDisplay from "@/components/VersionDisplay";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Organization {
@@ -273,8 +275,16 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
+
+        {/* Version Information */}
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Settings className="w-5 h-5" />
+            Version Information
+          </h3>
+          <VersionDisplay variant="detailed" className="mt-2" />
+        </div>
       </div>
     </div>
   );
 }
-
