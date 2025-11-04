@@ -122,13 +122,13 @@ export function validateEnum<T extends string>(
 }
 
 /**
- * Validate that an array contains only valid UUID strings.
+ * Check whether an array contains only valid UUID strings and meets a minimum length requirement.
  *
  * @param uuids - Array whose elements are expected to be UUID strings
  * @param fieldName - Field name used in error messages (defaults to "IDs")
- * @param strict - If `true`, require UUID v4 format; if `false`, accept any UUID version (default: `false`)
- * @param minLength - Minimum array length (default: 1). Set to 0 to allow empty arrays for optional parameters
- * @returns An object with `valid: true` when every element is a valid UUID and array length meets requirements; otherwise `valid: false` and an `error` message describing the first failure
+ * @param strict - When `true`, require UUID v4 format; when `false`, accept any UUID version (default: `false`)
+ * @param minLength - Minimum required number of elements in the array (default: 1). Set to 0 to allow an empty array
+ * @returns `{ valid: true }` when every element is a valid UUID and the array length is at least `minLength`; otherwise `{ valid: false, error: string }` describing the first failure
  */
 export function validateUUIDArray(
   uuids: string[] | null | undefined,
