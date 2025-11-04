@@ -35,8 +35,121 @@ jobs:
         continue-on-error: true  # Don't fail build, but warn about vulnerabilities
       
       - name: Run linter
-        run: npm run lint
+        run: npm run lint 2>&1 | tee lint-output.txt || true
         continue-on-error: true  # Continue if linting fails (can be changed to false once linting is clean)
+        id: lint
+  
+      - name: Create/Update linting errors issue
+        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            
+            // Read linting output
+            let lintOutput = '';
+            try {
+              if (fs.existsSync('lint-output.txt')) {
+                lintOutput = fs.readFileSync('lint-output.txt', 'utf-8');
+              }
+            } catch (error) {
+              lintOutput = 'Could not read linting output';
+            }
+            
+            // Check if there are actual linting errors (not just warnings)
+            const hasErrors = lintOutput.includes('Error:') || lintOutput.includes('✖');
+            
+            if (!hasErrors && lintOutput.includes('No ESLint warnings')) {
+              // No errors, close any existing issue
+              const issueTitle = '🔍 ESLint Errors - Automated CI Report';
+              const issues = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                labels: 'linting,ci,automated',
+                per_page: 100
+              });
+              
+              const existingIssue = issues.data.find(issue => issue.title === issueTitle);
+              if (existingIssue) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: existingIssue.number,
+                  state: 'closed'
+                });
+                console.log(`Closed issue #${existingIssue.number} - no linting errors`);
+              }
+              return;
+            }
+            
+            if (!hasErrors) {
+              console.log('No linting errors found, skipping issue creation');
+              return;
+            }
+            
+            // Prepare issue details
+            const issueTitle = '🔍 ESLint Errors - Automated CI Report';
+            const issueLabels = ['linting', 'ci', 'automated'];
+            const branchName = context.payload.pull_request?.head?.ref || context.ref.replace('refs/heads/', '');
+            const prNumber = context.payload.pull_request?.number;
+            const prLink = prNumber ? `#${prNumber}` : 'N/A';
+            
+            const issueBody = `## ESLint Errors Report
+            
+            This issue was automatically created by the CI pipeline due to linting errors.
+            
+            **Branch:** \`${branchName}\`
+            **PR:** ${prLink}
+            **Commit:** ${context.sha.substring(0, 7)}
+            **Workflow Run:** [View Run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+            
+            <details>
+            <summary>Click to expand linting errors</summary>
+            
+            \`\`\`
+            ${lintOutput.substring(0, 60000)}  // GitHub has a 65KB limit for issue body
+            \`\`\`
+            
+            </details>
+            
+            ---
+            *This issue will be automatically updated on each CI run with linting errors.*
+            *To fix: Run \`npm run lint\` locally and fix the errors.*
+            `;
+            
+            // Search for existing issue
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: issueLabels.join(','),
+              per_page: 100
+            });
+            
+            const existingIssue = issues.data.find(issue => issue.title === issueTitle);
+            
+            if (existingIssue) {
+              // Update existing issue
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: issueBody
+              });
+              console.log(`Updated existing issue #${existingIssue.number}`);
+            } else {
+              // Create new issue
+              const issue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issueTitle,
+                body: issueBody,
+                labels: issueLabels
+              });
+              console.log(`Created new issue #${issue.data.number}`);
+            }
       
       - name: Type check
         run: npx tsc --noEmit
