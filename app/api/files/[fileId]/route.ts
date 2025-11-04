@@ -96,6 +96,16 @@ async function canModifyFile(
   return false;
 }
 
+/**
+ * Replaces an existing stored file with a newly uploaded file and updates its metadata.
+ *
+ * Validates authentication and authorization, stages the uploaded file, atomically replaces the final storage object,
+ * updates the `document_files` metadata row, cleans up staging, and returns the updated metadata and public URL.
+ *
+ * @param request - Incoming request containing multipart form data with a `file` field for the new file.
+ * @param context - Route context containing `params`, where `params.fileId` is the ID of the file to replace.
+ * @returns A JSON NextResponse containing the updated file metadata and its public URL on success, or an error object on failure.
+ */
 export async function PUT(
   request: NextRequest,
   context: { params: Promise<{ fileId: string }> }
@@ -353,6 +363,20 @@ export async function PUT(
   }
 }
 
+/**
+ * Delete a file and its associated metadata after authenticating and authorizing the requester.
+ *
+ * Attempts to remove the file from the configured storage bucket and then deletes the corresponding
+ * row in the `document_files` table. If storage removal fails, metadata deletion is still attempted.
+ *
+ * @returns A JSON response indicating the outcome:
+ * - 200: `{ success: true, message: "File deleted successfully" }` when both deletion steps succeed (or storage removal fails but metadata deletion succeeds).
+ * - 400: when the `fileId` path parameter is missing or not a valid UUID.
+ * - 401: when the requester is not authenticated.
+ * - 403: when the authenticated user lacks permission to delete the file.
+ * - 404: when no file metadata is found for the provided `fileId`.
+ * - 500: when deleting the metadata fails or an unexpected server error occurs.
+ */
 export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ fileId: string }> }

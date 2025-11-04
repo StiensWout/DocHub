@@ -5,8 +5,13 @@ import { log } from '@/lib/logger';
 import { validateUUID, validateEnum, validateUUIDArray, DocumentType } from '@/lib/validation/api-validation';
 
 /**
- * GET /api/documents/[documentId]/tags
- * Get tags for a specific document
+ * Retrieve tag objects associated with a specific document.
+ *
+ * Requires an authenticated session. Validates `documentId` as a UUID and the optional `type` query parameter against `DocumentType`. Returns 401 if unauthenticated, 400 for validation failures, and 500 for server or database errors.
+ *
+ * @param request - Incoming request; may include the `type` query parameter to filter by document type (`base` or `team`).
+ * @param params.documentId - The document's UUID.
+ * @returns An object with a `tags` array containing tag objects (`id`, `name`, `slug`, `color`).
  */
 export async function GET(
   request: NextRequest,
@@ -80,8 +85,9 @@ export async function GET(
 }
 
 /**
- * POST /api/documents/[documentId]/tags
- * Add tags to a document
+ * Associate one or more existing tags with the specified document and return the associated tag objects.
+ *
+ * @returns The response body: on success, an object with `tags` — an array of tag objects (`id`, `name`, `slug`, `color`); on error, an object with `error` describing the failure.
  */
 export async function POST(
   request: NextRequest,
@@ -173,8 +179,14 @@ export async function POST(
 }
 
 /**
- * DELETE /api/documents/[documentId]/tags
- * Remove tags from a document
+ * Remove one or more tag associations from a document.
+ *
+ * Validates authentication, the `documentId` UUID, the optional `type` query enum (defaults to `base`),
+ * and an optional `tagIds` query containing a comma-separated list of tag UUIDs. If `tagIds` is provided,
+ * only those tag associations are removed; otherwise all tags for the document and type are removed.
+ *
+ * @param params.documentId - The UUID of the document to modify
+ * @returns A JSON object `{ success: true }` on success. On failure returns a JSON error message with an appropriate HTTP status (`401` for unauthorized, `400` for validation errors, `500` for server/database errors).
  */
 export async function DELETE(
   request: NextRequest,
@@ -254,4 +266,3 @@ export async function DELETE(
     );
   }
 }
-
