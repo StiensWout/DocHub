@@ -16,10 +16,6 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       canvas: false,
-      // Fix for react-pdf/pdfjs-dist webpack bundling issues (client-side only)
-      ...(!isServer && {
-        'pdfjs-dist/build/pdf.worker.mjs': require.resolve('pdfjs-dist/build/pdf.worker.mjs'),
-      }),
     };
     
     // Exclude winston from client bundle to avoid fs module errors
