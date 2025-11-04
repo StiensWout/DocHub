@@ -1,6 +1,6 @@
 # Product Roadmap
 
-Planned features, enhancements, and improvements for DocHub. Organized by priority and timeline.
+Planned features, enhancements, and improvements for DocHub. Features are tracked in [GitHub Issues](https://github.com/StiensWout/DocHub/issues). This roadmap provides a high-level overview.
 
 ## 🚀 Short Term (Next 1-2 Weeks)
 
@@ -16,9 +16,8 @@ Planned features, enhancements, and improvements for DocHub. Organized by priori
   - [x] Visual organization with group/app colors
   - [x] Group detail page with full group view
   - [x] Search integration for groups
-  - **See**: `docs/FEATURES/completed/main-page-group-overview.md`
-  - **Priority**: Medium
   - **Status**: ✅ Completed
+  - **See**: [GitHub Issues](https://github.com/StiensWout/DocHub/issues) for details
 
 ---
 
@@ -38,21 +37,25 @@ Planned features, enhancements, and improvements for DocHub. Organized by priori
   - [x] Client-side auth hooks
   - [x] **Key Feature**: Switch providers without code changes - just update organization connection in WorkOS Dashboard
   - [ ] **Future**: Magic Link, Password Reset, MFA, Passkeys
-  - **See**: `docs/FEATURES/completed/workos-organization-memberships-groups.md`
+  - **Status**: ✅ Completed
+  - **See**: [GitHub Issues](https://github.com/StiensWout/DocHub/issues) for details
 - [x] **WorkOS Organization Memberships** ✅ Complete
   - [x] Groups sourced from WorkOS Organizations
   - [x] Automatic team creation from organizations (subgroup teams only)
   - [x] Admin organization support
   - [x] Team filtering based on user memberships
-  - **See**: `docs/FEATURES/completed/workos-organization-memberships-groups.md`
-  - **See**: `docs/FEATURES/completed/auto-team-creation-from-organizations.md`
+  - **Status**: ✅ Completed
+  - **See**: [GitHub Issues](https://github.com/StiensWout/DocHub/issues) for details
+  - **Status**: ✅ Completed
+  - **See**: [GitHub Issues](https://github.com/StiensWout/DocHub/issues) for details
 - [x] **User Profiles** ✅ Complete
   - [x] User profile pages (`/profile`)
   - [x] Organization memberships display
   - [x] Current organization/team display in header
   - [x] Admin team switching
   - [ ] **Future**: Avatar uploads, User preferences, Activity history
-  - **See**: `docs/FEATURES/completed/user-profile-and-org-display.md`
+  - **Status**: ✅ Completed
+  - **See**: [GitHub Issues](https://github.com/StiensWout/DocHub/issues) for details
 
 ### Collaboration Features
 - [ ] **Document Collaboration**
@@ -184,11 +187,11 @@ These are ideas for future consideration, not currently prioritized:
 ## 📊 Completed Features
 
 ### Recently Completed ✅
-- ✅ WorkOS SSO Authentication (2025-01-30)
-- ✅ WorkOS Organization Memberships for Groups (2025-01-30)
-- ✅ Automatic Team Creation from Organizations (2025-01-30)
-- ✅ User Profile Page & Organization Display (2025-01-30)
-- ✅ Team Filtering & Access Control (2025-01-30)
+- ✅ WorkOS SSO Authentication
+- ✅ WorkOS Organization Memberships for Groups
+- ✅ Automatic Team Creation from Organizations
+- ✅ User Profile Page & Organization Display
+- ✅ Team Filtering & Access Control
 - ✅ Main page group overview (replaces recent documents)
 - ✅ Group detail page with applications grid
 - ✅ Application & group search integration
@@ -206,9 +209,9 @@ These are ideas for future consideration, not currently prioritized:
 - ✅ Multi-team support
 - ✅ Consistent URL navigation for all applications
 
-**See**: [Changelog](CHANGELOG.md) for complete history of completed features
+See [Changelog](CHANGELOG.md) for complete history of completed features.
 
-**See**: `docs/FEATURES/completed/` for detailed feature specifications
+For detailed feature information, see [GitHub Issues](https://github.com/StiensWout/DocHub/issues).
 
 ---
 
@@ -222,7 +225,7 @@ These are ideas for future consideration, not currently prioritized:
 
 ## 📅 Roadmap Updates
 
-- **Last Updated**: 2025-01-30
+---
 - **Review Frequency**: Monthly
 - **Current Focus**: Document Management & User Experience Improvements
 
@@ -283,7 +286,7 @@ These are ideas for future consideration, not currently prioritized:
 Want to work on a roadmap item?
 
 1. Check if it's already in progress
-2. Review feature specifications in `docs/FEATURES/pending/`
+2. Review feature specifications in [GitHub Issues](https://github.com/StiensWout/DocHub/issues)
 3. Create an issue to discuss approach
 4. Create a feature branch
 5. Submit pull request when ready
@@ -296,7 +299,7 @@ See [Development Guide](DEVELOPMENT/GUIDE.md) for development guidelines.
 
 - [Changelog](CHANGELOG.md) - History of completed features
 - [Architecture Overview](ARCHITECTURE/OVERVIEW.md) - Technical architecture
-- [Feature Guides](FEATURES/guides/) - How to use features
+- [User Guides](GUIDES/) - How to use features
 
 ---
 

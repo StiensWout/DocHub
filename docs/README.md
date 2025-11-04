@@ -35,12 +35,8 @@ Welcome to the DocHub documentation. This is your central hub for all documentat
 - **[SSO Configuration](SETUP/SSO.md)** - Single Sign-On
 - **[Provider Migration](SETUP/PROVIDER_MIGRATION.md)** - Switch SSO providers
 
-### Features
-- **[Authentication](FEATURES/AUTHENTICATION.md)** - Auth & authorization
-- **[Document Management](FEATURES/DOCUMENTS.md)** - Documents
-- **[Search & Discovery](FEATURES/SEARCH.md)** - Search functionality
-- **[Teams & Organizations](FEATURES/TEAMS.md)** - Teams and access
-- **[File Management](FEATURES/FILES.md)** - File attachments
+### User Guides
+- **[Rich Text Editor](GUIDES/rich-text-editor.md)** - Using the editor
 
 ### Architecture
 - **[Overview](ARCHITECTURE/OVERVIEW.md)** - System architecture
@@ -69,7 +65,7 @@ Welcome to the DocHub documentation. This is your central hub for all documentat
 | **Understand the project** | [Status](STATUS.md) or [Index](INDEX.md) |
 | **Set up locally** | [Installation](GETTING_STARTED/INSTALLATION.md) |
 | **Configure auth** | [WorkOS Setup](SETUP/WORKOS.md) |
-| **Understand a feature** | [Features Directory](FEATURES/) |
+| **View features** | Check [GitHub Issues](https://github.com/StiensWout/DocHub/issues) - features are tracked in git |
 | **See what's planned** | [Roadmap](ROADMAP.md) |
 | **Contribute code** | [Development Guide](DEVELOPMENT/GUIDE.md) |
 | **Get help** | [Troubleshooting](TROUBLESHOOTING.md) or [FAQ](FAQ.md) |
@@ -81,7 +77,7 @@ Welcome to the DocHub documentation. This is your central hub for all documentat
 1. **[INDEX.md](INDEX.md)** - Get oriented
 2. **[STATUS.md](STATUS.md)** - Understand current state
 3. **[Installation Guide](GETTING_STARTED/INSTALLATION.md)** - Get running
-4. **[Feature Documentation](FEATURES/)** - Understand capabilities
+4. **[Architecture](ARCHITECTURE/OVERVIEW.md)** - Understand system design
 
 ---
 

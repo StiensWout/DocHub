@@ -85,7 +85,7 @@ A beautiful, dark-mode documentation manager built with Next.js 14, TypeScript, 
    - Go to Supabase Dashboard → Storage
    - Create a bucket named `documents`
    - Set it to **Public**
-   - Configure storage policies (see `docs/FEATURES/guides/rich-text-editor.md` for details)
+   - Configure storage policies (see `docs/GUIDES/rich-text-editor.md` for details)
 
 6. **Seed the database with sample data:**
    ```bash
@@ -118,7 +118,7 @@ Comprehensive documentation is available in the `docs/` directory:
 - **[docs/DEVELOPMENT/GUIDE.md](docs/DEVELOPMENT/GUIDE.md)** - Developer guide
 - **[docs/DEVELOPMENT/TESTING.md](docs/DEVELOPMENT/TESTING.md)** - Testing and validation
 - **[docs/ROADMAP.md](docs/ROADMAP.md)** - Product roadmap
-- **[docs/FEATURES/guides/rich-text-editor.md](docs/FEATURES/guides/rich-text-editor.md)** - Rich text editor guide
+- **[docs/GUIDES/rich-text-editor.md](docs/GUIDES/rich-text-editor.md)** - Rich text editor guide
 
 ## 🛠️ Tech Stack
 
@@ -180,7 +180,8 @@ The application uses the following main tables:
 - **`document_templates`** - Template library for document creation
 - **`document_versions`** - Version history for documents
 
-See `supabase/schema.sql` for complete schema definition.
+- **Database Schema**: See `supabase/database_dump.sql` for the complete schema (source of truth)
+- **Database Documentation**: See `docs/ARCHITECTURE/DATABASE.md` for schema overview
 
 ## 🎨 Rich Text Editor
 
@@ -194,7 +195,7 @@ DocHub features a full-featured rich text editor powered by Tiptap:
 - **Tables**: Create and edit tables
 - **Blockquotes**: Format quotes
 
-See `docs/FEATURES/guides/rich-text-editor.md` for detailed setup and usage instructions.
+See `docs/GUIDES/rich-text-editor.md` for detailed setup and usage instructions.
 
 ## 📋 Template System
 
@@ -242,7 +243,7 @@ bun run check-db     # Check database connection and tables
 **Images not uploading:**
 - Ensure `documents` bucket exists in Supabase Storage
 - Verify bucket is set to Public
-- Check storage policies are configured (see `docs/FEATURES/guides/rich-text-editor.md`)
+- Check storage policies are configured (see `docs/GUIDES/rich-text-editor.md`)
 
 **Templates not showing:**
 - Ensure `document_templates` table exists
@@ -258,14 +259,19 @@ See `docs/TROUBLESHOOTING.md` for more troubleshooting tips.
 
 ## 🤝 Contributing
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on contributing to DocHub.
+
+Quick steps:
 1. Read the documentation in `docs/`
-2. Check `docs/ROADMAP.md` for planned features
-3. Follow existing code style and patterns
-4. Update relevant documentation when adding features
+2. Review the [Documentation Style Guide](docs/DEVELOPMENT/STYLE_GUIDE.md)
+3. Check `docs/ROADMAP.md` for planned features
+4. Follow existing code style and patterns
+5. Update relevant documentation when adding features
+6. See [GitHub Issues](https://github.com/StiensWout/DocHub/issues) for feature tracking
 
 ## 📝 License
 
-[Add your license here]
+MIT License - See LICENSE file for details
 
 ## 🙏 Acknowledgments
 

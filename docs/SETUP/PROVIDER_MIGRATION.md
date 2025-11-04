@@ -1,7 +1,5 @@
 # SSO Provider Migration Guide
 
-**Last Updated**: 2025-01-30
-
 ---
 
 ## Overview
@@ -177,5 +175,5 @@ Before completing migration:
 
 - [WorkOS Setup](WORKOS.md)
 - [SSO Configuration](SSO.md)
-- [Authentication Features](../FEATURES/AUTHENTICATION.md)
+- [Authentication & Authorization](https://github.com/StiensWout/DocHub/issues) - See GitHub Issues for feature details
 

@@ -2,7 +2,7 @@
 
 All notable changes and completed features in DocHub.
 
-## [Current] - 2025-01-30
+## [Current]
 
 ### ✨ Completed Features
 
@@ -29,7 +29,7 @@ All notable changes and completed features in DocHub.
 - ✅ Sign-up page redirects to sign-in (SSO doesn't require separate sign-up)
 - ✅ **Key Benefit**: Switch from test SSO to Microsoft (or any provider) by updating organization connection
 - **Status**: ✅ Fully functional with test SSO, ready for production provider
-- **See**: `docs/FEATURES/pending/auth-provider-switching.md` for migration guide
+- **See**: [GitHub Issues](https://github.com/StiensWout/DocHub/issues) for migration guide
 
 #### WorkOS SSO Integration - Phase 1 ✅
 - ✅ Installed and configured WorkOS Node.js SDK
@@ -306,5 +306,5 @@ See [Roadmap](ROADMAP.md) for planned features:
 
 ---
 
-**Last Updated**: 2025-01-30
+---
 

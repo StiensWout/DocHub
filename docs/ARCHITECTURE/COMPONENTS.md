@@ -451,5 +451,3 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
 ---
 
-**Last Updated**: 2025-01-30
-

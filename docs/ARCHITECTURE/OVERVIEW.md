@@ -253,5 +253,4 @@ bun run start     # Production server
 
 ---
 
-**Last Updated**: 2025-01-30
-
+---

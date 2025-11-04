@@ -1,7 +1,5 @@
 # Frequently Asked Questions
 
-**Last Updated**: 2025-01-30
-
 ---
 
 ## Authentication
@@ -30,7 +28,7 @@ You can switch providers without code changes - just update the configuration in
 
 ### How are teams created?
 
-Teams are automatically created from WorkOS Organizations. When a user joins a WorkOS organization, corresponding teams are created in DocHub. See [Teams Documentation](FEATURES/TEAMS.md).
+Teams are automatically created from WorkOS Organizations. When a user joins a WorkOS organization, corresponding teams are created in DocHub. See [GitHub Issues](https://github.com/StiensWout/DocHub/issues) for feature details.
 
 ### What's the difference between organizations and teams?
 
@@ -52,7 +50,7 @@ Currently, teams are auto-created from WorkOS Organizations. Manual team managem
 
 ### How do I create a document?
 
-Click the "+" button or use the document creation dialog. Documents can be base (shared) or team-specific. See [Document Management](FEATURES/DOCUMENTS.md).
+Click the "+" button or use the document creation dialog. Documents can be base (shared) or team-specific.
 
 ### What document types are supported?
 
@@ -63,7 +61,7 @@ You can switch document types after creation via the metadata editor.
 
 ### Can I edit document metadata?
 
-Yes! Click the settings (gear) icon in the document viewer to edit title, category, document type, and tags. See [Document Management](FEATURES/DOCUMENTS.md).
+Yes! Click the settings (gear) icon in the document viewer to edit title, category, document type, and tags.
 
 ### How do tags work?
 
@@ -84,7 +82,7 @@ Search works in real-time as you type. It searches:
 - Application names
 - Application group names
 
-See [Search Documentation](FEATURES/SEARCH.md).
+Search functionality is documented in [GitHub Issues](https://github.com/StiensWout/DocHub/issues).
 
 ### Can I filter search results?
 

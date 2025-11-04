@@ -12,9 +12,11 @@
     "test:coverage": "jest --coverage",
     "seed": "bun run scripts/seed.ts",
     "check-db": "bun run scripts/check-db.ts",
-    "validate": "bun run scripts/validate.ts"
+    "validate": "bun run scripts/validate.ts",
+    "dump-db": "bun run scripts/dump-database.ts"
   },
   "dependencies": {
+    "-": "^0.0.1",
     "@supabase/supabase-js": "^2.78.0",
     "@tiptap/extension-image": "^3.10.1",
     "@tiptap/extension-link": "^3.10.1",
@@ -33,6 +35,7 @@
     "react-dom": "^18.3.0",
     "react-pdf": "10.2.0",
     "server-only": "^0.0.1",
+    "supabase": "^2.54.11",
     "turndown": "^7.2.2",
     "winston": "^3.18.3"
   },

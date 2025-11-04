@@ -90,5 +90,5 @@ The system is ready for AD group integration. When implementing:
 3. Auto-assign roles based on AD group membership
 4. Use WorkOS Directory Sync or custom sync mechanism
 
-See `docs/FEATURES/completed/user-groups-access-control.md` for detailed documentation.
+See [GitHub Issues](https://github.com/StiensWout/DocHub/issues) for detailed feature documentation.
 

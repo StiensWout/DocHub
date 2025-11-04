@@ -2,7 +2,9 @@
 
 Complete database schema documentation for DocHub.
 
-## 📊 Schema Overview
+> **📌 Source of Truth**: The complete database schema is defined in `supabase/database_dump.sql`. This file is the authoritative source for all database structure. See [Database Dump Guide](../INFRASTRUCTURE/DATABASE_DUMP.md) for instructions on exporting and updating the schema.
+
+> **Note**: This documentation provides an overview of the database structure. For the complete, up-to-date schema, always refer to `supabase/database_dump.sql`.
 
 DocHub uses PostgreSQL via Supabase with the following core entities:
 
@@ -416,5 +418,4 @@ Indexes are created on:
 
 ---
 
-**Last Updated**: 2025-01-30
-
+---

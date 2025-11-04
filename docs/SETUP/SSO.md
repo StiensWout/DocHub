@@ -1,7 +1,5 @@
 # SSO Configuration Guide
 
-**Last Updated**: 2025-01-30
-
 ---
 
 ## Overview
@@ -173,5 +171,5 @@ This guide explains how to configure Single Sign-On (SSO) providers in DocHub us
 
 - [WorkOS Setup](WORKOS.md)
 - [Provider Migration](PROVIDER_MIGRATION.md)
-- [Authentication Features](../FEATURES/AUTHENTICATION.md)
+- [Authentication & Authorization](https://github.com/StiensWout/DocHub/issues) - See GitHub Issues for feature details
 

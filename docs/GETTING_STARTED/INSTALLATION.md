@@ -63,27 +63,30 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 
 ### Step 5: Set Up Database Schema
 
-**Option A: Fresh Setup (Recommended)**
+You have three options for setting up the database:
 
+**Option A: Use Database Dump (Recommended)**
+- Check if `supabase/database_dump.sql` exists
+- If available, run it in Supabase SQL Editor for the complete, up-to-date schema
+- See [Database Dump Guide](../INFRASTRUCTURE/DATABASE_DUMP.md) for more information
+
+**Option B: Complete Schema Reset**
 1. Go to Supabase Dashboard → **SQL Editor**
 2. Click **"New query"**
 3. Open `supabase/complete_schema.sql` in your editor
 4. Copy the entire contents
 5. Paste into Supabase SQL Editor
 6. Click **"Run"**
+- ⚠️ **Warning:** This will delete all existing data if tables already exist
 
-This single script creates all tables, indexes, triggers, and functions.
+**Option C: Incremental Setup (If you already have data)**
+- Run these SQL files in order:
+  1. `supabase/schema.sql` - Main tables
+  2. `supabase/templates_schema.sql` - Templates table
+  3. `supabase/versioning_schema.sql` - Versioning system
+  4. `supabase/rls_policies.sql` - Row Level Security
 
-**⚠️ Warning:** This will delete all existing data if tables already exist.
-
-**Option B: Incremental Setup**
-
-Run these SQL files in order:
-
-1. `supabase/schema.sql` - Main tables
-2. `supabase/templates_schema.sql` - Templates table
-3. `supabase/versioning_schema.sql` - Versioning system
-4. `supabase/rls_policies.sql` - Row Level Security
+> **Note**: For the most up-to-date schema, always check `supabase/database_dump.sql` first. See [Database Dump Guide](../INFRASTRUCTURE/DATABASE_DUMP.md) for information on exporting the schema.
 
 ### Step 6: Configure Storage
 

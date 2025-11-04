@@ -1,8 +1,10 @@
 # Troubleshooting Guide
 
-## Microsoft SSO 404 Error
+Common issues and solutions for DocHub.
 
-If you're getting a 404 error when clicking the Microsoft login button, here are common causes and solutions:
+## SSO Authentication Issues
+
+If you're having trouble with SSO authentication, here are common causes and solutions:
 
 ### 1. Check Environment Variables
 
@@ -11,9 +13,10 @@ The most common cause is missing or incorrect environment variables.
 **Check your `.env.local` file has:**
 
 ```env
-NEXT_PUBLIC_WORKOS_CLIENT_ID=client_your_workos_client_id
+WORKOS_API_KEY=sk_your_workos_api_key
+WORKOS_CLIENT_ID=client_your_workos_client_id
 NEXT_PUBLIC_WORKOS_REDIRECT_URI=http://localhost:3000/auth/callback
-WORKOS_API_KEY=sk_test_your_workos_api_key
+WORKOS_USE_ORGANIZATIONS=true
 ```
 
 **Verify they're loaded:**
@@ -21,7 +24,7 @@ WORKOS_API_KEY=sk_test_your_workos_api_key
 1. Open browser DevTools (F12)
 2. Go to Console tab
 3. Check for logs that show environment variable status
-4. If you see "Missing NEXT_PUBLIC_WORKOS_CLIENT_ID", the variable isn't set
+4. If you see "Missing NEXT_PUBLIC_WORKOS_CLIENT_ID" or similar, the variable isn't set
 
 **Fix:**
 
@@ -54,17 +57,17 @@ https://api.workos.com/user_management/authorize
 
 **Common mistakes:**
 
-- Wrong endpoint URL (e.g., `/oauth/authorize` instead of `/user_management/authorize`)
+- Wrong endpoint URL
 - Missing query parameters
 - Incorrect redirect URI format
 
 ### 4. Check WorkOS Dashboard Configuration
 
-The Microsoft provider must be configured in WorkOS Dashboard:
+The SSO provider must be configured in WorkOS Dashboard:
 
 1. Go to [WorkOS Dashboard](https://dashboard.workos.com)
-2. Navigate to **User Management** → **Social Providers**
-3. Check if **Microsoft** is enabled
+2. Navigate to **User Management** → **Social Providers** (or **SSO Connections**)
+3. Check if your SSO provider is configured
 4. Verify the redirect URI matches: `http://localhost:3000/auth/callback`
 
 ### 5. Check Network Tab

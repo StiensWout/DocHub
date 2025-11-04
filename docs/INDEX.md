@@ -2,8 +2,6 @@
 
 > **Your central hub for all DocHub documentation**
 
-**Last Updated**: 2025-01-30
-
 ---
 
 ## 🚀 Quick Start
@@ -43,28 +41,13 @@
 
 ### Development
 - **[Development Guide](DEVELOPMENT/GUIDE.md)** - Contributing and development workflow
+- **[Style Guide](DEVELOPMENT/STYLE_GUIDE.md)** - Documentation style standards
 - **[Testing Guide](DEVELOPMENT/TESTING.md)** - Testing strategies and practices
 - **[Test Suite Documentation](DEVELOPMENT/TESTING_README.md)** - Test suite setup and configuration
 - **[API Testing Guide](DEVELOPMENT/TESTING_API.md)** - Testing API endpoints with Postman
 
-### Features
-
-#### Core Features (Completed)
-- **[Authentication & Authorization](FEATURES/AUTHENTICATION.md)** - SSO, WorkOS, user management
-- **[Document Management](FEATURES/DOCUMENTS.md)** - Creating, editing, viewing documents
-- **[Search & Discovery](FEATURES/SEARCH.md)** - Search functionality and filters
-- **[Teams & Organizations](FEATURES/TEAMS.md)** - Team management and access control
-- **[File Management](FEATURES/FILES.md)** - File upload and viewing system
-
-#### In Progress
-- **[Document Search Enhancement](FEATURES/pending/enhanced-document-search-filtering.md)** - Advanced search and tagging
-
-#### Planned
-- **[Application Management](FEATURES/pending/application-management.md)** - Advanced app features
-- **[WorkOS AuthKit Advanced](FEATURES/pending/workos-authkit-integration.md)** - MFA, Magic Link, Passkeys
-
-#### User Guides
-- **[Rich Text Editor](FEATURES/guides/rich-text-editor.md)** - Using the editor
+### User Guides
+- **[Rich Text Editor](GUIDES/rich-text-editor.md)** - Using the editor
 
 ### Support
 - **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
@@ -92,7 +75,7 @@
 | **See what's planned** | [Roadmap](ROADMAP.md) |
 | **Report/fix bugs** | [Troubleshooting](TROUBLESHOOTING.md) |
 | **Track tasks/bugs** | [GitHub Issues](https://github.com/StiensWout/DocHub/issues) or [GitHub Projects](https://github.com/StiensWout/DocHub/projects) |
-| **Understand a feature** | [Features Directory](FEATURES/) |
+| **View features** | Check [GitHub Issues](https://github.com/StiensWout/DocHub/issues) - features are tracked in git |
 
 ---
 
@@ -130,14 +113,8 @@ docs/
 │   ├── TESTING_README.md
 │   └── TESTING_API.md
 │
-└── FEATURES/                   # Feature documentation
-    ├── AUTHENTICATION.md
-    ├── DOCUMENTS.md
-    ├── SEARCH.md
-    ├── TEAMS.md
-    ├── FILES.md
-    ├── guides/
-    └── pending/
+├── GUIDES/                      # User guides
+│   └── rich-text-editor.md
 
 docs/archive/bugs/              # Archived project management (migrated to GitHub)
     ├── README.md               # Historical project management overview
