@@ -254,7 +254,7 @@ function HomeContent() {
     }
     
     loadData();
-  }, [isMounted, authChecked]);
+  }, [isMounted, authChecked, selectedTeamId]);
 
   // Handle app and group query parameters from URL
   // Only process search params after component is mounted to avoid hydration issues
@@ -291,14 +291,14 @@ function HomeContent() {
   useEffect(() => {
     if (!selectedTeamId || applications.length === 0) return;
     refreshDocuments();
-  }, [selectedTeamId, applications]);
+  }, [selectedTeamId, applications, refreshDocuments]);
 
   // Track document views for recent documents
   useEffect(() => {
     if (selectedDocument && selectedDocumentAppName) {
       addRecentDocument(selectedDocument, selectedDocumentAppName);
     }
-  }, [selectedDocument?.id, selectedDocumentAppName, addRecentDocument]);
+  }, [selectedDocument, selectedDocumentAppName, addRecentDocument]);
 
   // Scroll to top only when document first opens (not on every render)
   useEffect(() => {
@@ -308,7 +308,7 @@ function HomeContent() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
-  }, [selectedDocument?.id]);
+  }, [selectedDocument]);
 
   // Scroll to top only when editor first opens
   useEffect(() => {
@@ -317,7 +317,7 @@ function HomeContent() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
-  }, [editingDocument?.id]);
+  }, [editingDocument]);
 
   // Generate breadcrumbs based on current state
   const getBreadcrumbs = useCallback((): BreadcrumbItem[] => {
@@ -596,7 +596,7 @@ function HomeContent() {
           <div className="mb-12">
             <h2 className="text-4xl font-bold mb-3">Welcome back!</h2>
             <p className="text-gray-400 text-lg mb-6">
-              Manage and access all your team's documentation in one place.
+              Manage and access all your team&apos;s documentation in one place.
             </p>
             <p className="text-gray-500 text-sm">
               Use the sidebar to navigate between teams and applications, or search for documents using the search bar above.

@@ -262,7 +262,7 @@ export default function TagSelector({
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-blue-400 font-medium">
-                      Create tag "{query.trim()}"
+                      Create tag &quot;{query.trim()}&quot;
                     </span>
                   </div>
                 </button>
@@ -280,7 +280,7 @@ export default function TagSelector({
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-blue-400 font-medium">
-                      Create tag "{query.trim()}"
+                      Create tag &quot;{query.trim()}&quot;
                     </span>
                   </div>
                 </button>

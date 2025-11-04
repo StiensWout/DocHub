@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Download, Trash2, Loader2, Globe, Users, RefreshCw, Eye } from "lucide-react";
 import { getApplicationFiles } from "@/lib/supabase/queries";
 import { supabase } from "@/lib/supabase/client";
@@ -27,11 +27,7 @@ export default function ApplicationFileList({
   const [viewingFile, setViewingFile] = useState<DocumentFile | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadFiles();
-  }, [applicationId, teamId]);
-
-  const loadFiles = async () => {
+  const loadFiles = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -43,7 +39,11 @@ export default function ApplicationFileList({
     } finally {
       setLoading(false);
     }
-  };
+  }, [applicationId, teamId]);
+
+  useEffect(() => {
+    loadFiles();
+  }, [loadFiles]);
 
   const handleDelete = async (fileId: string) => {
     if (!confirm("Are you sure you want to delete this file?")) {

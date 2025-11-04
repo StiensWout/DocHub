@@ -109,7 +109,7 @@ export default function FileUploadButton({
       setUploadProgress(0);
       setIsDragging(false);
     }
-  }, [documentId, documentType, applicationId, teamId, visibility, onUploadSuccess]);
+  }, [documentId, documentType, applicationId, teamId, visibility, onUploadSuccess, MAX_FILE_SIZE, isValidConfig]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

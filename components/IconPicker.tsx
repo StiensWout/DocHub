@@ -158,7 +158,7 @@ export default function IconPicker({ selectedIcon, onSelect, availableIcons, dis
       <div className="max-h-[300px] overflow-y-auto border border-white/10 rounded-lg p-2 bg-white/5">
         {filteredIcons.length === 0 ? (
           <div className="text-center py-8 text-gray-400 text-sm">
-            No icons found matching "{searchQuery}"
+            No icons found matching &quot;{searchQuery}&quot;
           </div>
         ) : (
           <div className="grid grid-cols-8 gap-2">

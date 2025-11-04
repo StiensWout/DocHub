@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { X, Users, Shield, Save, Loader2 } from "lucide-react";
 
@@ -66,9 +66,9 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
           // Fallback: will be set when users load
         });
     }
-  }, [isOpen]);
+  }, [isOpen, loadOrganizations, loadUsers]);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/users/all');
@@ -116,9 +116,9 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadOrganizations = async () => {
+  const loadOrganizations = useCallback(async () => {
     try {
       const response = await fetch('/api/organizations');
       const data = await response.json();
@@ -136,7 +136,7 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
     } catch (error: any) {
       console.error('Error loading organizations:', error);
     }
-  };
+  }, [loadUsers]);
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
