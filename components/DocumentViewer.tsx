@@ -127,7 +127,7 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
     }
 
     validateAccess();
-  }, [document, appId, teamId, onClose, toast]);
+  }, [document?.id, document?.type, document?.appId, appId, teamId, onClose, toast]);
 
   // Load document tags
   useEffect(() => {
@@ -147,7 +147,7 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
     }
 
     loadTags();
-  }, [document, appId]);
+  }, [document?.id, document?.type, appId]);
 
   if (!document) return null;
 

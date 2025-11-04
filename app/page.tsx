@@ -254,7 +254,7 @@ function HomeContent() {
     }
     
     loadData();
-  }, [isMounted, authChecked, selectedTeamId]);
+  }, [isMounted, authChecked]);
 
   // Handle app and group query parameters from URL
   // Only process search params after component is mounted to avoid hydration issues
@@ -298,7 +298,7 @@ function HomeContent() {
     if (selectedDocument && selectedDocumentAppName) {
       addRecentDocument(selectedDocument, selectedDocumentAppName);
     }
-  }, [selectedDocument, selectedDocumentAppName, addRecentDocument]);
+  }, [selectedDocument?.id, selectedDocumentAppName, addRecentDocument]);
 
   // Scroll to top only when document first opens (not on every render)
   useEffect(() => {
@@ -308,7 +308,7 @@ function HomeContent() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
-  }, [selectedDocument]);
+  }, [selectedDocument?.id]);
 
   // Scroll to top only when editor first opens
   useEffect(() => {
@@ -317,7 +317,7 @@ function HomeContent() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
-  }, [editingDocument]);
+  }, [editingDocument?.id]);
 
   // Generate breadcrumbs based on current state
   const getBreadcrumbs = useCallback((): BreadcrumbItem[] => {
