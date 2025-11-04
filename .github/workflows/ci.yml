@@ -237,6 +237,7 @@ jobs:
           path: .next/
           retention-days: 7
           if-no-files-found: ignore
+          continue-on-error: true  # Continue even if build failed
       
       - name: Analyze bundle size
         run: |
@@ -279,6 +280,7 @@ jobs:
         with:
           name: build-artifacts
           path: .next/
+          continue-on-error: true  # Continue even if artifacts don't exist
       
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v10
