@@ -35,7 +35,12 @@ export function parseVersion(version: string = VERSION): {
   const versionPart = parts[0];
   const preRelease = parts[1];
 
-  const [major, minor, patch] = versionPart.split('.').map(Number);
+  const versionNumbers = versionPart.split('.').map(Number);
+  
+  // Ensure we have at least 3 parts, defaulting missing parts to 0
+  const major = versionNumbers[0] || 0;
+  const minor = versionNumbers[1] ?? 0;
+  const patch = versionNumbers[2] ?? 0;
 
   return {
     major,
