@@ -1,7 +1,7 @@
 # Issue: Inconsistent Use of Validated Enum Values in API Endpoints
 
 **Related PR**: #59  
-**Related Review**: https://github.com/StiensWout/DLWait/pull/59#pullrequestreview-3414822559  
+**Related Review**: [PR #59 Review](https://github.com/StiensWout/DLWait/pull/59#pullrequestreview-3414822559)  
 **Status**: Fixed  
 **Priority**: Low (Code Quality)
 
