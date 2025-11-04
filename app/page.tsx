@@ -160,8 +160,9 @@ function HomeContent() {
       setSelectedDocumentAppId("");
       setEditingDocument(null);
       
-      // Clear document list by refreshing - use ref to get latest function
-      if (selectedTeamId && selectedDocumentAppId) {
+      // Clear document list by refreshing - always refresh if we have a team selected
+      // Removing the selectedDocumentAppId check since refreshDocuments doesn't depend on it
+      if (selectedTeamId) {
         refreshDocumentsRef.current();
       }
     };

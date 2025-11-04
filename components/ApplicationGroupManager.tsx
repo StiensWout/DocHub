@@ -120,13 +120,7 @@ export default function ApplicationGroupManager({
         setEditingGroup(null);
         setFormData({ name: "", icon_name: "Layers", color: "gray-500" });
         
-        // Force refresh groups from database
-        await loadGroups();
-        
-        // Small delay to ensure database consistency
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        
-        // Refresh again to ensure we have the latest data
+        // Refresh groups from database once (updateApplicationGroup already returns updated data)
         await loadGroups();
         
         onGroupCreated?.();

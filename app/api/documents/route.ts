@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
     if (!userIsAdmin) {
       if (userGroups.length > 0) {
         // Get document IDs accessible to user's groups
+        // Use .select() without .single() to handle multiple rows (user may belong to multiple groups)
         const { data: accessibleDocs, error: accessError } = await supabaseAdmin
           .from('document_access_groups')
           .select('team_document_id')
@@ -63,15 +64,18 @@ export async function GET(request: NextRequest) {
 
         if (accessError) {
           log.error('Error fetching accessible documents:', accessError);
-        }
-
-        const accessibleDocIds = accessibleDocs?.map(d => d.team_document_id) || [];
-        
-        if (accessibleDocIds.length > 0) {
-          teamDocsQuery = teamDocsQuery.in('id', accessibleDocIds);
+          // On error, return nothing to be safe
+          teamDocsQuery = teamDocsQuery.eq('id', '00000000-0000-0000-0000-000000000000');
         } else {
-          // User has groups but no accessible documents
-          teamDocsQuery = teamDocsQuery.eq('id', '00000000-0000-0000-0000-000000000000'); // Return nothing
+          // Extract unique document IDs (user may have multiple group memberships for same doc)
+          const accessibleDocIds = [...new Set(accessibleDocs?.map(d => d.team_document_id) || [])];
+          
+          if (accessibleDocIds.length > 0) {
+            teamDocsQuery = teamDocsQuery.in('id', accessibleDocIds);
+          } else {
+            // User has groups but no accessible documents
+            teamDocsQuery = teamDocsQuery.eq('id', '00000000-0000-0000-0000-000000000000'); // Return nothing
+          }
         }
       } else {
         // Non-admin user with no groups has no access to team documents

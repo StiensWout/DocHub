@@ -389,11 +389,9 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
           detail: { newRole: data.roleChanged } 
         }));
         
-        // Redirect to home page and force reload to clear cached permissions
-        router.push('/');
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        // Use window.location.href for direct navigation with reload to avoid race condition
+        // This ensures we navigate to home page before reloading
+        window.location.href = '/';
       }
     } catch (error: any) {
       console.error('Error setting role:', error);
