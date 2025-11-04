@@ -696,25 +696,37 @@ function HomeContent() {
               teamId={selectedTeamId}
               breadcrumbs={getBreadcrumbs()}
               onSave={async () => {
+                // Store reference to document being edited before any state changes
+                const documentBeingEdited = editingDocument;
+                
                 // Refresh documents list first
                 await refreshDocuments();
                 
                 // Update selected document with latest content from database
-                if (editingDocument) {
+                if (documentBeingEdited && selectedTeamId && selectedDocumentAppId) {
                   const allDocs = await getAllDocumentsForApp(selectedTeamId, selectedDocumentAppId);
-                  const updatedDoc = allDocs.find((d) => d.id === editingDocument.id && d.type === editingDocument.type);
+                  const updatedDoc = allDocs.find(
+                    (d) => d.id === documentBeingEdited.id && d.type === documentBeingEdited.type
+                  );
+                  
                   if (updatedDoc) {
-                    // Update selected document before closing editor to ensure DocumentViewer shows latest content
+                    // Update selected document state - React will batch this update
+                    // This ensures DocumentViewer receives the updated content before editor unmounts
                     setSelectedDocument(updatedDoc);
-                    // Small delay to ensure state update completes before closing editor
-                    await new Promise(resolve => setTimeout(resolve, 100));
                   }
                 }
+                
+                // Close editor after state update is scheduled
+                // Don't clear selectedDocumentAppId here as DocumentViewer needs it
                 setEditingDocument(null);
               }}
               onClose={() => {
+                // Only clear editing state and selectedDocumentAppId when closing without saving
                 setEditingDocument(null);
-                setSelectedDocumentAppId("");
+                // Only clear selectedDocumentAppId if we're not viewing a document
+                if (!selectedDocument) {
+                  setSelectedDocumentAppId("");
+                }
               }}
             />
           </div>
