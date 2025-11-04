@@ -5,7 +5,7 @@ This directory contains all bug tracking and management documentation.
 ## 📁 Files
 
 - **[BUG_LIST.md](./BUG_LIST.md)** - Official bug list with categorized issues (Critical, High, Medium, Low priority)
-- **[BUG_FIX_TODO.md](./BUG_FIX_TODO.md)** - Detailed TODO list for bug fixes with progress tracking and validation notes
+- **[TODO.md](./TODO.md)** - Comprehensive project TODO list covering bug fixes, infrastructure tasks, optimizations, and all development work
 - **[BUG_REPORTS.md](./BUG_REPORTS.md)** - Staging area for user-reported bugs before analysis and addition to the official bug list
 
 ## 🔄 Workflow
@@ -22,7 +22,7 @@ This directory contains all bug tracking and management documentation.
 
 3. **Bug Tracking**
    - Add validated bugs to [BUG_LIST.md](./BUG_LIST.md) with proper categorization
-   - Create tracking items in [BUG_FIX_TODO.md](./BUG_FIX_TODO.md)
+   - Create tracking items in [TODO.md](./TODO.md)
 
 4. **Bug Resolution**
    - Fix bugs according to priority
@@ -39,5 +39,5 @@ This directory contains all bug tracking and management documentation.
 
 **Progress:** 35% (7/20 bugs fixed)
 
-See [BUG_LIST.md](./BUG_LIST.md) for detailed bug information and [BUG_FIX_TODO.md](./BUG_FIX_TODO.md) for fix progress.
+See [BUG_LIST.md](./BUG_LIST.md) for detailed bug information and [TODO.md](./TODO.md) for fix progress and all project tasks.
 

@@ -7,7 +7,7 @@
 - [BUG_LIST.md](./BUG_LIST.md) - Detailed bug descriptions
 - [BUG_REPORTS.md](./BUG_REPORTS.md) - User bug reports staging area
 
-This comprehensive TODO list covers bug fixes, optimizations, infrastructure improvements, and all development tasks. Check off items as you complete them.
+This comprehensive TODO list covers bug fixes, optimizations, infrastructure improvements, rebranding tasks, and all development work. Check off items as you complete them.
 
 ## 📋 Table of Contents
 
