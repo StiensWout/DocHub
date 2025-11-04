@@ -5,7 +5,12 @@ import { Download, Trash2, Loader2, Globe, Users, RefreshCw, Eye } from "lucide-
 import { getApplicationFiles } from "@/lib/supabase/queries";
 import { supabase } from "@/lib/supabase/client";
 import type { DocumentFile } from "@/types";
-import FileViewer from "./FileViewer";
+import dynamic from "next/dynamic";
+
+// Dynamically import FileViewer to avoid SSR issues with react-pdf
+const FileViewer = dynamic(() => import("./FileViewer"), {
+  ssr: false,
+});
 
 interface ApplicationFileListProps {
   applicationId: string;

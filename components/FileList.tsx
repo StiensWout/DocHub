@@ -1,11 +1,16 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { Download, Trash2, Loader2, Globe, Users, RefreshCw, Eye, ChevronDown, ChevronUp } from "lucide-react";
 import { getAllFilesForDocument, deleteFileMetadata } from "@/lib/supabase/queries";
 import { supabase } from "@/lib/supabase/client";
 import type { DocumentFile, DocumentType } from "@/types";
-import FileViewer from "./FileViewer";
+
+// Dynamically import FileViewer to avoid SSR issues with react-pdf
+const FileViewer = dynamic(() => import("./FileViewer"), {
+  ssr: false,
+});
 
 interface FileListProps {
   documentId: string;
