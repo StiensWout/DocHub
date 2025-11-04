@@ -3,10 +3,18 @@ import { getSession } from '@/lib/auth/session';
 import { getUserGroups, isAdmin } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { log } from '@/lib/logger';
+import { validateUUID, validateArray } from '@/lib/validation/api-validation';
 
 /**
- * GET /api/users/groups
- * Get current user's groups or all users (if admin)
+ * Retrieve groups for the current user or for a specified user when requested by an admin.
+ *
+ * When a `userId` query parameter is provided, the `userId` is validated and the caller must be an admin to retrieve that user's groups; otherwise the groups for the authenticated session user are returned.
+ *
+ * @returns A JSON response. On success returns `{ groups }`. Possible error responses:
+ * - `401` when there is no authenticated session
+ * - `400` for invalid `userId` format
+ * - `403` when a non-admin requests another user's groups
+ * - `500` on internal errors
  */
 export async function GET(request: NextRequest) {
   try {
@@ -20,6 +28,15 @@ export async function GET(request: NextRequest) {
 
     // If userId is specified and user is admin, get that user's groups
     if (userId) {
+      // Validate userId UUID format
+      const userIdValidation = validateUUID(userId, 'userId');
+      if (!userIdValidation.valid) {
+        return NextResponse.json(
+          { error: userIdValidation.error },
+          { status: 400 }
+        );
+      }
+
       const userIsAdmin = await isAdmin();
       if (!userIsAdmin) {
         return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
@@ -42,16 +59,13 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/users/groups
- * Assign user to groups (admin only)
- * 
- * NOTE: If using WorkOS Organizations (WORKOS_USE_ORGANIZATIONS=true),
- * groups are managed via WorkOS Organizations and should be updated
- * through WorkOS Dashboard or Organization API. This endpoint will
- * work in database fallback mode.
- * 
- * TODO: Add WorkOS Organization management support for adding/removing
- * users from organizations programmatically.
+ * Assigns (replaces) the groups for a specified user; admin-only HTTP handler.
+ *
+ * Validates the request body for a `userId` UUID and a `groups` array of non-empty strings.
+ * If WorkOS Organizations mode is enabled, the endpoint rejects changes and instructs to use WorkOS instead.
+ *
+ * @param request - Incoming NextRequest whose JSON body must include `{ userId: string, groups: string[] }`
+ * @returns JSON response: `{ success: true }` on success, or an `{ error: string }` object with an appropriate HTTP status code (401, 403, 400, or 500) on failure
  */
 export async function POST(request: NextRequest) {
   try {
@@ -84,6 +98,32 @@ export async function POST(request: NextRequest) {
     if (!userId || !Array.isArray(groups)) {
       return NextResponse.json(
         { error: 'userId and groups array are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate userId UUID format
+    const userIdValidation = validateUUID(userId, 'userId');
+    if (!userIdValidation.valid) {
+      return NextResponse.json(
+        { error: userIdValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate groups array
+    const groupsValidation = validateArray(groups, 'groups', 0);
+    if (!groupsValidation.valid) {
+      return NextResponse.json(
+        { error: groupsValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate that all group names are strings
+    if (!groups.every(g => typeof g === 'string' && g.trim().length > 0)) {
+      return NextResponse.json(
+        { error: 'All group names must be non-empty strings' },
         { status: 400 }
       );
     }
@@ -123,4 +163,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

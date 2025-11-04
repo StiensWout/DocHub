@@ -3,10 +3,15 @@ import { getSession } from '@/lib/auth/session';
 import { getUserGroups, isAdmin } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { log } from '@/lib/logger';
+import { validateUUID, validateString } from '@/lib/validation/api-validation';
 
 /**
- * POST /api/applications
- * Create a new application (requires authentication)
+ * Create a new application from the request body, enforcing authentication and input validation.
+ *
+ * Validates required fields: `id` (UUID), `name` (1–255 chars), `iconName` (1–100 chars), `color` (hex `#RRGGBB`), and optional `groupId` (UUID).
+ * Responds with appropriate HTTP status codes for authentication failures, validation errors, permission errors, duplicate IDs, and server errors.
+ *
+ * @returns A JSON NextResponse containing `{ success: true }` on successful creation; on failure, a JSON error object with an explanatory message and an appropriate HTTP status (401, 400, 403, 409, or 500).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +30,52 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields: id, name, iconName, color' },
         { status: 400 }
       );
+    }
+
+    // Validate application ID format (UUID)
+    const idValidation = validateUUID(id, 'Application ID');
+    if (!idValidation.valid) {
+      return NextResponse.json(
+        { error: idValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate name
+    const nameValidation = validateString(name, 'Application name', 1, 255);
+    if (!nameValidation.valid) {
+      return NextResponse.json(
+        { error: nameValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate iconName
+    const iconValidation = validateString(iconName, 'Icon name', 1, 100);
+    if (!iconValidation.valid) {
+      return NextResponse.json(
+        { error: iconValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate color format (basic hex color validation)
+    if (typeof color !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(color)) {
+      return NextResponse.json(
+        { error: 'Color must be a valid hex color format (#RRGGBB)' },
+        { status: 400 }
+      );
+    }
+
+    // Validate groupId if provided (must be UUID)
+    if (groupId !== null && groupId !== undefined) {
+      const groupIdValidation = validateUUID(groupId, 'Group ID');
+      if (!groupIdValidation.valid) {
+        return NextResponse.json(
+          { error: groupIdValidation.error },
+          { status: 400 }
+        );
+      }
     }
 
     // Check if application ID already exists
@@ -143,4 +194,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
