@@ -25,7 +25,7 @@ High-level overview of DocHub's architecture, tech stack, and design decisions.
 ## 📁 Project Structure
 
 ```
-DLWait/
+DocHub/
 ├── app/                      # Next.js App Router
 │   ├── globals.css           # Global styles and Tailwind
 │   ├── layout.tsx            # Root layout component

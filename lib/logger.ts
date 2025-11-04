@@ -147,7 +147,7 @@ const initializeServerLogger = () => {
       winston.format.splat(),
       winston.format.json()
     ),
-    defaultMeta: { service: 'dlwait' },
+    defaultMeta: { service: 'dochub' },
     transports: [
       // Only add file transports if not in test environment
       ...(process.env.NODE_ENV !== 'test' ? [

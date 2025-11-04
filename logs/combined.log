@@ -2178,3 +2178,6 @@
 {"0":"CDLE (role: member)","level":"debug","message":"[isUserInAdminOrganization] User's organizations and roles:","service":"dlwait","timestamp":"2025-11-04 10:39:16"}
 {"level":"debug","message":"[isAdmin] User user_01K8WJG016RNBNKRBJMTGM9EKC is NOT in admin organization, checking database fallback","service":"dlwait","timestamp":"2025-11-04 10:39:16"}
 {"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-11-04 10:39:16"}
+{"currentTime":"2025-11-04T09:46:31.393Z","expiredAt":"2025-11-04T09:39:49.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dlwait","timestamp":"2025-11-04 10:46:31"}
+{"currentTime":"2025-11-04T09:46:31.438Z","expiredAt":"2025-11-04T09:39:49.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dlwait","timestamp":"2025-11-04 10:46:31"}
+{"currentTime":"2025-11-04T09:46:31.463Z","expiredAt":"2025-11-04T09:39:49.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dlwait","timestamp":"2025-11-04 10:46:31"}

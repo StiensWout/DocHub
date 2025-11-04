@@ -56,8 +56,8 @@ Welcome to the DocHub documentation. This is your central hub for all documentat
 - **[FAQ](FAQ.md)** - Frequently asked questions
 
 ### Project Management
-- **Bug Tracking:** All bugs are tracked in [GitHub Issues](https://github.com/StiensWout/DLWait/issues)
-- **Task Management:** Tasks are tracked in [GitHub Projects](https://github.com/StiensWout/DLWait/projects)
+- **Bug Tracking:** All bugs are tracked in [GitHub Issues](https://github.com/StiensWout/DocHub/issues)
+- **Task Management:** Tasks are tracked in [GitHub Projects](https://github.com/StiensWout/DocHub/projects)
 - **Historical Project Management:** Archived in `docs/archive/bugs/` (migrated to GitHub)
 
 ---

@@ -125,8 +125,8 @@ docs/
 ## Project Management Migration
 
 All project management has been migrated to GitHub:
-- **Bug Tracking:** [GitHub Issues](https://github.com/StiensWout/DLWait/issues)
-- **Task Management:** [GitHub Projects](https://github.com/StiensWout/DLWait/projects)
+- **Bug Tracking:** [GitHub Issues](https://github.com/StiensWout/DocHub/issues)
+- **Task Management:** [GitHub Projects](https://github.com/StiensWout/DocHub/projects)
 - **Historical Data:** Archived in `docs/archive/bugs/`
 
 ## Next Steps
@@ -135,7 +135,7 @@ All project management has been migrated to GitHub:
 2. ✅ Broken links fixed
 3. ✅ Duplicate files removed
 4. ✅ Historical files archived
-5. ⚠️ Consider updating remaining "DLWait" references to "DocHub" where appropriate (repository name still DLWait)
+5. ✅ Updated remaining "DLWait" references to "DocHub" (repository name migration in progress)
 6. ⚠️ Review and update any outdated content in archived files if needed
 
 ## Impact

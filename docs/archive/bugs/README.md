@@ -4,8 +4,8 @@ This directory contains project management documentation and historical bug trac
 
 ## 📋 Current Status
 
-**Bug Tracking:** All bugs are now tracked in [GitHub Issues](https://github.com/StiensWout/DLWait/issues)  
-**Task Management:** Project tasks are tracked in [TODO.md](./TODO.md) and can be synced to [GitHub Projects](https://github.com/StiensWout/DLWait/projects)
+**Bug Tracking:** All bugs are now tracked in [GitHub Issues](https://github.com/StiensWout/DocHub/issues)  
+**Task Management:** Project tasks are tracked in [TODO.md](./TODO.md) and can be synced to [GitHub Projects](https://github.com/StiensWout/DocHub/projects)
 
 ## 📁 Files Overview
 
@@ -15,9 +15,9 @@ This directory contains project management documentation and historical bug trac
 
 ### Historical Reference Files
 
-- **[BUG_LIST.md](./BUG_LIST.md)** - ⚠️ **ARCHIVED** - Historical bug list. All bugs are now tracked in [GitHub Issues](https://github.com/StiensWout/DLWait/issues). This file is maintained for historical reference only.
+- **[BUG_LIST.md](./BUG_LIST.md)** - ⚠️ **ARCHIVED** - Historical bug list. All bugs are now tracked in [GitHub Issues](https://github.com/StiensWout/DocHub/issues). This file is maintained for historical reference only.
 
-- **[BUG_REPORTS.md](./BUG_REPORTS.md)** - ⚠️ **ARCHIVED** - Historical bug reports staging area. New bug reports should be created directly as [GitHub Issues](https://github.com/StiensWout/DLWait/issues).
+- **[BUG_REPORTS.md](./BUG_REPORTS.md)** - ⚠️ **ARCHIVED** - Historical bug reports staging area. New bug reports should be created directly as [GitHub Issues](https://github.com/StiensWout/DocHub/issues).
 
 - **[BUG_FIX_REVIEW.md](./BUG_FIX_REVIEW.md)** - Historical bug fix validation and code review documentation. Useful for understanding past bug fixes and verification processes.
 
@@ -25,7 +25,7 @@ This directory contains project management documentation and historical bug trac
 
 ### Bug Tracking (GitHub Issues)
 
-1. **Report Bugs:** Create a new issue at [GitHub Issues](https://github.com/StiensWout/DLWait/issues)
+1. **Report Bugs:** Create a new issue at [GitHub Issues](https://github.com/StiensWout/DocHub/issues)
 2. **Categorize:** Use GitHub labels (`bug`, `critical`, `high-priority`, etc.)
 3. **Track Progress:** Update issue status and link to PRs when fixed
 4. **Close:** Mark issues as resolved when bugs are fixed
@@ -39,8 +39,8 @@ This directory contains project management documentation and historical bug trac
 
 ## 🎯 Quick Links
 
-- **Report a Bug:** [Create GitHub Issue](https://github.com/StiensWout/DLWait/issues/new)
-- **View All Bugs:** [GitHub Issues](https://github.com/StiensWout/DLWait/issues)
+- **Report a Bug:** [Create GitHub Issue](https://github.com/StiensWout/DocHub/issues/new)
+- **View All Bugs:** [GitHub Issues](https://github.com/StiensWout/DocHub/issues)
 - **View Tasks:** [TODO.md](./TODO.md)
 - **Sync Tasks to GitHub:** [GitHub Projects Sync Guide](./GITHUB_PROJECTS_SYNC.md)
 

@@ -3,7 +3,7 @@
 **Generated:** $(date)
 **Scope:** Full codebase analysis
 
-**⚠️ IMPORTANT:** All bugs are now tracked in [GitHub Issues](https://github.com/StiensWout/DLWait/issues). This file is maintained for historical reference and detailed bug analysis. Please create new issues on GitHub rather than adding to this file.
+**⚠️ IMPORTANT:** All bugs are now tracked in [GitHub Issues](https://github.com/StiensWout/DocHub/issues). This file is maintained for historical reference and detailed bug analysis. Please create new issues on GitHub rather than adding to this file.
 
 ## 🔴 CRITICAL ISSUES
 

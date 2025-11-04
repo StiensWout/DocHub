@@ -45,8 +45,8 @@ A beautiful, dark-mode documentation manager built with Next.js 14, TypeScript, 
 
 1. **Clone the repository:**
    ```bash
-   git clone <repository-url>
-   cd DLWait  # Note: Repository may be renamed to DocHub in the future
+   git clone https://github.com/StiensWout/DocHub.git
+   cd DocHub
    ```
 
 2. **Install dependencies:**
@@ -134,7 +134,7 @@ Comprehensive documentation is available in the `docs/` directory:
 ## 📁 Project Structure
 
 ```
-DLWait/
+DocHub/
 ├── app/                    # Next.js app directory
 │   ├── globals.css        # Global styles
 │   ├── layout.tsx         # Root layout

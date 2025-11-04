@@ -51,11 +51,11 @@ This document summarizes the reorganization of project documentation to align wi
 
 ### Bug Tracking
 - **Before:** Bugs tracked in `BUG_LIST.md` and `BUG_REPORTS.md`
-- **After:** All bugs tracked in [GitHub Issues](https://github.com/StiensWout/DLWait/issues)
+- **After:** All bugs tracked in [GitHub Issues](https://github.com/StiensWout/DocHub/issues)
 
 ### Task Management
 - **Before:** Tasks only in `TODO.md`
-- **After:** Tasks in `TODO.md` + can be synced to [GitHub Projects](https://github.com/StiensWout/DLWait/projects)
+- **After:** Tasks in `TODO.md` + can be synced to [GitHub Projects](https://github.com/StiensWout/DocHub/projects)
   - Tasks created as GitHub Issues with `task` label (distinguished from `bug` label)
   - Organized in GitHub Project board
   - See `bugs/GITHUB_PROJECTS_SYNC.md` for detailed instructions
@@ -86,8 +86,8 @@ docs/
 
 ## 🔗 Quick Links
 
-- **Report a Bug:** [Create GitHub Issue](https://github.com/StiensWout/DLWait/issues/new)
-- **View All Bugs:** [GitHub Issues](https://github.com/StiensWout/DLWait/issues)
+- **Report a Bug:** [Create GitHub Issue](https://github.com/StiensWout/DocHub/issues/new)
+- **View All Bugs:** [GitHub Issues](https://github.com/StiensWout/DocHub/issues)
 - **View Tasks:** [TODO.md](./bugs/TODO.md)
 - **Sync Tasks to GitHub:** [GitHub Projects Sync Guide](./bugs/GITHUB_PROJECTS_SYNC.md)
 - **Project Management:** [README.md](./bugs/README.md)

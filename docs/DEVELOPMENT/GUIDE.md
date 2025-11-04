@@ -16,7 +16,7 @@ This guide covers development workflows, best practices, and common tasks for co
 ### Directory Structure
 
 ```
-DLWait/
+DocHub/
 ├── app/                    # Next.js App Router
 │   ├── globals.css        # Global styles and Tailwind
 │   ├── layout.tsx         # Root layout component
