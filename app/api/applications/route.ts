@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
+import { getUserGroups, isAdmin } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { log } from '@/lib/logger';
 
@@ -86,10 +87,31 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/applications
- * Get all applications
+ * Get applications filtered by user permissions
+ * Requires authentication
+ * Admin users see all applications
+ * Regular users see all applications (applications are shared across teams)
  */
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userIsAdmin = await isAdmin();
+    const userGroups = await getUserGroups(session.user.id);
+
+    log.debug('[GET /api/applications] Fetching applications', {
+      userId: session.user.id,
+      isAdmin: userIsAdmin,
+      userGroups: userGroups.length,
+    });
+
+    // Applications are shared across all teams, so we return all applications
+    // Admin users see all applications
+    // Regular users also see all applications (access control is at document level)
     const { data, error } = await supabaseAdmin
       .from('applications')
       .select('*')
@@ -103,7 +125,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ applications: data || [] });
+    log.debug('[GET /api/applications] Successfully fetched applications', {
+      count: data?.length || 0,
+      isAdmin: userIsAdmin,
+    });
+
+    return NextResponse.json({ 
+      applications: data || [],
+      isAdmin: userIsAdmin,
+      userGroups,
+    });
   } catch (error: any) {
     log.error('Unexpected error fetching applications:', error);
     return NextResponse.json(
