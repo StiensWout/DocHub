@@ -1675,3 +1675,78 @@
 {"level":"info","message":"[validate-access] Request received","service":"dlwait","timestamp":"2025-11-04 07:36:49"}
 {"currentTime":"2025-11-04T06:36:49.720Z","expiredAt":"2025-10-31T10:50:33.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dlwait","timestamp":"2025-11-04 07:36:49"}
 {"level":"warn","message":"[validate-access] No session found","service":"dlwait","timestamp":"2025-11-04 07:36:49"}
+{"level":"info","message":"[validate-access] Request received","service":"dlwait","timestamp":"2025-11-04 07:38:43"}
+{"currentTime":"2025-11-04T06:38:43.112Z","expiredAt":"2025-10-31T10:50:33.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dlwait","timestamp":"2025-11-04 07:38:43"}
+{"level":"warn","message":"[validate-access] No session found","service":"dlwait","timestamp":"2025-11-04 07:38:43"}
+{"currentTime":"2025-11-04T06:40:07.159Z","expiredAt":"2025-10-31T10:50:33.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dlwait","timestamp":"2025-11-04 07:40:07"}
+{"currentTime":"2025-11-04T06:40:07.201Z","expiredAt":"2025-10-31T10:50:33.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dlwait","timestamp":"2025-11-04 07:40:07"}
+{"currentTime":"2025-11-04T06:40:07.265Z","expiredAt":"2025-10-31T10:50:33.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dlwait","timestamp":"2025-11-04 07:40:07"}
+{"level":"error","message":"Invalid credentials for 'w.stiens@europehospitals.be'.","name":"GenericServerException","rawData":{"code":"invalid_credentials","message":"Invalid credentials for 'w.stiens@europehospitals.be'."},"requestID":"","service":"dlwait","status":400,"timestamp":"2025-11-04 07:40:17"}
+{"level":"error","message":"Invalid credentials for 'w.stiens@europehospitals.be'.","name":"GenericServerException","rawData":{"code":"invalid_credentials","message":"Invalid credentials for 'w.stiens@europehospitals.be'."},"requestID":"","service":"dlwait","status":400,"timestamp":"2025-11-04 07:40:22"}
+{"level":"error","message":"Invalid credentials for 'w.stiens@europehospitals.be'.","name":"GenericServerException","rawData":{"code":"invalid_credentials","message":"Invalid credentials for 'w.stiens@europehospitals.be'."},"requestID":"","service":"dlwait","status":400,"timestamp":"2025-11-04 07:40:24"}
+{"level":"error","message":"Invalid credentials for 'w.stiens@europehospitals.be'.","name":"GenericServerException","rawData":{"code":"invalid_credentials","message":"Invalid credentials for 'w.stiens@europehospitals.be'."},"requestID":"","service":"dlwait","status":400,"timestamp":"2025-11-04 07:40:30"}
+{"level":"error","message":"Invalid credentials for 'w.stiens@europehospitals.be'.","name":"GenericServerException","rawData":{"code":"invalid_credentials","message":"Invalid credentials for 'w.stiens@europehospitals.be'."},"requestID":"","service":"dlwait","status":400,"timestamp":"2025-11-04 07:40:45"}
+{"level":"error","message":"Invalid credentials for 'w.stiens@europehospitals.be'.","name":"GenericServerException","rawData":{"code":"invalid_credentials","message":"Invalid credentials for 'w.stiens@europehospitals.be'."},"requestID":"","service":"dlwait","status":400,"timestamp":"2025-11-04 07:40:58"}
+{"level":"debug","message":"SSO authorization using: organization ID","service":"dlwait","timestamp":"2025-11-04 07:41:04"}
+{"level":"debug","message":"✅ Using organization ID (org_01K8WG3DSX12ES2Z703H7A3475). To switch providers, update the organization's connection in WorkOS Dashboard.","service":"dlwait","timestamp":"2025-11-04 07:41:04"}
+{"level":"debug","message":"[signin] Syncing user user_01K8WJG016RNBNKRBJMTGM9EKC to local database","service":"dlwait","timestamp":"2025-11-04 07:42:50"}
+{"level":"debug","message":"[syncUserFromWorkOS] Syncing user: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:42:50"}
+{"level":"info","message":"[syncUserFromWorkOS] ✅ Successfully synced user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:42:50"}
+{"level":"debug","message":"[signin] Syncing teams for user user_01K8WJG016RNBNKRBJMTGM9EKC after email/password authentication","service":"dlwait","timestamp":"2025-11-04 07:42:50"}
+{"level":"debug","message":"[getUserGroups] Called for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:42:50"}
+{"level":"debug","message":"[getUserGroups] WORKOS_USE_ORGANIZATIONS=true, useWorkOSGroups=true","service":"dlwait","timestamp":"2025-11-04 07:42:50"}
+{"level":"debug","message":"[getUserGroups] Starting WorkOS organization sync for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:42:50"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:42:50"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:42:50"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-11-04 07:42:50"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[getUserGroups] Fetched 1 organization memberships (cached for reuse)","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[syncTeamsFromUserOrganizations] Starting sync for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[syncTeamsFromUserOrganizations] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[syncTeamsFromUserOrganizations] Processing 1 organization memberships","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[syncTeamsFromUserOrganizations] Processing membership 1/1: CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[getUserSubgroupsInOrganization] Getting user's team (role) for user user_01K8WJG016RNBNKRBJMTGM9EKC in org CDLE","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[getUserSubgroupsInOrganization] User has role \"member\" in organization \"CDLE\"","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[getUserSubgroupsInOrganization] Skipping role \"member\" (empty or generic)","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[getUserSubgroupsInOrganization] Found 0 team(s) for user in org CDLE:","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[syncTeamsFromUserOrganizations] Organization \"CDLE\" serves as parent - teams are subgroups only","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"info","message":"[syncTeamsFromUserOrganizations] ✅ Sync complete. Created/found 0 teams:","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[getUserGroups] Synced 0 teams:","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[getUserGroupsFromWorkOS] Using provided memberships (1 memberships)","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"0":"CDLE","level":"debug","message":"[getUserGroups] WorkOS groups found:","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"0":"CDLE (role: member)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[isUserInAdminOrganization] ❌ User is NOT in admin organization or has admin role. Expected org: \"admin\"","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"0":"CDLE (role: member)","level":"debug","message":"[isUserInAdminOrganization] User's organizations and roles:","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[getUserGroups] Is user in admin organization: false","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[getUserGroups] No valid role found for user in organization \"CDLE\"","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[getUserGroups] Returning user's team(s) only:","service":"dlwait","timestamp":"2025-11-04 07:42:51"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:43:00"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:43:00"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-11-04 07:43:00"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-11-04 07:43:00"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:43:01"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-11-04 07:43:01"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:43:01"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:43:01"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:43:01"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-11-04 07:43:01"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:43:01"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dlwait","timestamp":"2025-11-04 07:43:01"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-11-04 07:43:01"}
+{"0":"CDLE (role: member)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-11-04 07:43:01"}
+{"level":"debug","message":"[isUserInAdminOrganization] ❌ User is NOT in admin organization or has admin role. Expected org: \"admin\"","service":"dlwait","timestamp":"2025-11-04 07:43:01"}
+{"0":"CDLE (role: member)","level":"debug","message":"[isUserInAdminOrganization] User's organizations and roles:","service":"dlwait","timestamp":"2025-11-04 07:43:01"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dlwait","timestamp":"2025-11-04 07:43:01"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-11-04 07:43:21"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dlwait","timestamp":"2025-11-04 07:43:21"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dlwait","timestamp":"2025-11-04 07:43:21"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-11-04 07:43:21"}
+{"0":"CDLE (role: member)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dlwait","timestamp":"2025-11-04 07:43:21"}
+{"level":"debug","message":"[isUserInAdminOrganization] ❌ User is NOT in admin organization or has admin role. Expected org: \"admin\"","service":"dlwait","timestamp":"2025-11-04 07:43:21"}
+{"0":"CDLE (role: member)","level":"debug","message":"[isUserInAdminOrganization] User's organizations and roles:","service":"dlwait","timestamp":"2025-11-04 07:43:21"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dlwait","timestamp":"2025-11-04 07:43:22"}
+{"currentTime":"2025-11-04T07:11:12.728Z","expiredAt":"2025-11-04T06:47:49.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dlwait","timestamp":"2025-11-04 08:11:12"}
+{"currentTime":"2025-11-04T07:11:12.764Z","expiredAt":"2025-11-04T06:47:49.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dlwait","timestamp":"2025-11-04 08:11:12"}
+{"currentTime":"2025-11-04T07:11:12.796Z","expiredAt":"2025-11-04T06:47:49.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dlwait","timestamp":"2025-11-04 08:11:12"}

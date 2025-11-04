@@ -100,23 +100,43 @@ export default function ApplicationGroupManager({
 
     setIsSaving(true);
     try {
+      console.log("[ApplicationGroupManager] Starting update", {
+        groupId: editingGroup.id,
+        updates: formData,
+      });
+
       const result = await updateApplicationGroup(editingGroup.id, {
         name: formData.name,
         icon_name: formData.icon_name,
         color: formData.color,
       });
 
-      if (result.success) {
+      console.log("[ApplicationGroupManager] Update result", result);
+
+      if (result.success && result.data) {
+        // Verify we got updated data back
+        console.log("[ApplicationGroupManager] Update verified, refreshing groups");
         toast.success("Application group updated successfully!");
         setEditingGroup(null);
         setFormData({ name: "", icon_name: "Layers", color: "gray-500" });
+        
+        // Force refresh groups from database
         await loadGroups();
+        
+        // Small delay to ensure database consistency
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        
+        // Refresh again to ensure we have the latest data
+        await loadGroups();
+        
         onGroupCreated?.();
       } else {
-        toast.error(result.error || "Failed to update group");
+        const errorMessage = result.error || "Failed to update group";
+        console.error("[ApplicationGroupManager] Update failed:", errorMessage);
+        toast.error(errorMessage);
       }
     } catch (error) {
-      console.error("Error updating group:", error);
+      console.error("[ApplicationGroupManager] Error updating group:", error);
       toast.error("Failed to update application group");
     } finally {
       setIsSaving(false);

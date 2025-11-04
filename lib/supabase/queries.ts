@@ -456,6 +456,9 @@ export async function getFileMetadata(fileId: string): Promise<DocumentFile | nu
 
 // Fetch all application groups
 export async function getApplicationGroups(): Promise<ApplicationGroup[]> {
+  log.info("[getApplicationGroups] Fetching application groups");
+  
+  // Use single() with select to ensure fresh data (no cache)
   const { data, error } = await supabase
     .from("application_groups")
     .select("*")
@@ -463,9 +466,14 @@ export async function getApplicationGroups(): Promise<ApplicationGroup[]> {
     .order("name");
 
   if (error) {
-    log.error("Error fetching application groups:", error);
+    log.error("[getApplicationGroups] Error fetching application groups:", error);
     return [];
   }
+
+  log.info("[getApplicationGroups] Successfully fetched groups", { 
+    count: data?.length || 0,
+    groups: data?.map(g => ({ id: g.id, name: g.name, updated_at: g.updated_at }))
+  });
 
   // Map icon names to actual icon components
   const getIconComponent = (iconName: string | null | undefined): LucideIcon | undefined => {
@@ -538,18 +546,77 @@ export async function updateApplicationGroup(
     color?: string;
     display_order?: number;
   }
-): Promise<{ success: boolean; error?: string }> {
-  const { error } = await supabase
-    .from("application_groups")
-    .update(updates)
-    .eq("id", id);
+): Promise<{ success: boolean; error?: string; data?: DatabaseApplicationGroup }> {
+  log.info("[updateApplicationGroup] Starting update", { id, updates });
 
-  if (error) {
-    log.error("Error updating application group:", error);
-    return { success: false, error: error.message };
+  // First, verify the group exists
+  const { data: existingData, error: fetchError } = await supabase
+    .from("application_groups")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (fetchError) {
+    log.error("[updateApplicationGroup] Error fetching existing group:", fetchError);
+    return { success: false, error: `Group not found: ${fetchError.message}` };
   }
 
-  return { success: true };
+  if (!existingData) {
+    log.error("[updateApplicationGroup] Group not found", { id });
+    return { success: false, error: "Group not found" };
+  }
+
+  log.info("[updateApplicationGroup] Existing group found", { existingData });
+
+  // Perform the update with select to get updated data
+  const { data: updatedData, error: updateError } = await supabase
+    .from("application_groups")
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(), // Explicitly set updated_at timestamp
+    })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (updateError) {
+    log.error("[updateApplicationGroup] Error updating group:", updateError);
+    return { success: false, error: updateError.message };
+  }
+
+  if (!updatedData) {
+    log.error("[updateApplicationGroup] Update returned no data", { id });
+    return { success: false, error: "Update completed but no data returned" };
+  }
+
+  // Verify the update actually changed the data
+  const updateSucceeded = Object.keys(updates).every((key) => {
+    const keyTyped = key as keyof typeof updates;
+    // Handle null/undefined comparison
+    const expectedValue = updates[keyTyped];
+    const actualValue = updatedData[keyTyped];
+    
+    // If both are null/undefined, consider it a match
+    if (expectedValue === null && (actualValue === null || actualValue === undefined)) {
+      return true;
+    }
+    if (expectedValue === undefined && (actualValue === null || actualValue === undefined)) {
+      return true;
+    }
+    
+    return updatedData[keyTyped] === updates[keyTyped];
+  });
+
+  if (!updateSucceeded) {
+    log.error("[updateApplicationGroup] Update verification failed", {
+      expected: updates,
+      actual: updatedData,
+    });
+    return { success: false, error: "Update verification failed - data mismatch" };
+  }
+
+  log.info("[updateApplicationGroup] Update succeeded", { updatedData });
+  return { success: true, data: updatedData };
 }
 
 // Delete an application group

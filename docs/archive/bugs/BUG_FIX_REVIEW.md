@@ -72,30 +72,6 @@
 - Non-JWT tokens handled gracefully without breaking SSO flow
 - Debug logging helps identify token age issues
 
-### Bug #30: Session Expiration Not Enforced
-**Status:** ✅ Fix implemented correctly and validated
-
-**Verification:**
-- ✅ Cookie `maxAge` changed from 7 days to 24 hours in all auth routes:
-  - `app/api/auth/signin/route.ts:67` - `maxAge: 60 * 60 * 24`
-  - `app/api/auth/signup/route.ts:70` - `maxAge: 60 * 60 * 24`
-  - `app/api/auth/verify-email/route.ts:55` - `maxAge: 60 * 60 * 24`
-- ✅ Token expiration validation added in `lib/auth/session.ts`:
-  - Lines 33-55: JWT payload decoding and expiration check
-  - Lines 37-47: Expiration validation using `exp` claim
-  - Line 42-46: Proper expiration logging
-  - Lines 50-54: Token age debugging for tokens >20 hours old
-- ✅ Handles non-JWT tokens gracefully (SSO tokens) - continues with WorkOS validation
-- ✅ JWT utilities implemented (`lib/auth/jwt-utils.ts`):
-  - Base64url decoding for JWT tokens (RFC 7515 compliant)
-  - Proper payload extraction and parsing
-
-**Code Validation:**
-- All three auth routes correctly set 24-hour cookie expiration
-- Session validation checks token expiration before accepting session
-- Non-JWT tokens handled gracefully without breaking SSO flow
-- Debug logging helps identify token age issues
-
 **Security Improvement:** Sessions now properly expire after 24 hours, both at cookie level and token validation level, preventing unauthorized access beyond intended duration.
 
 ### Document Access Validation - Multiple Group Memberships Fix

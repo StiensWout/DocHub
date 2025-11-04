@@ -3,6 +3,8 @@
 **Generated:** $(date)
 **Scope:** Full codebase analysis
 
+**⚠️ IMPORTANT:** All bugs are now tracked in [GitHub Issues](https://github.com/StiensWout/DLWait/issues). This file is maintained for historical reference and detailed bug analysis. Please create new issues on GitHub rather than adding to this file.
+
 ## 🔴 CRITICAL ISSUES
 
 _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes---resolved) section below for details._
@@ -118,6 +120,84 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 **Resolution Date:** 2024
 **Validation:** ✅ All auth routes validated, token expiration check verified - validated 2024-12-19
 **Security Improvement:** Sessions now properly expire after 24 hours at both cookie and token validation levels
+
+---
+
+### 32. Icon and Color Picker Buttons Trigger Form Submission When Creating Application
+
+**Severity:** MEDIUM
+**Category:** UI/UX Bug
+**Status:** 🔴 ACTIVE
+**Files:** `components/IconPicker.tsx:172-189`, `components/ColorPicker.tsx:81-102`, `components/ApplicationCreateDialog.tsx:268-285`
+
+#### Issues:
+- When clicking an icon or color when creating a new app, it directly saves the app without further notice
+- IconPicker and ColorPicker buttons are inside a form but don't have `type="button"`
+- Default button type is `type="submit"` when inside a form, causing form submission on click
+- No confirmation or validation before saving - user accidentally triggers save
+
+#### Impact:
+- **MEDIUM** - Poor user experience - accidental saves when just selecting preferences
+- Users cannot preview icon/color selection before saving
+- Confusing UX - selection appears to save immediately without confirmation
+
+#### Fix Required:
+- Add `type="button"` to IconPicker button elements (line 172)
+- Add `type="button"` to ColorPicker button elements (line 81)
+- Ensure buttons only update local state, not trigger form submission
+- Verify same issue doesn't exist in ApplicationEditDialog
+
+---
+
+### 33. Application Group Update Not Persisting After Edit
+
+**Severity:** MEDIUM
+**Category:** Functionality / Data Integrity
+**Status:** 🔴 ACTIVE
+**Files:** `components/ApplicationEditDialog.tsx`, `lib/supabase/queries.ts:80-100`
+
+#### Issues:
+- When editing an application and updating the group, it does not save correctly
+- When creating a new application, group assignment works correctly
+- `updateApplication` function similar to Bug #31's `updateApplicationGroup` - doesn't verify update succeeded
+- No verification that update actually persisted to database
+- No error logging or update confirmation
+
+#### Impact:
+- **MEDIUM** - User experience issue - changes appear to save but don't persist
+- Users cannot reliably update application groups
+- Data integrity concern - UI shows success but data isn't updated
+- Similar to Bug #31 but for applications instead of groups
+
+#### Fix Required:
+- Add error logging to `updateApplication` function to capture any database errors
+- Verify database update is actually succeeding (check return value/error)
+- Add verification that update actually changed the data (similar to Bug #31 fix)
+- Use `.select().single()` to get updated data back from database
+- Add client-side validation that update succeeded before showing success toast
+- Add refresh mechanism that re-fetches from database after update
+- Consider adding optimistic UI update + database confirmation pattern
+
+---
+
+### 34. Duplicate Bug Entry in BUG_FIX_REVIEW.md ✅ RESOLVED
+
+**Severity:** LOW
+**Category:** Documentation
+**Status:** ✅ FIXED
+**Files:** `bugs/BUG_FIX_REVIEW.md:75-99`
+
+#### Issues:
+- BUG_FIX_REVIEW.md file has a duplicate entry for "Bug #30: Session Expiration Not Enforced"
+- Redundant section appears twice (lines 51-74 and 75-99)
+- Makes review document confusing and harder to maintain
+
+#### Impact:
+- **LOW** - Documentation issue only, no functional impact
+
+#### Fix Applied:
+- ✅ Removed duplicate Bug #30 section from BUG_FIX_REVIEW.md
+- ✅ Kept single comprehensive entry with all validation details
 
 ---
 
@@ -632,7 +712,7 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 
 - **Critical Issues:** 0 (All 3 resolved ✅)
 - **High Priority:** 0 (All 6 resolved ✅, Bug #21 & #22 validated ✅)
-- **Medium Priority:** 11 (9 existing + Bug #29 + Bug #31, Bug #30 ✅ RESOLVED & VALIDATED)
+- **Medium Priority:** 14 (9 existing + Bug #29 + Bug #31 + Bug #32 + Bug #33, Bug #30 ✅ RESOLVED & VALIDATED)
 - **Low Priority:** 5
 
 ### Validation Status
