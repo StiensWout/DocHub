@@ -123,12 +123,14 @@ export function validateEnum<T extends string>(
  * @param uuids - Array of UUID strings to validate
  * @param fieldName - Name of the field being validated (for error messages)
  * @param strict - If true, only accepts UUID v4. If false, accepts any UUID format (default: false)
+ * @param minLength - Minimum array length (default: 1). Set to 0 to allow empty arrays for optional parameters
  * @returns Object with validation result and error message if invalid
  */
 export function validateUUIDArray(
   uuids: string[] | null | undefined,
   fieldName: string = 'IDs',
-  strict: boolean = false
+  strict: boolean = false,
+  minLength: number = 1
 ): { valid: boolean; error?: string } {
   if (!Array.isArray(uuids)) {
     return {
@@ -136,11 +138,11 @@ export function validateUUIDArray(
       error: `${fieldName} must be an array`,
     };
   }
-  
-  if (uuids.length === 0) {
+
+  if (uuids.length < minLength) {
     return {
       valid: false,
-      error: `${fieldName} array cannot be empty`,
+      error: `${fieldName} must contain at least ${minLength} element(s)`,
     };
   }
   

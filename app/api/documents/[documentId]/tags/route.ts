@@ -41,6 +41,8 @@ export async function GET(
       );
     }
 
+    const validatedDocumentType = documentTypeValidation.value!;
+
     // Get tags for the document
     const { data: documentTags, error } = await supabaseAdmin
       .from('document_tags')
@@ -54,7 +56,7 @@ export async function GET(
         )
       `)
       .eq('document_id', documentId)
-      .eq('document_type', documentType);
+      .eq('document_type', validatedDocumentType);
 
     if (error) {
       log.error('Error fetching document tags:', error);
@@ -105,8 +107,8 @@ export async function POST(
     const body = await request.json();
     const { tagIds, documentType = 'base' } = body;
 
-    // Validate tagIds array
-    const tagIdsValidation = validateUUIDArray(tagIds, 'tagIds');
+    // Validate tagIds array (must have at least one tag)
+    const tagIdsValidation = validateUUIDArray(tagIds, 'tagIds', false, 1);
     if (!tagIdsValidation.valid) {
       return NextResponse.json(
         { error: tagIdsValidation.error },
@@ -123,10 +125,12 @@ export async function POST(
       );
     }
 
+    const validatedDocumentType = documentTypeValidation.value!;
+
     // Prepare tag associations
     const tagAssociations = tagIds.map((tagId: string) => ({
       document_id: documentId,
-      document_type: documentTypeValidation.value!,
+      document_type: validatedDocumentType,
       tag_id: tagId,
     }));
 
@@ -205,13 +209,15 @@ export async function DELETE(
       );
     }
 
+    const validatedDocumentType = documentTypeValidation.value!;
+
     const tagIds = searchParams.get('tagIds');
 
     let deleteQuery = supabaseAdmin
       .from('document_tags')
       .delete()
       .eq('document_id', documentId)
-      .eq('document_type', documentTypeValidation.value!);
+      .eq('document_type', validatedDocumentType);
 
     // If tagIds provided, delete only those tags; otherwise delete all tags
     if (tagIds) {
