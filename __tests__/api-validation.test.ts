@@ -897,4 +897,220 @@ describe('API Validation Tests', () => {
       expect(end - start).toBeLessThan(1000); // Should complete in less than 1 second
     });
   });
+
+  describe('validateUUIDArray with minLength parameter', () => {
+    const validUUIDs = [
+      '550e8400-e29b-41d4-a716-446655440000',
+      'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
+    ];
+
+    describe('minLength = 0 (allow empty arrays)', () => {
+      test('should accept empty array when minLength is 0', () => {
+        const result = validateUUIDArray([], 'tagIds', false, 0);
+        expect(result.valid).toBe(true);
+        expect(result.error).toBeUndefined();
+      });
+
+      test('should accept non-empty array when minLength is 0', () => {
+        const result = validateUUIDArray([validUUIDs[0]], 'tagIds', false, 0);
+        expect(result.valid).toBe(true);
+        expect(result.error).toBeUndefined();
+      });
+
+      test('should use 0 as minLength for optional parameters', () => {
+        // Simulate optional tag filtering where empty array means "no filter"
+        const optionalFilter: string[] = [];
+        const result = validateUUIDArray(optionalFilter, 'filterIds', false, 0);
+        expect(result.valid).toBe(true);
+      });
+    });
+
+    describe('minLength = 1 (default, require at least one element)', () => {
+      test('should reject empty array when minLength is 1', () => {
+        const result = validateUUIDArray([], 'tagIds', false, 1);
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('tagIds must contain at least 1 element(s)');
+      });
+
+      test('should accept single element array', () => {
+        const result = validateUUIDArray([validUUIDs[0]], 'tagIds', false, 1);
+        expect(result.valid).toBe(true);
+        expect(result.error).toBeUndefined();
+      });
+
+      test('should accept multiple element array', () => {
+        const result = validateUUIDArray(validUUIDs, 'tagIds', false, 1);
+        expect(result.valid).toBe(true);
+        expect(result.error).toBeUndefined();
+      });
+
+      test('should use 1 as default minLength', () => {
+        const result = validateUUIDArray([], 'tagIds');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('tagIds must contain at least 1 element(s)');
+      });
+    });
+
+    describe('minLength > 1 (require multiple elements)', () => {
+      test('should reject empty array when minLength is 2', () => {
+        const result = validateUUIDArray([], 'tagIds', false, 2);
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('tagIds must contain at least 2 element(s)');
+      });
+
+      test('should reject single element when minLength is 2', () => {
+        const result = validateUUIDArray([validUUIDs[0]], 'tagIds', false, 2);
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('tagIds must contain at least 2 element(s)');
+      });
+
+      test('should accept array meeting minLength', () => {
+        const result = validateUUIDArray([validUUIDs[0], validUUIDs[1]], 'tagIds', false, 2);
+        expect(result.valid).toBe(true);
+        expect(result.error).toBeUndefined();
+      });
+
+      test('should accept array exceeding minLength', () => {
+        const result = validateUUIDArray(validUUIDs, 'tagIds', false, 2);
+        expect(result.valid).toBe(true);
+        expect(result.error).toBeUndefined();
+      });
+
+      test('should enforce minLength of 5', () => {
+        const result = validateUUIDArray([validUUIDs[0], validUUIDs[1]], 'requiredTags', false, 5);
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('requiredTags must contain at least 5 element(s)');
+      });
+    });
+
+    describe('minLength with strict UUID validation', () => {
+      test('should validate minLength and UUID v4 format', () => {
+        const v4UUIDs = [
+          '550e8400-e29b-41d4-a716-446655440000',
+          'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        ];
+        const result = validateUUIDArray(v4UUIDs, 'tagIds', true, 2);
+        expect(result.valid).toBe(true);
+      });
+
+      test('should reject when array meets minLength but has invalid UUID version', () => {
+        const mixedVersions = [
+          '550e8400-e29b-41d4-a716-446655440000', // v4
+          'c232ab00-9414-11ec-b909-0242ac120002', // v1
+        ];
+        const result = validateUUIDArray(mixedVersions, 'tagIds', true, 2);
+        expect(result.valid).toBe(false);
+        expect(result.error).toContain('tagIds[1]');
+      });
+
+      test('should reject when array below minLength with strict validation', () => {
+        const result = validateUUIDArray(['550e8400-e29b-41d4-a716-446655440000'], 'tagIds', true, 2);
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('tagIds must contain at least 2 element(s)');
+      });
+    });
+
+    describe('Real-world POST /api/documents/[documentId]/tags scenarios', () => {
+      test('should validate tag assignment with at least one tag', () => {
+        // Simulating POST request that requires at least one tag
+        const tagIds = [
+          '550e8400-e29b-41d4-a716-446655440000',
+          'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        ];
+        const result = validateUUIDArray(tagIds, 'tagIds', false, 1);
+        expect(result.valid).toBe(true);
+      });
+
+      test('should reject empty tag array in POST request', () => {
+        // POST endpoint requires at least one tag
+        const tagIds: string[] = [];
+        const result = validateUUIDArray(tagIds, 'tagIds', false, 1);
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('tagIds must contain at least 1 element(s)');
+      });
+
+      test('should validate single tag assignment', () => {
+        const tagIds = ['550e8400-e29b-41d4-a716-446655440000'];
+        const result = validateUUIDArray(tagIds, 'tagIds', false, 1);
+        expect(result.valid).toBe(true);
+      });
+    });
+
+    describe('Error message clarity', () => {
+      test('should provide clear error for minLength 1', () => {
+        const result = validateUUIDArray([], 'tagIds', false, 1);
+        expect(result.error).toBe('tagIds must contain at least 1 element(s)');
+      });
+
+      test('should provide clear error for minLength 0 (should never fail on length)', () => {
+        const result = validateUUIDArray([], 'optionalIds', false, 0);
+        expect(result.valid).toBe(true);
+      });
+
+      test('should provide clear error for minLength 3', () => {
+        const result = validateUUIDArray(['550e8400-e29b-41d4-a716-446655440000'], 'requiredIds', false, 3);
+        expect(result.error).toBe('requiredIds must contain at least 3 element(s)');
+      });
+
+      test('should prioritize minLength error over invalid UUID error', () => {
+        // When array is too short, should fail on length first
+        const result = validateUUIDArray([], 'tagIds', false, 2);
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('tagIds must contain at least 2 element(s)');
+      });
+
+      test('should show UUID validation error when array meets minLength but has invalid UUID', () => {
+        const result = validateUUIDArray(['550e8400-e29b-41d4-a716-446655440000', 'invalid'], 'tagIds', false, 2);
+        expect(result.valid).toBe(false);
+        expect(result.error).toContain('tagIds[1]');
+        expect(result.error).toContain('UUID');
+      });
+    });
+
+    describe('Backward compatibility', () => {
+      test('should default to minLength 1 when not specified', () => {
+        const result = validateUUIDArray([], 'tagIds');
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('tagIds must contain at least 1 element(s)');
+      });
+
+      test('should maintain existing behavior for non-empty valid arrays', () => {
+        const result = validateUUIDArray([validUUIDs[0]], 'ids');
+        expect(result.valid).toBe(true);
+      });
+
+      test('should maintain existing strict mode behavior', () => {
+        const v1UUID = 'c232ab00-9414-11ec-b909-0242ac120002';
+        const result = validateUUIDArray([v1UUID], 'ids', true);
+        expect(result.valid).toBe(false);
+      });
+    });
+
+    describe('Edge cases with minLength', () => {
+      test('should handle minLength 0 with null', () => {
+        const result = validateUUIDArray(null, 'ids', false, 0);
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('ids must be an array');
+      });
+
+      test('should handle minLength 0 with undefined', () => {
+        const result = validateUUIDArray(undefined, 'ids', false, 0);
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('ids must be an array');
+      });
+
+      test('should handle very large minLength', () => {
+        const result = validateUUIDArray([validUUIDs[0]], 'ids', false, 100);
+        expect(result.valid).toBe(false);
+        expect(result.error).toBe('ids must contain at least 100 element(s)');
+      });
+
+      test('should handle large array meeting large minLength', () => {
+        const largeArray = Array(150).fill(validUUIDs[0]);
+        const result = validateUUIDArray(largeArray, 'ids', false, 100);
+        expect(result.valid).toBe(true);
+      });
+    });
+  });
 });
