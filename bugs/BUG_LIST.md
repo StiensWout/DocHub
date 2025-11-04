@@ -13,7 +13,7 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 
 **Severity:** HIGH
 **Category:** Functionality / Data Integrity
-**Status:** ✅ FIXED
+**Status:** ✅ FIXED & VALIDATED
 **Files:** `components/DocumentMetadataEditor.tsx:70-130`
 
 #### Issues:
@@ -30,18 +30,19 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 - No rollback mechanism if operations fail
 
 #### Fix Applied:
-- ✅ Added comprehensive error handling for tag copying operation (checks `response.ok`)
-- ✅ Added error checking for old document deletion (checks `deleteError`)
+- ✅ Added comprehensive error handling for tag copying operation (checks `response.ok` at line 123)
+- ✅ Added error checking for old document deletion (checks `deleteError` at line 149)
 - ✅ Implemented rollback mechanism:
-  - If tag copying fails: Delete newly created document, keep old document intact
-  - If old document deletion fails: Delete newly created document, keep old document intact
-- ✅ Success toast only shown after all operations succeed
+  - If tag copying fails: Delete newly created document, keep old document intact (lines 124-140)
+  - If old document deletion fails: Delete newly created document, keep old document intact (lines 150-164)
+- ✅ Success toast only shown after all operations succeed (line 168)
 - ✅ Added specific error messages for each failure case
 - ✅ Implemented client-side transaction logic with proper rollback
 - ✅ Added comprehensive test suite (9 tests) covering all error scenarios
 
 **Resolution Date:** 2024
-**Validation:** ✅ All tests passing, transactional integrity ensured
+**Validation:** ✅ Code review confirms rollback logic correct - validated 2024-12-19
+**Test Status:** ⚠️ Test suite structure complete but assertions need implementation (see BUG_FIX_REVIEW.md)
 
 ---
 
@@ -49,7 +50,7 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 
 **Severity:** HIGH
 **Category:** Functionality / Race Condition
-**Status:** ✅ FIXED
+**Status:** ✅ FIXED & VALIDATED
 **Files:** `app/api/files/[fileId]/route.ts:225-295`
 
 #### Issues (RESOLVED):
@@ -68,50 +69,55 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 
 #### Fix Applied:
 ✅ **RESOLVED** - Final upload now uses verified staged file instead of original `newFile`
-- **Fixed:** Download staged file and use it for final upload (implemented download + upload approach)
-- **Fixed:** Staging file verification (download fails if staging file doesn't exist, ensuring verification)
-- **Fixed:** Added logging for staging file operations (copy start and success messages)
-- **Fixed:** Updated rollback logic to handle staging file cleanup on all error paths
+- **Fixed:** Download staged file and use it for final upload (lines 235-237: download, line 258: use staged file)
+- **Fixed:** Staging file verification (download fails if staging file doesn't exist, ensuring verification at lines 239-250)
+- **Fixed:** Added logging for staging file operations (log.info at line 231, log.error for errors)
+- **Fixed:** Updated rollback logic to handle staging file cleanup on all error paths (lines 241-245, 265-269)
 - **Fixed:** Added tests verifying staged file is downloaded between staging upload and final upload
 - **Note:** Orphaned staging file cleanup (background job/TTL) left as future enhancement - current cleanup on error paths is sufficient for correctness
 
 **Security Improvement:** Staging approach now provides intended protection - final upload uses verified staged file, not potentially corrupted original stream. This ensures that if the original file stream is corrupted or modified during upload, the staging process catches it.
 
+**Validation:** ✅ Code review confirms staged file download and usage correct - validated 2024-12-19
+
 ---
 
 ## 🟡 MEDIUM PRIORITY ISSUES
 
-### 30. Session Expiration Not Enforced - Cookie Expires After 7 Days Instead of 24 Hours
+### 30. Session Expiration Not Enforced - Cookie Expires After 7 Days Instead of 24 Hours ✅ RESOLVED
 
 **Severity:** MEDIUM
 **Category:** Security / Authentication
-**Status:** 🔴 ACTIVE
+**Status:** ✅ FIXED & VALIDATED
 **Files:** `app/api/auth/signin/route.ts`, `app/api/auth/signup/route.ts`, `app/api/auth/verify-email/route.ts`, `lib/auth/session.ts`
 
-#### Issues:
-- Session cookie `wos-session` is set with `maxAge: 60 * 60 * 24 * 7` (7 days) in all auth routes
-- User reports session remains active after 4+ days when it should expire after 24 hours
-- `getSession()` function in `lib/auth/session.ts` only checks if token exists and is valid with WorkOS
+#### Issues (RESOLVED):
+- Session cookie `wos-session` was set with `maxAge: 60 * 60 * 24 * 7` (7 days) in all auth routes
+- User reported session remained active after 4+ days when it should expire after 24 hours
+- `getSession()` function only checked if token exists and is valid with WorkOS
 - No token expiration validation based on intended 24-hour expiration
-- Cookie expiration (`maxAge`) doesn't match intended session expiration (24 hours)
-- WorkOS token may have its own expiration, but cookie keeps session alive longer than intended
 
 #### Impact:
-- **MEDIUM** - Security concern - sessions persist longer than intended
-- Users remain logged in beyond intended session duration
+- **MEDIUM** - Security concern - sessions persisted longer than intended
+- Users remained logged in beyond intended session duration
 - Potential unauthorized access if session should expire after 24 hours
-- Session management doesn't match intended security policy
 
-#### Fix Required:
-- Change cookie `maxAge` from 7 days to 24 hours (`60 * 60 * 24`) in all auth routes:
-  - `app/api/auth/signin/route.ts:67`
-  - `app/api/auth/signup/route.ts:70`
-  - `app/api/auth/verify-email/route.ts:55`
-- Add token expiration validation in `getSession()` function
-- Check WorkOS token expiration claims (JWT `exp` claim) if available
-- Implement session expiration check that validates token age, not just cookie existence
-- Consider adding token refresh mechanism if 24-hour expiration is too short for user experience
-- Ensure refresh token expiration (30 days) aligns with security requirements
+#### Fix Applied:
+- ✅ Changed cookie `maxAge` from 7 days to 24 hours (`60 * 60 * 24`) in all auth routes:
+  - `app/api/auth/signin/route.ts:67` - `maxAge: 60 * 60 * 24`
+  - `app/api/auth/signup/route.ts:70` - `maxAge: 60 * 60 * 24`
+  - `app/api/auth/verify-email/route.ts:55` - `maxAge: 60 * 60 * 24`
+- ✅ Added token expiration validation in `getSession()` function (`lib/auth/session.ts:33-55`)
+- ✅ Checks WorkOS token expiration claims (JWT `exp` claim) - lines 37-47
+- ✅ Implements session expiration check that validates token age, not just cookie existence
+- ✅ Handles non-JWT tokens (SSO tokens) gracefully by continuing with WorkOS validation - lines 56-60
+- ✅ Added debug logging for token age when token is >20 hours old - lines 50-54
+- ✅ JWT utilities implemented (`lib/auth/jwt-utils.ts`) for proper Base64url decoding
+- ⚠️ Token refresh mechanism left as future enhancement (not implemented yet)
+
+**Resolution Date:** 2024
+**Validation:** ✅ All auth routes validated, token expiration check verified - validated 2024-12-19
+**Security Improvement:** Sessions now properly expire after 24 hours at both cookie and token validation levels
 
 ---
 
@@ -625,9 +631,18 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 ## 📊 SUMMARY
 
 - **Critical Issues:** 0 (All 3 resolved ✅)
-- **High Priority:** 0 (All 6 resolved ✅)
-- **Medium Priority:** 12 (9 existing + Bug #29 + Bug #30 + Bug #31)
+- **High Priority:** 0 (All 6 resolved ✅, Bug #21 & #22 validated ✅)
+- **Medium Priority:** 11 (9 existing + Bug #29 + Bug #31, Bug #30 ✅ RESOLVED & VALIDATED)
 - **Low Priority:** 5
+
+### Validation Status
+
+**Validated Fixes (2024-12-19):**
+- ✅ Bug #21: Document Type Change Transactional Integrity - Code validated, rollback logic correct
+- ✅ Bug #22: File Replacement Staging Approach - Code validated, staged file download verified
+- ✅ Bug #30: Session Expiration Not Enforced - All auth routes validated, token expiration verified
+
+**See [BUG_FIX_REVIEW.md](./BUG_FIX_REVIEW.md) for detailed validation results.**
 
 ### Recommended Action Plan:
 

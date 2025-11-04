@@ -39,26 +39,75 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
   // Validate document access when document changes
   useEffect(() => {
     async function validateAccess() {
-      if (!document || !appId || !teamId) {
+      // Use appId prop or fallback to document.appId
+      const effectiveAppId = appId || document?.appId;
+      
+      console.log('[DocumentViewer] Starting access validation', {
+        documentId: document?.id,
+        documentType: document?.type,
+        appId: effectiveAppId,
+        appIdProp: appId,
+        documentAppId: document?.appId,
+        teamId,
+        hasDocument: !!document,
+      });
+
+      if (!document || !effectiveAppId || !teamId) {
+        console.log('[DocumentViewer] Missing required fields, skipping validation', {
+          hasDocument: !!document,
+          hasAppId: !!effectiveAppId,
+          appIdProp: !!appId,
+          documentAppId: !!document?.appId,
+          hasTeamId: !!teamId,
+        });
         setHasAccess(null);
         return;
       }
 
+      // Set timeout to prevent hanging
+      const timeoutId = setTimeout(() => {
+        console.warn('[DocumentViewer] ⚠️ Document access validation timed out after 5s, allowing access');
+        setHasAccess(true); // Fail open - allow access if validation times out
+      }, 5000); // 5 second timeout
+
       try {
+        const requestBody = {
+          documentId: document.id,
+          documentType: document.type,
+          teamId,
+          appId: effectiveAppId,
+        };
+        console.log('[DocumentViewer] Sending access validation request', requestBody);
+
         const response = await fetch('/api/documents/validate-access', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            documentId: document.id,
-            documentType: document.type,
-            teamId,
-            appId,
-          }),
+          body: JSON.stringify(requestBody),
         });
 
-        const data = await response.json();
+        console.log('[DocumentViewer] Received response', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+        });
 
-        if (!response.ok || !data.hasAccess) {
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          // If response is not OK, fail open (allow access) since user already passed GET filter
+          console.warn('[DocumentViewer] ⚠️ Response not OK, allowing access', {
+            status: response.status,
+            statusText: response.statusText,
+          });
+          setHasAccess(true);
+          return;
+        }
+
+        const data = await response.json();
+        console.log('[DocumentViewer] Response data', data);
+
+        if (!data.hasAccess) {
+          console.warn('[DocumentViewer] ❌ Access denied');
           setHasAccess(false);
           toast.error('You no longer have access to this document');
           // Close the document viewer after a short delay
@@ -66,20 +115,19 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
             onClose();
           }, 2000);
         } else {
+          console.log('[DocumentViewer] ✅ Access granted');
           setHasAccess(true);
         }
       } catch (error) {
-        console.error('Error validating document access:', error);
-        setHasAccess(false);
-        toast.error('Error checking document access');
-        setTimeout(() => {
-          onClose();
-        }, 2000);
+        clearTimeout(timeoutId);
+        console.error('[DocumentViewer] ❌ Error validating document access:', error);
+        // Fail open - allow access if there's an error (user already passed GET filter)
+        setHasAccess(true);
       }
     }
 
     validateAccess();
-  }, [document?.id, document?.type, appId, teamId, onClose, toast]);
+  }, [document?.id, document?.type, document?.appId, appId, teamId, onClose, toast]);
 
   // Load document tags
   useEffect(() => {

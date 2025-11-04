@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FileText, Search, BookOpen, ChevronRight, Layers, Plus, FolderKanban, Settings } from "lucide-react";
 import { getTeams, getApplications, getAllDocumentsForApp, getApplicationGroups } from "@/lib/supabase/queries";
@@ -69,31 +69,6 @@ function HomeContent() {
     setIsMounted(true);
   }, []);
 
-  // Listen for role change events and clear document state
-  useEffect(() => {
-    const handleRoleChange = (event: CustomEvent) => {
-      const { newRole } = event.detail || {};
-      console.log('Role change detected, clearing document state. New role:', newRole);
-      
-      // Clear all document-related state
-      setSelectedDocument(null);
-      setSelectedDocumentAppName("");
-      setSelectedDocumentAppId("");
-      setEditingDocument(null);
-      
-      // Clear document list by refreshing
-      if (selectedTeamId && selectedDocumentAppId) {
-        refreshDocuments();
-      }
-    };
-
-    window.addEventListener('userRoleChanged', handleRoleChange as EventListener);
-    
-    return () => {
-      window.removeEventListener('userRoleChanged', handleRoleChange as EventListener);
-    };
-  }, [selectedTeamId, selectedDocumentAppId, refreshDocuments]);
-
   // Check authentication status on mount
   useEffect(() => {
     if (!isMounted) return;
@@ -122,7 +97,7 @@ function HomeContent() {
 
 
   // Function to refresh documents without page reload
-  const refreshDocuments = async () => {
+  const refreshDocuments = useCallback(async () => {
     if (!selectedTeamId || applications.length === 0) return;
 
     const appsWithDocs = await Promise.all(
@@ -164,7 +139,39 @@ function HomeContent() {
       .slice(0, 6);
 
     setRecentDocs(allRecentDocs);
-  };
+  }, [selectedTeamId, applications]);
+
+  // Use ref to store latest refreshDocuments to avoid re-registering event listener
+  const refreshDocumentsRef = useRef(refreshDocuments);
+  useEffect(() => {
+    refreshDocumentsRef.current = refreshDocuments;
+  }, [refreshDocuments]);
+
+  // Listen for role change events and clear document state
+  // Using ref to avoid re-registering event listener when refreshDocuments changes
+  useEffect(() => {
+    const handleRoleChange = (event: CustomEvent) => {
+      const { newRole } = event.detail || {};
+      console.log('Role change detected, clearing document state. New role:', newRole);
+      
+      // Clear all document-related state
+      setSelectedDocument(null);
+      setSelectedDocumentAppName("");
+      setSelectedDocumentAppId("");
+      setEditingDocument(null);
+      
+      // Clear document list by refreshing - use ref to get latest function
+      if (selectedTeamId && selectedDocumentAppId) {
+        refreshDocumentsRef.current();
+      }
+    };
+
+    window.addEventListener('userRoleChanged', handleRoleChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('userRoleChanged', handleRoleChange as EventListener);
+    };
+  }, [selectedTeamId, selectedDocumentAppId]); // Removed refreshDocuments from dependencies
 
   // Load initial data - only after mount to avoid hydration issues
   useEffect(() => {
@@ -606,6 +613,7 @@ function HomeContent() {
                 onDocumentClick={(doc, appName) => {
                   setSelectedDocument(doc);
                   setSelectedDocumentAppName(appName);
+                  setSelectedDocumentAppId(selectedApp || doc.appId || "");
                 }}
                 setSelectedDocumentAppId={setSelectedDocumentAppId}
                 onCreateDocument={() => {

@@ -16,6 +16,7 @@ export interface SessionUser {
  * Returns null if no valid session exists
  * 
  * Supports both SSO (organization-based) and User Management authentication
+ * Validates token expiration based on JWT exp claim (24-hour expiration)
  */
 export async function getSession(): Promise<{ user: SessionUser; accessToken: string } | null> {
   try {
@@ -27,8 +28,39 @@ export async function getSession(): Promise<{ user: SessionUser; accessToken: st
       return null;
     }
 
+    // Validate token expiration if it's a JWT token
+    // SSO tokens may not be JWTs, so we check expiration only if we can decode the token
+    try {
+      const payload = decodeJWTPayload(accessToken);
+      
+      // Check if token has exp claim and if it's expired
+      if (payload.exp) {
+        const expirationTime = payload.exp * 1000; // Convert to milliseconds (JWT exp is in seconds)
+        const currentTime = Date.now();
+        
+        if (currentTime >= expirationTime) {
+          log.info('[session] Token expired, expiring session', {
+            expiredAt: new Date(expirationTime).toISOString(),
+            currentTime: new Date(currentTime).toISOString(),
+          });
+          return null; // Token is expired
+        }
+        
+        // Log token age for debugging (but don't fail if token is still valid)
+        const tokenAge = currentTime - (payload.iat ? payload.iat * 1000 : expirationTime - (24 * 60 * 60 * 1000));
+        const tokenAgeHours = Math.floor(tokenAge / (60 * 60 * 1000));
+        if (tokenAgeHours > 20) {
+          log.debug(`[session] Token age: ${tokenAgeHours} hours (expires in ${Math.floor((expirationTime - currentTime) / (60 * 60 * 1000))} hours)`);
+        }
+      }
+    } catch (decodeError: any) {
+      // If we can't decode the token, it might be an SSO token (not a JWT)
+      // Continue with WorkOS validation - WorkOS will reject expired tokens
+      log.debug('[session] Token is not a JWT or cannot be decoded, will validate with WorkOS');
+    }
+
     // NOTE: Token refresh is disabled for now
-    // WorkOS tokens typically last long enough with the 7-day cookie expiration
+    // WorkOS tokens typically last long enough with the 24-hour cookie expiration
     // If token refresh is needed, it should be implemented using WorkOS's session refresh API
     // For now, if the token is invalid, the user will need to re-authenticate
 
