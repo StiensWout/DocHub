@@ -17,7 +17,7 @@ This document outlines all the free tools integrated into the CI/CD pipeline.
 ### 2. **Codecov** ✅ Free (Public Repos)
 - **What it does**: Advanced code coverage tracking and reporting
 - **Cost**: Free for public repos, free tier for private repos
-- **Setup**: Optional - requires token at https://codecov.io
+- **Setup**: Optional - requires token at <https://codecov.io>
 - **Features**:
   - Coverage history tracking
   - PR coverage comments
@@ -58,7 +58,7 @@ This document outlines all the free tools integrated into the CI/CD pipeline.
 ### 6. **GitGuardian** ✅ Free Tier
 - **What it does**: Secrets scanning (API keys, tokens, passwords)
 - **Cost**: Free for up to 25 developers
-- **Setup**: Install GitHub App at https://github.com/apps/gitguardian
+- **Setup**: Install GitHub App at <https://github.com/apps/gitguardian>
 - **Features**:
   - Automatic PR scanning
   - Repository-wide scanning
@@ -82,13 +82,13 @@ All tools work out of the box. Optional enhancements:
 ### Optional Enhancements
 
 1. **Codecov** (Recommended for better coverage tracking):
-   - Sign up at https://codecov.io
+   - Sign up at <https://codecov.io>
    - Connect your GitHub repo
    - Copy your token
    - Add to GitHub Secrets: `CODECOV_TOKEN`
 
 2. **GitGuardian** (Recommended for security):
-   - Visit https://github.com/apps/gitguardian
+   - Visit <https://github.com/apps/gitguardian>
    - Click "Install"
    - Select repository: `StiensWout/DocHub`
    - Free tier covers up to 25 developers
