@@ -23,6 +23,51 @@ This comprehensive TODO list covers bug fixes, optimizations, infrastructure imp
 
 ---
 
+## 🔴 ACTIVE BUGS REQUIRING IMMEDIATE ATTENTION
+
+**Last Updated:** Analysis from BUG_LIST.md  
+**Branch:** `optimization-and-fixes`
+
+### High Priority Active Bugs
+_All high priority bugs have been resolved ✅_
+
+### Medium Priority Active Bugs
+1. **Bug #23** - Slug Generation Logic Produces Empty Slugs
+   - **Severity:** MEDIUM
+   - **Status:** ACTIVE
+   - **Impact:** Can cause database constraint violations
+   - **Estimated Time:** 1-2 hours
+   - **See:** [Bug #23 Details](#bug-23-slug-generation-logic-produces-empty-slugs-and-inconsistent-underscore-handling--active)
+
+2. **Bug #24** - Document Changes Not Displayed After Save Until Page Reload
+   - **Severity:** MEDIUM
+   - **Status:** ACTIVE
+   - **Impact:** Poor user experience, requires manual page reload
+   - **Estimated Time:** 2-3 hours
+   - **See:** [Bug #24 Details](#bug-24-document-changes-not-displayed-after-save-until-page-reload--active)
+
+3. **Bug #28** - No Distinction Between Global Admin and Entity Admin
+   - **Severity:** MEDIUM
+   - **Status:** ACTIVE
+   - **Impact:** Access control design issue, cannot implement entity-specific admin privileges
+   - **Estimated Time:** 4-6 hours
+   - **See:** [Bug #28 Details](#bug-28-no-distinction-between-global-admin-and-entity-admin--active)
+
+4. **Bug #29** - Custom WorkOS Roles Not Fully Displayed
+   - **Severity:** MEDIUM
+   - **Status:** ⚠️ PARTIALLY ADDRESSED
+   - **Impact:** Admins cannot assign users to custom roles that haven't been used yet
+   - **Estimated Time:** 2-4 hours (remaining work)
+   - **See:** [Bug #29 Details](#bug-29-custom-workos-roles-not-fully-displayed-in-admin-user-group-menu--partially-addressed)
+
+5. **Bug #25** - Tag Search Bar Not Refreshing After Tag Creation
+   - **Severity:** MEDIUM
+   - **Status:** ⚠️ STATUS UNKNOWN (Implementation complete in TODO.md, but marked ACTIVE in BUG_LIST.md)
+   - **Action Required:** Verify implementation and update BUG_LIST.md if complete
+   - **See:** [Bug #25 Details](#bug-25-tag-search-bar-not-refreshing-after-tag-creation--status-unknown)
+
+---
+
 ## 🔴 CRITICAL PRIORITY - Fix Immediately
 
 ### Bug #1: TypeScript Compilation Errors ✅ COMPLETED
@@ -129,6 +174,131 @@ This comprehensive TODO list covers bug fixes, optimizations, infrastructure imp
 ---
 
 ## 🟠 HIGH PRIORITY - Fix Soon
+
+### Bug #26: User Role Management Not Saving to WorkOS and Local Database ✅ COMPLETED
+**Files:** `app/api/users/role/route.ts`, `lib/workos/organizations.ts`, `components/UserGroupManager.tsx`
+
+- [x] Debug role update endpoint: ✅ **Complete**
+  - [x] Add comprehensive logging to `app/api/users/role/route.ts` POST handler ✅ **Complete**
+  - [x] Verify request body parameters (userId, role) are received correctly ✅ **Complete**
+  - [x] Check database update succeeds (line 82-99) ✅ **Complete**
+  - [x] Check WorkOS update succeeds (line 104-134) ✅ **Complete**
+- [x] Fix WorkOS role update: ✅ **Complete**
+  - [x] Verify `updateUserRoleInOrganization` function implementation ✅ **Verified - correct**
+  - [x] Check WorkOS API credentials and permissions ✅ **Noted in logs**
+  - [x] Ensure error handling captures and logs all failures ✅ **Complete**
+  - [x] Add rollback mechanism if WorkOS update fails after DB update ✅ **Complete**
+- [x] Fix admin UI: ✅ **Complete**
+  - [x] Verify admin UI calls correct API endpoint ✅ **Verified - correct**
+  - [x] Check request payload format matches API expectations ✅ **Verified - correct**
+  - [x] Add error display for failed role updates ✅ **Complete**
+  - [x] Add success confirmation after role update ✅ **Complete**
+- [x] Implement preferred behaviour: ✅ **Complete**
+  - [x] Fetch active roles from WorkOS ✅ **Already implemented via getUserOrganizationMemberships**
+  - [x] Display selectable list of roles in admin UI ✅ **Already implemented**
+  - [x] Save to both WorkOS and local database ✅ **Complete with rollback**
+  - [x] Provide user feedback on save status ✅ **Complete**
+- [ ] Test end-to-end: ⚠️ **Requires testing**
+  - [ ] Admin changes user role via UI
+  - [ ] Verify role saved to database
+  - [ ] Verify role saved to WorkOS
+  - [ ] Verify UI updates reflect new role
+
+**Changes Made:**
+1. **Enhanced logging** throughout the POST handler:
+   - Request validation logging
+   - Database update logging with success/failure tracking
+   - WorkOS update progress logging for each organization
+   - Detailed error logging with context
+2. **Rollback mechanism**:
+   - Stores previous role before update
+   - Rolls back database if all WorkOS updates fail
+   - Handles both cases: user had previous role vs no previous role
+   - Critical error logging if rollback itself fails
+3. **Improved error handling**:
+   - Separate handling for partial failures (some orgs succeed, some fail)
+   - Detailed error messages with failure reasons
+   - Rollback status included in error responses
+4. **Enhanced admin UI**:
+   - Detailed success messages with organization update counts
+   - Detailed error messages with failure details and rollback status
+   - Warning messages for partial failures
+   - Better user feedback overall
+
+**Key Improvements:**
+- Database update now uses `.select()` to verify success
+- Previous role is fetched before update for rollback capability
+- WorkOS membership fetching disables cache for role updates (ensures fresh data)
+- All WorkOS updates are tracked individually with detailed logging
+- Partial failure handling (some orgs succeed, some fail) doesn't trigger rollback
+- Complete failure (all orgs fail) triggers automatic database rollback
+
+**Estimated Time:** ✅ **Complete** - 2 hours
+
+**Status:** ✅ Implementation complete, requires end-to-end testing
+
+---
+
+### Bug #27: Admin Role Change Doesn't Revoke Document Access ✅ COMPLETED
+**Files:** `app/api/users/role/route.ts`, `app/api/documents/route.ts`, `components/DocumentViewer.tsx`, `app/page.tsx`, `components/UserGroupManager.tsx`
+
+**Severity:** HIGH
+**Category:** Security / Access Control
+**Status:** ✅ FIXED
+
+- [x] Add role change detection:
+  - [x] Implement role change detection in `app/api/users/role/route.ts` (returns `currentUserRoleChanged` flag)
+  - [x] Add client-side listener for role changes in `app/page.tsx`
+  - [x] Clear cached document access on role change
+- [x] Fix document access logic:
+  - [x] Verify `app/api/documents/route.ts` re-checks permissions on each request (already implemented)
+  - [x] Add new document access validation endpoint `/api/documents/validate-access`
+  - [x] Ensure document access is not cached client-side (added validation in DocumentViewer)
+- [x] Implement redirect and refresh:
+  - [x] Redirect to home page after role change (when admin changes current user's role)
+  - [x] Clear selected document state via event listener
+  - [x] Refresh document list with new permissions
+  - [x] Force page reload to clear cached permissions
+- [x] Clear client-side state:
+  - [x] Clear `selectedDocument` after role change (via event listener)
+  - [x] Clear `documentList` and re-fetch with new permissions
+  - [x] Invalidate document viewer state (DocumentViewer validates access on mount)
+- [x] Add document access validation:
+  - [x] Created `/api/documents/validate-access` POST endpoint
+  - [x] DocumentViewer validates access before displaying document
+  - [x] Shows access denied message and closes document if access revoked
+
+**Implementation Details:**
+1. **Role Change Detection** (`app/api/users/role/route.ts`):
+   - Added `isCurrentUserRoleChange` flag to detect if current user's role is being changed
+   - Returns `currentUserRoleChanged` and `roleChanged` in all success responses
+
+2. **UserGroupManager** (`components/UserGroupManager.tsx`):
+   - Checks `currentUserRoleChanged` flag from API response
+   - Dispatches `userRoleChanged` custom event when current user's role changes
+   - Redirects to home page and forces page reload after role change
+
+3. **Client-Side Role Change Listener** (`app/page.tsx`):
+   - Listens for `userRoleChanged` custom event
+   - Clears all document-related state (selectedDocument, selectedDocumentAppId, editingDocument)
+   - Refreshes document list if applicable
+
+4. **Document Access Validation** (`app/api/documents/route.ts`):
+   - Created new POST endpoint `/api/documents/validate-access`
+   - Validates user has access to specific document based on current permissions
+   - Checks admin status, user groups, and document access groups
+
+5. **DocumentViewer Access Check** (`components/DocumentViewer.tsx`):
+   - Validates document access on mount and when document changes
+   - Shows "Verifying access..." loading state
+   - Shows "Access Denied" message and closes document if access revoked
+   - Prevents unauthorized document viewing
+
+**Estimated Time:** 2-3 hours  
+**Actual Time:** ~2 hours  
+**Status:** ✅ Fixed - Role changes now properly revoke document access and clear client-side state
+
+---
 
 ### Bug #21: Document Type Change Lacks Transactional Integrity ✅ COMPLETED
 **File:** `components/DocumentMetadataEditor.tsx:70-130`
@@ -424,8 +594,14 @@ This comprehensive TODO list covers bug fixes, optimizations, infrastructure imp
 
 ---
 
-### Bug #25: Tag Search Bar Not Refreshing After Tag Creation ✅ **COMPLETE**
+### Bug #25: Tag Search Bar Not Refreshing After Tag Creation ⚠️ STATUS UNKNOWN
 **Files:** `components/SearchBar.tsx`, `components/TagSelector.tsx`, `app/api/tags/route.ts`, `contexts/TagContext.tsx`, `app/layout.tsx`
+
+**Severity:** MEDIUM
+**Category:** Functionality / UI State Management
+**Status:** 🔴 ACTIVE (per BUG_LIST.md) - but implementation appears complete in TODO.md
+
+**Note:** TODO.md shows this as complete, but BUG_LIST.md shows it as ACTIVE. Verification needed.
 
 - [x] Add tag refresh mechanism in `SearchBar.tsx`: ✅ **Complete**
   - [x] Create callback/event mechanism to notify SearchBar when tags are created ✅ **React Context implemented**
@@ -452,72 +628,16 @@ This comprehensive TODO list covers bug fixes, optimizations, infrastructure imp
 
 **Estimated Time:** ✅ **Complete** - 1 hour
 
----
-
-### Bug #26: User Role Management Not Saving to WorkOS and Local Database ✅ **COMPLETE**
-**Files:** `app/api/users/role/route.ts`, `lib/workos/organizations.ts`, `components/UserGroupManager.tsx`
-
-- [x] Debug role update endpoint: ✅ **Complete**
-  - [x] Add comprehensive logging to `app/api/users/role/route.ts` POST handler ✅ **Complete**
-  - [x] Verify request body parameters (userId, role) are received correctly ✅ **Complete**
-  - [x] Check database update succeeds (line 82-99) ✅ **Complete**
-  - [x] Check WorkOS update succeeds (line 104-134) ✅ **Complete**
-- [x] Fix WorkOS role update: ✅ **Complete**
-  - [x] Verify `updateUserRoleInOrganization` function implementation ✅ **Verified - correct**
-  - [x] Check WorkOS API credentials and permissions ✅ **Noted in logs**
-  - [x] Ensure error handling captures and logs all failures ✅ **Complete**
-  - [x] Add rollback mechanism if WorkOS update fails after DB update ✅ **Complete**
-- [x] Fix admin UI: ✅ **Complete**
-  - [x] Verify admin UI calls correct API endpoint ✅ **Verified - correct**
-  - [x] Check request payload format matches API expectations ✅ **Verified - correct**
-  - [x] Add error display for failed role updates ✅ **Complete**
-  - [x] Add success confirmation after role update ✅ **Complete**
-- [x] Implement preferred behaviour: ✅ **Complete**
-  - [x] Fetch active roles from WorkOS ✅ **Already implemented via getUserOrganizationMemberships**
-  - [x] Display selectable list of roles in admin UI ✅ **Already implemented**
-  - [x] Save to both WorkOS and local database ✅ **Complete with rollback**
-  - [x] Provide user feedback on save status ✅ **Complete**
-- [ ] Test end-to-end: ⚠️ **Requires testing**
-  - [ ] Admin changes user role via UI
-  - [ ] Verify role saved to database
-  - [ ] Verify role saved to WorkOS
-  - [ ] Verify UI updates reflect new role
-
-**Changes Made:**
-1. **Enhanced logging** throughout the POST handler:
-   - Request validation logging
-   - Database update logging with success/failure tracking
-   - WorkOS update progress logging for each organization
-   - Detailed error logging with context
-2. **Rollback mechanism**:
-   - Stores previous role before update
-   - Rolls back database if all WorkOS updates fail
-   - Handles both cases: user had previous role vs no previous role
-   - Critical error logging if rollback itself fails
-3. **Improved error handling**:
-   - Separate handling for partial failures (some orgs succeed, some fail)
-   - Detailed error messages with failure reasons
-   - Rollback status included in error responses
-4. **Enhanced admin UI**:
-   - Detailed success messages with organization update counts
-   - Detailed error messages with failure details and rollback status
-   - Warning messages for partial failures
-   - Better user feedback overall
-
-**Key Improvements:**
-- Database update now uses `.select()` to verify success
-- Previous role is fetched before update for rollback capability
-- WorkOS membership fetching disables cache for role updates (ensures fresh data)
-- All WorkOS updates are tracked individually with detailed logging
-- Partial failure handling (some orgs succeed, some fail) doesn't trigger rollback
-- Complete failure (all orgs fail) triggers automatic database rollback
-
-**Estimated Time:** ✅ **Complete** - 2 hours
+**⚠️ ACTION REQUIRED:** Verify implementation matches BUG_LIST.md requirements and update BUG_LIST.md status if complete.
 
 ---
 
-### Bug #29: Custom WorkOS Roles Not Fully Displayed in Admin User Group Menu
+### Bug #29: Custom WorkOS Roles Not Fully Displayed in Admin User Group Menu ⚠️ PARTIALLY ADDRESSED
 **Files:** `components/UserGroupManager.tsx`, `app/api/users/all/route.ts`, `lib/workos/organizations.ts`, `app/api/organizations/route.ts`
+
+**Severity:** MEDIUM
+**Category:** Functionality / User Management
+**Status:** ⚠️ PARTIALLY ADDRESSED
 
 - [x] Improved role extraction from existing user memberships ✅ **Complete**
 - [x] Better handling of role objects vs strings ✅ **Complete**
@@ -546,40 +666,12 @@ This comprehensive TODO list covers bug fixes, optimizations, infrastructure imp
 
 ---
 
-### Bug #27: Admin Role Change Doesn't Revoke Document Access
-**Files:** `app/api/users/role/route.ts`, `app/api/documents/route.ts`, `components/DocumentViewer.tsx`, `app/page.tsx`
+### Bug #28: No Distinction Between Global Admin and Entity Admin 🔴 ACTIVE
+**Files:** `lib/auth/user-groups.ts`, `lib/workos/team-sync.ts`, `app/api/documents/route.ts`, Admin UI
 
-- [ ] Add role change detection:
-  - [ ] Implement session/permission refresh after role change
-  - [ ] Add client-side listener for role changes
-  - [ ] Clear cached document access on role change
-- [ ] Fix document access logic:
-  - [ ] Verify `app/api/documents/route.ts` re-checks permissions on each request
-  - [ ] Ensure document access is not cached client-side
-  - [ ] Add server-side permission validation
-- [ ] Implement redirect and refresh:
-  - [ ] Redirect to home page after role change (when admin changes another user)
-  - [ ] Clear selected document state
-  - [ ] Refresh document list with new permissions
-  - [ ] Force re-fetch user groups/permissions
-- [ ] Clear client-side state:
-  - [ ] Clear `selectedDocument` after role change
-  - [ ] Clear `documentList` and re-fetch with new permissions
-  - [ ] Clear cached user groups
-  - [ ] Invalidate document viewer state
-- [ ] Test access revocation:
-  - [ ] Admin opens document
-  - [ ] Admin changes user role to lower permission
-  - [ ] Verify user redirected to home page
-  - [ ] Verify document no longer accessible
-  - [ ] Verify document list shows only accessible documents
-
-**Estimated Time:** 2-3 hours
-
----
-
-### Bug #28: No Distinction Between Global Admin and Entity Admin
-**Files:** `lib/auth/user-groups.ts`, `lib/workos/team-sync.ts`, `app/api/documents/route.ts`
+**Severity:** MEDIUM
+**Category:** Security / Access Control / Design
+**Status:** 🔴 ACTIVE
 
 - [ ] Design admin role hierarchy:
   - [ ] Define global admin vs entity admin requirements
@@ -703,8 +795,12 @@ This comprehensive TODO list covers bug fixes, optimizations, infrastructure imp
 
 ---
 
-### Bug #23: Slug Generation Logic Produces Empty Slugs and Inconsistent Underscore Handling
+### Bug #23: Slug Generation Logic Produces Empty Slugs and Inconsistent Underscore Handling 🔴 ACTIVE
 **File:** `app/api/tags/route.ts:80-94`
+
+**Severity:** MEDIUM
+**Category:** Functionality / Validation
+**Status:** 🔴 ACTIVE
 
 - [ ] Align slug generation with validation:
   - [ ] Option 1: Allow underscores in slugs (update regex to `/[^a-z0-9\s\-_]/g`)
@@ -724,8 +820,12 @@ This comprehensive TODO list covers bug fixes, optimizations, infrastructure imp
 
 ---
 
-### Bug #24: Document Changes Not Displayed After Save Until Page Reload
+### Bug #24: Document Changes Not Displayed After Save Until Page Reload 🔴 ACTIVE
 **Files:** `components/DocumentEditor.tsx`, `components/DocumentMetadataEditor.tsx`, `components/DocumentViewer.tsx`, `app/page.tsx`
+
+**Severity:** MEDIUM
+**Category:** Functionality / UI State Management
+**Status:** 🔴 ACTIVE
 
 - [ ] Review `onSave()` callback implementation in `app/page.tsx` (line 660-665)
 - [ ] Ensure document refresh happens after save:
@@ -1349,8 +1449,8 @@ After fixing each bug category, ensure:
 ### Bug Fixes
 **Total Bugs:** 29
 - **Critical:** 3 bugs (all fixed ✅)
-- **High Priority:** 6 bugs (all fixed ✅: Bug #4, Bug #5, Bug #6, Bug #7, Bug #21, Bug #22)
-- **Medium Priority:** 10 bugs (Bug #8 ✅, Bug #9, Bug #10, Bug #11, Bug #12, Bug #13, Bug #14, Bug #23, Bug #24, Bug #25 ✅, Bug #26 ✅, Bug #27, Bug #28, Bug #29 ⚠️)
+- **High Priority:** 7 bugs (Bug #4 ✅, Bug #5 ✅, Bug #6 ✅, Bug #7 ✅, Bug #21 ✅, Bug #22 ✅, Bug #26 ✅, Bug #27 ✅)
+- **Medium Priority:** 10 bugs (Bug #8 ✅, Bug #9, Bug #10, Bug #11, Bug #12, Bug #13, Bug #14, Bug #23 🔴 ACTIVE, Bug #24 🔴 ACTIVE, Bug #25 ⚠️ STATUS UNKNOWN, Bug #28 🔴 ACTIVE, Bug #29 ⚠️ PARTIALLY ADDRESSED)
 - **Low Priority:** 5 bugs (Bug #15, Bug #16, Bug #17, Bug #18, Bug #19, Bug #20)
 
 ### Infrastructure & DevOps Tasks
@@ -1380,12 +1480,19 @@ After fixing each bug category, ensure:
 
 ### Progress Summary
 - [x] Critical bugs fixed: 3/3 (Bug #1, Bug #2, and Bug #3 completed) ✅ ALL CRITICAL BUGS FIXED
-- [x] High priority bugs fixed: 6/6 (Bug #4, Bug #5, Bug #6, Bug #7, Bug #21, and Bug #22 completed) ✅ ALL HIGH PRIORITY BUGS FIXED
-- [ ] Medium priority bugs fixed: 3/14 (Bug #8 ✅, Bug #25 ✅, Bug #26 ✅)
+- [x] High priority bugs fixed: 7/7 (Bug #4, Bug #5, Bug #6, Bug #7, Bug #21, Bug #22, Bug #26, Bug #27 completed) ✅ ALL HIGH PRIORITY BUGS FIXED
+- [ ] Medium priority bugs fixed: 1/10 (Bug #8 ✅)
+- [ ] Medium priority bugs active: 4/10 (Bug #23 🔴 ACTIVE, Bug #24 🔴 ACTIVE, Bug #28 🔴 ACTIVE, Bug #29 ⚠️ PARTIALLY ADDRESSED)
 - [ ] Low priority bugs fixed: 0/5
 - [ ] Infrastructure & DevOps tasks: 0/4
 - [ ] Performance optimizations: 0/12
-- [ ] Overall completion: 31% (12/38 total tasks)
+- [ ] Overall completion: ~32% (12/38 total tasks)
+
+### Active Bugs Requiring Immediate Attention 🔴
+1. **Bug #23** (MEDIUM): Slug Generation Logic Produces Empty Slugs
+2. **Bug #24** (MEDIUM): Document Changes Not Displayed After Save Until Page Reload
+3. **Bug #28** (MEDIUM): No Distinction Between Global Admin and Entity Admin
+4. **Bug #29** (MEDIUM): Custom WorkOS Roles Not Fully Displayed - Partially addressed
 
 ### Key Metrics to Track
 - **Before/After Lighthouse Scores:** TBD

@@ -82,6 +82,10 @@ export async function POST(request: NextRequest) {
     userIdForRollback = userId; // Store for potential rollback
 
     log.debug(`[POST /api/users/role] Request body - userId: ${userId}, role: ${role}`);
+    
+    // Check if the current user's role is being changed (for redirect/clear state logic)
+    const isCurrentUserRoleChange = userId === session.user.id;
+    log.debug(`[POST /api/users/role] Is current user role change: ${isCurrentUserRoleChange}`);
 
     if (!userId || !role || !['admin', 'user'].includes(role)) {
       log.warn(`[POST /api/users/role] Invalid request - userId: ${userId}, role: ${role}`);
@@ -143,7 +147,9 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ 
             success: true,
             message: 'Role updated in database. User has no WorkOS organization memberships.',
-            warning: 'User may need to be added to an organization for WorkOS role sync'
+            warning: 'User may need to be added to an organization for WorkOS role sync',
+            currentUserRoleChanged: isCurrentUserRoleChange,
+            roleChanged: role
           });
         } else {
           // Update role in all organizations the user belongs to
@@ -225,7 +231,9 @@ export async function POST(request: NextRequest) {
                 success: true,
                 message: `Role updated in database. ${successes.length} WorkOS organization(s) updated successfully, ${failures.length} failed.`,
                 warning: 'Some WorkOS role updates failed. User may need to re-login for all changes to take effect.',
-                partialFailure: true
+                partialFailure: true,
+                currentUserRoleChanged: isCurrentUserRoleChange,
+                roleChanged: role
               });
             }
           } else {
@@ -233,7 +241,9 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ 
               success: true,
               message: 'Role updated in database and WorkOS',
-              organizationsUpdated: memberships.length
+              organizationsUpdated: memberships.length,
+              currentUserRoleChanged: isCurrentUserRoleChange,
+              roleChanged: role
             });
           }
         }
@@ -278,7 +288,9 @@ export async function POST(request: NextRequest) {
     // If not using WorkOS, just return success
     return NextResponse.json({ 
       success: true,
-      message: 'Role updated in database'
+      message: 'Role updated in database',
+      currentUserRoleChanged: isCurrentUserRoleChange,
+      roleChanged: role
     });
   } catch (error: any) {
     log.error('[POST /api/users/role] Unexpected error:', error);

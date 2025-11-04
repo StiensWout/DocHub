@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { X, Users, Shield, Save, Loader2 } from "lucide-react";
 
 interface User {
@@ -29,6 +30,7 @@ interface UserGroupManagerProps {
 }
 
 export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerProps) {
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -37,11 +39,32 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
   const [availableRoles, setAvailableRoles] = useState<string[]>([]); // Available roles across all organizations
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [userGroups, setUserGroups] = useState<string[]>([]); // Format: "orgId:role" or "orgName" for backward compatibility
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       loadUsers();
       loadOrganizations();
+      // Get current user ID for role change detection
+      fetch('/api/users/role')
+        .then(res => res.json())
+        .then(data => {
+          // Get current user from session (we'll need to fetch this differently)
+          // For now, we'll check userId from the role response or fetch user info
+          fetch('/api/auth/session')
+            .then(res => res.json())
+            .then(sessionData => {
+              if (sessionData?.user?.id) {
+                setCurrentUserId(sessionData.user.id);
+              }
+            })
+            .catch(() => {
+              // Fallback: try to get from users list after it loads
+            });
+        })
+        .catch(() => {
+          // Fallback: will be set when users load
+        });
     }
   }, [isOpen]);
 
@@ -333,6 +356,9 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
         throw new Error(errorMessage);
       }
 
+      // Check if current user's role was changed
+      const currentUserRoleChanged = data.currentUserRoleChanged === true;
+      
       // Show success message with details
       let successMessage = 'Role updated successfully!';
       if (data.message) {
@@ -352,6 +378,23 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
       
       // Refresh users to get updated data
       await loadUsers();
+      
+      // If current user's role was changed, redirect to home and trigger page reload
+      if (currentUserRoleChanged) {
+        // Close the dialog first
+        onClose();
+        
+        // Dispatch a custom event to notify the page component to clear state
+        window.dispatchEvent(new CustomEvent('userRoleChanged', { 
+          detail: { newRole: data.roleChanged } 
+        }));
+        
+        // Redirect to home page and force reload to clear cached permissions
+        router.push('/');
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      }
     } catch (error: any) {
       console.error('Error setting role:', error);
       alert('Failed to set role:\n\n' + error.message);

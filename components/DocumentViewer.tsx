@@ -33,7 +33,53 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
   const [showMetadataEditor, setShowMetadataEditor] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [documentTags, setDocumentTags] = useState<Tag[]>([]);
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const toast = useToast();
+
+  // Validate document access when document changes
+  useEffect(() => {
+    async function validateAccess() {
+      if (!document || !appId || !teamId) {
+        setHasAccess(null);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/documents/validate-access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            documentId: document.id,
+            documentType: document.type,
+            teamId,
+            appId,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.hasAccess) {
+          setHasAccess(false);
+          toast.error('You no longer have access to this document');
+          // Close the document viewer after a short delay
+          setTimeout(() => {
+            onClose();
+          }, 2000);
+        } else {
+          setHasAccess(true);
+        }
+      } catch (error) {
+        console.error('Error validating document access:', error);
+        setHasAccess(false);
+        toast.error('Error checking document access');
+        setTimeout(() => {
+          onClose();
+        }, 2000);
+      }
+    }
+
+    validateAccess();
+  }, [document?.id, document?.type, appId, teamId, onClose, toast]);
 
   // Load document tags
   useEffect(() => {
@@ -56,6 +102,31 @@ export default function DocumentViewer({ document, appName, appId, teamId, onClo
   }, [document?.id, document?.type, appId]);
 
   if (!document) return null;
+
+  // Show loading state while checking access
+  if (hasAccess === null) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-gray-400">Verifying access...</div>
+      </div>
+    );
+  }
+
+  // Show access denied message
+  if (hasAccess === false) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="text-red-400 font-semibold mb-2">Access Denied</div>
+        <div className="text-gray-400 text-sm mb-4">You no longer have access to this document.</div>
+        <button
+          onClick={onClose}
+          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-sm"
+        >
+          Close
+        </button>
+      </div>
+    );
+  }
 
   // Handle print
   const handlePrint = () => {

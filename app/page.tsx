@@ -69,6 +69,31 @@ function HomeContent() {
     setIsMounted(true);
   }, []);
 
+  // Listen for role change events and clear document state
+  useEffect(() => {
+    const handleRoleChange = (event: CustomEvent) => {
+      const { newRole } = event.detail || {};
+      console.log('Role change detected, clearing document state. New role:', newRole);
+      
+      // Clear all document-related state
+      setSelectedDocument(null);
+      setSelectedDocumentAppName("");
+      setSelectedDocumentAppId("");
+      setEditingDocument(null);
+      
+      // Clear document list by refreshing
+      if (selectedTeamId && selectedDocumentAppId) {
+        refreshDocuments();
+      }
+    };
+
+    window.addEventListener('userRoleChanged', handleRoleChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('userRoleChanged', handleRoleChange as EventListener);
+    };
+  }, [selectedTeamId, selectedDocumentAppId, refreshDocuments]);
+
   // Check authentication status on mount
   useEffect(() => {
     if (!isMounted) return;
