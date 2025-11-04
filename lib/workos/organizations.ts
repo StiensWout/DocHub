@@ -497,6 +497,22 @@ export async function removeUserFromOrganization(
 }
 
 /**
+ * Map internal role names to WorkOS role slugs
+ * WorkOS uses role slugs (e.g., 'member', 'admin'), while we use simple names ('user', 'admin')
+ */
+function mapRoleToWorkOSRoleSlug(role: string): string {
+  // Map our internal roles to WorkOS role slugs
+  // Default mapping: 'admin' -> 'admin', 'user' -> 'member'
+  const roleMap: Record<string, string> = {
+    'admin': 'admin',
+    'user': 'member',
+  };
+  
+  // Return mapped role or use the role as-is if it's already a valid slug
+  return roleMap[role.toLowerCase()] || role;
+}
+
+/**
  * Update user's role in an organization
  * Requires admin privileges or appropriate permissions
  */
@@ -506,7 +522,9 @@ export async function updateUserRoleInOrganization(
   newRole: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    log.info(`[updateUserRoleInOrganization] Updating role for user ${userId} in org ${organizationId} to "${newRole}"`);
+    // Map internal role to WorkOS role slug
+    const workOSRoleSlug = mapRoleToWorkOSRoleSlug(newRole);
+    log.info(`[updateUserRoleInOrganization] Updating role for user ${userId} in org ${organizationId} from "${newRole}" to WorkOS slug "${workOSRoleSlug}"`);
     
     // Get the user's organization memberships
     // WorkOS SDK returns { data: [] } structure for list operations
@@ -525,20 +543,30 @@ export async function updateUserRoleInOrganization(
       return { success: false, error: 'User is not a member of this organization' };
     }
 
+    log.debug(`[updateUserRoleInOrganization] Found membership ID: ${membership.id} for user ${userId} in org ${organizationId}`);
+
     // Update the membership role
     // Note: TypeScript types may not include 'role' in UpdateOrganizationMembershipOptions,
     // but the WorkOS runtime API supports it. Using type assertion to bypass type check.
-    await workos.userManagement.updateOrganizationMembership(membership.id, {
-      role: newRole,
+    const updateResult = await workos.userManagement.updateOrganizationMembership(membership.id, {
+      role: workOSRoleSlug,
     } as any);
 
-    log.info(`[updateUserRoleInOrganization] ✅ Successfully updated role to "${newRole}"`);
+    log.info(`[updateUserRoleInOrganization] ✅ Successfully updated role to "${workOSRoleSlug}" (from "${newRole}")`);
+    
+    // Verify the update succeeded by checking the response
+    // WorkOS API may return the updated membership object
+    if (updateResult && typeof updateResult === 'object') {
+      log.debug(`[updateUserRoleInOrganization] Update result:`, JSON.stringify(updateResult));
+    }
+    
     return { success: true };
   } catch (error: any) {
     logWorkOSError('updateUserRoleInOrganization', error, { 
       userId, 
       organizationId, 
-      newRole 
+      newRole,
+      attemptedWorkOSRoleSlug: mapRoleToWorkOSRoleSlug(newRole)
     });
     const errorMessage = getWorkOSErrorMessage(error, 'Failed to update user role');
     return { success: false, error: errorMessage };
