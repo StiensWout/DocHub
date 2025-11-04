@@ -71,15 +71,12 @@ A beautiful, dark-mode documentation manager built with Next.js 14, TypeScript, 
    
    **Option A: Complete Schema Reset (Recommended for fresh setup)**
    - Go to Supabase Dashboard → SQL Editor
-   - Run `supabase/complete_schema.sql` - This will clean and recreate the entire database schema
-   - ⚠️ **Warning**: This will delete all existing data
+   - Run `supabase/purge.sql` first (removes all existing data)
+   - Then run `supabase/create.sql` (creates complete schema)
+   - ⚠️ **Warning**: This will delete all existing data!
    
-   **Option B: Incremental Setup (If you already have data)**
-   - Run these SQL files in your Supabase SQL Editor (in order):
-     1. `supabase/schema.sql` - Main database schema
-     2. `supabase/templates_schema.sql` - Template table schema
-     3. `supabase/versioning_schema.sql` - Document versioning system
-     4. `supabase/rls_policies.sql` - Row Level Security policies
+   **Option B: Use Database Dump (If available)**
+   - Run `supabase/database_dump.sql` in Supabase SQL Editor for the most up-to-date schema
 
 5. **Set up Supabase Storage (for images):**
    - Go to Supabase Dashboard → Storage
@@ -160,10 +157,9 @@ DocHub/
 │   ├── validate.ts      # Database validation
 │   └── check-db.ts      # Database connection check
 ├── supabase/             # Database schemas
-│   ├── complete_schema.sql
-│   ├── schema.sql
-│   ├── templates_schema.sql
-│   ├── versioning_schema.sql
+│   ├── purge.sql                # Remove all database objects
+│   ├── create.sql               # Create complete schema
+│   ├── database_dump.sql        # Current schema (source of truth)
 │   └── rls_policies.sql
 ├── types/                # TypeScript type definitions
 └── docs/                 # Documentation
@@ -247,7 +243,7 @@ bun run check-db     # Check database connection and tables
 
 **Templates not showing:**
 - Ensure `document_templates` table exists
-- Run `supabase/templates_schema.sql`
+- Run `supabase/create.sql` (includes templates table)
 - Verify database connection
 
 **Seed script errors:**

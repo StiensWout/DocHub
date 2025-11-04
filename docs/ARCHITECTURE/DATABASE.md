@@ -391,24 +391,22 @@ Indexes are created on:
 - Leverage indexes for filtering
 - Use `LIMIT` for pagination (future enhancement)
 
-## 🔄 Migration Strategy
+## 🔄 Database Setup
 
-### Schema Files
+DocHub uses two main scripts for database management:
 
-- `complete_schema.sql` - Complete schema for fresh setup
-- `schema.sql` - Main schema
-- `templates_schema.sql` - Templates table
-- `versioning_schema.sql` - Versioning system
-- `files_schema.sql` - File system
-- `migration_application_groups.sql` - Application groups
+- `supabase/purge.sql` - Removes all database objects (use before fresh setup)
+- `supabase/create.sql` - Creates complete schema from scratch
+- `supabase/database_dump.sql` - Current database schema (source of truth)
 
-### Running Migrations
+### Setting Up Database
 
-1. Go to Supabase Dashboard → SQL Editor
-2. Create new query
-3. Copy and paste migration SQL
-4. Run query
-5. Verify tables/indexes created
+**Fresh Setup:**
+1. Run `supabase/purge.sql` to remove all existing objects (if needed)
+2. Run `supabase/create.sql` to create the complete schema
+
+**Using Database Dump:**
+1. Run `supabase/database_dump.sql` in Supabase SQL Editor for the most up-to-date schema
 
 ## 📚 Related Documentation
 

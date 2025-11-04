@@ -73,18 +73,12 @@ You have three options for setting up the database:
 **Option B: Complete Schema Reset**
 1. Go to Supabase Dashboard → **SQL Editor**
 2. Click **"New query"**
-3. Open `supabase/complete_schema.sql` in your editor
-4. Copy the entire contents
-5. Paste into Supabase SQL Editor
-6. Click **"Run"**
-- ⚠️ **Warning:** This will delete all existing data if tables already exist
-
-**Option C: Incremental Setup (If you already have data)**
-- Run these SQL files in order:
-  1. `supabase/schema.sql` - Main tables
-  2. `supabase/templates_schema.sql` - Templates table
-  3. `supabase/versioning_schema.sql` - Versioning system
-  4. `supabase/rls_policies.sql` - Row Level Security
+3. Open `supabase/purge.sql` in your editor
+4. Copy the entire contents and paste into Supabase SQL Editor
+5. Click **"Run"** (this removes all existing data)
+6. Open `supabase/create.sql` in your editor
+7. Copy the entire contents and paste into Supabase SQL Editor
+8. Click **"Run"** (this creates the complete schema)
 
 > **Note**: For the most up-to-date schema, always check `supabase/database_dump.sql` first. See [Database Dump Guide](../INFRASTRUCTURE/DATABASE_DUMP.md) for information on exporting the schema.
 

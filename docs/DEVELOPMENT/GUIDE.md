@@ -42,11 +42,9 @@ DocHub/
 │   ├── validate.ts      # Database validation script
 │   └── check-db.ts      # Database connection checker
 ├── supabase/             # Database schemas
-│   ├── complete_schema.sql      # Complete schema (fresh setup)
-│   ├── schema.sql               # Main schema
-│   ├── templates_schema.sql     # Templates table
-│   ├── versioning_schema.sql    # Versioning system
-│   └── rls_policies.sql         # Row Level Security
+│   ├── purge.sql                # Remove all database objects
+│   ├── create.sql               # Create complete schema
+│   ├── database_dump.sql        # Current schema (source of truth)
 ├── types/                # TypeScript type definitions
 │   └── index.ts         # Shared types
 └── docs/                 # Documentation
@@ -75,8 +73,8 @@ DocHub/
 When modifying database schema:
 
 1. **Update SQL files:**
-   - Edit `supabase/schema.sql` or relevant schema file
-   - Update `supabase/complete_schema.sql` to include changes
+  - Edit `supabase/create.sql` with schema changes
+  - Update `supabase/database_dump.sql` by running the dump script
 
 2. **Test locally:**
    - Run schema changes in Supabase SQL Editor
@@ -278,8 +276,9 @@ bun run lint --fix
 
 ### Modifying Database Schema
 
-1. Update `supabase/schema.sql` with changes
-2. Update `supabase/complete_schema.sql` to include drops
+1. Update `supabase/create.sql` with schema changes
+2. Run `supabase/purge.sql` to test cleanup (if needed)
+3. Update `supabase/database_dump.sql` by running the dump script
 3. Test locally first
 4. Update TypeScript types if needed
 5. Update queries if schema changes affect them

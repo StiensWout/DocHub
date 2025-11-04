@@ -139,18 +139,18 @@ These policies are included in `supabase/rls_policies.sql` and should be applied
 
 ### Database Schema Files
 
-- `supabase/complete_schema.sql` - Complete schema for fresh setup
-- `supabase/schema.sql` - Main schema
-- `supabase/templates_schema.sql` - Templates table
-- `supabase/versioning_schema.sql` - Versioning system
-- `supabase/rls_policies.sql` - Row Level Security policies
+- `supabase/purge.sql` - Removes all database objects
+- `supabase/create.sql` - Creates complete schema from scratch
+- `supabase/database_dump.sql` - Current database schema (source of truth)
 
-### Running Migrations
+### Setting Up Database
 
-1. Go to Supabase Dashboard → **SQL Editor**
-2. Create new query
-3. Copy migration SQL
-4. Run query
+**Fresh Setup:**
+1. Run `supabase/purge.sql` to remove all existing objects (if needed)
+2. Run `supabase/create.sql` to create the complete schema
+
+**Using Database Dump:**
+1. Run `supabase/database_dump.sql` in Supabase SQL Editor for the most up-to-date schema
 
 ## 📝 Next Steps
 
