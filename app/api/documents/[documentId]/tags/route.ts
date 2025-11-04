@@ -5,13 +5,11 @@ import { log } from '@/lib/logger';
 import { validateUUID, validateEnum, validateUUIDArray, DocumentType } from '@/lib/validation/api-validation';
 
 /**
- * Retrieve tag objects associated with a specific document.
- *
- * Requires an authenticated session. Validates `documentId` as a UUID and the optional `type` query parameter against `DocumentType`. Returns 401 if unauthenticated, 400 for validation failures, and 500 for server or database errors.
+ * Retrieve tags associated with a document.
  *
  * @param request - Incoming request; may include the `type` query parameter to filter by document type (`base` or `team`).
  * @param params.documentId - The document's UUID.
- * @returns An object with a `tags` array containing tag objects (`id`, `name`, `slug`, `color`).
+ * @returns An object with a `tags` array containing tag objects with `id`, `name`, `slug`, and `color`.
  */
 export async function GET(
   request: NextRequest,
@@ -85,9 +83,11 @@ export async function GET(
 }
 
 /**
- * Associate one or more existing tags with the specified document and return the associated tag objects.
+ * Associate one or more existing tags with a document and return the associated tag objects.
  *
- * @returns The response body: on success, an object with `tags` — an array of tag objects (`id`, `name`, `slug`, `color`); on error, an object with `error` describing the failure.
+ * @param request - Incoming request whose JSON body must include `tagIds` (array of tag UUIDs) and may include `documentType` (defaults to `'base'`).
+ * @param params.documentId - The target document's UUID.
+ * @returns On success, an object with `tags`: an array of tag objects (`id`, `name`, `slug`, `color`); on failure, an object with an `error` string describing the problem.
  */
 export async function POST(
   request: NextRequest,
