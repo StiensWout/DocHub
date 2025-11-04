@@ -35,7 +35,7 @@ jobs:
         continue-on-error: true  # Don't fail build, but warn about vulnerabilities
       
       - name: Run linter
-        run: npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0
+        run: npm run lint
         continue-on-error: true  # Continue if linting fails (can be changed to false once linting is clean)
       
       - name: Type check
