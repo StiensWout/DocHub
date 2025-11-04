@@ -350,13 +350,13 @@ Add to `.github/workflows/ci.yml`:
 
 For build verification (Phase 3+), add these in GitHub Settings → Secrets:
 
-```
+```yaml
 NEXT_PUBLIC_SUPABASE_URL (optional, can use dummy for build)
 NEXT_PUBLIC_SUPABASE_ANON_KEY (optional, can use dummy for build)
 ```
 
 For GitGuardian GitHub Actions integration (optional):
-```
+```yaml
 GITGUARDIAN_API_KEY (only if using workflow integration, not needed for GitHub App)
 ```
 

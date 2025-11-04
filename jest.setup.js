@@ -59,7 +59,7 @@ if (typeof Request === 'undefined') {
 if (typeof Response === 'undefined') {
   global.Response = class Response {
     constructor(body, init = {}) {
-      this.body = body || null;
+      this.body = body === undefined ? null : body;
       this.status = init.status || 200;
       this.statusText = init.statusText || 'OK';
       this.headers = new Headers(init.headers);
@@ -71,11 +71,20 @@ if (typeof Response === 'undefined') {
     }
     
     async text() {
-      return typeof this.body === 'string' ? this.body : JSON.stringify(this.body);
+      if (typeof this.body === 'string') {
+        return this.body;
+      }
+      if (this.body === null) {
+        return '';
+      }
+      return JSON.stringify(this.body);
     }
     
     async json() {
-      return typeof this.body === 'string' ? JSON.parse(this.body) : this.body;
+      if (typeof this.body === 'string') {
+        return JSON.parse(this.body);
+      }
+      return this.body;
     }
     
     async arrayBuffer() {

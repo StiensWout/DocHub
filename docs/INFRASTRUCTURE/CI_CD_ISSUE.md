@@ -56,7 +56,7 @@ Investigate and implement a basic CI/CD pipeline for automated testing, linting,
 
 ## Implementation Details
 
-See full investigation document: [`docs/INFRASTRUCTURE/CI_CD_PIPELINE_SETUP.md`](../docs/INFRASTRUCTURE/CI_CD_PIPELINE_SETUP.md)
+See full investigation document: [`docs/INFRASTRUCTURE/CI_CD_PIPELINE_SETUP.md`](./CI_CD_PIPELINE_SETUP.md)
 
 ## What's Easy & Viable ✅
 
@@ -122,7 +122,7 @@ See full investigation document: [`docs/INFRASTRUCTURE/CI_CD_PIPELINE_SETUP.md`]
 
 ## Related Documentation
 
-- [CI/CD Pipeline Investigation](../docs/INFRASTRUCTURE/CI_CD_PIPELINE_SETUP.md)
+- [CI/CD Pipeline Investigation](./CI_CD_PIPELINE_SETUP.md)
 - [Testing Documentation](../docs/DEVELOPMENT/TESTING.md)
 - [GitHub Actions Docs](https://docs.github.com/en/actions)
 - [GitGuardian Docs](https://docs.gitguardian.com/platform/user-account/plan-usage)
@@ -132,9 +132,16 @@ See full investigation document: [`docs/INFRASTRUCTURE/CI_CD_PIPELINE_SETUP.md`]
 
 Before implementing, decide:
 - [ ] Do we want automatic deployments or manual?
+    - Manual deployments
 - [ ] Do we need coverage reports on PRs?
+    - Yes
 - [ ] Should we test on multiple Node.js versions?
+    - No
 - [ ] Where do we want to deploy? (Vercel recommended for Next.js)
+    - Not defined yet
 - [x] **GitGuardian** - Set up for secrets scanning? ✅ Recommended
+    - Already added to repository, not to pipeline
 - [x] **Cursor Bugbot** - Set up for automated reviews? ✅ Recommended
+    - Already configured on repository not on pipeline
 - [x] **CodeRabbit** - Manual reviews already configured? ✅ Yes
+        - Already configured on repository not on pipeline
