@@ -6,8 +6,14 @@ import { log } from '@/lib/logger';
 import { validateUUID } from '@/lib/validation/api-validation';
 
 /**
- * PUT /api/tags/[id]
- * Update a tag (admin only)
+ * Update an existing tag by ID (admin only).
+ *
+ * Validates the user session and admin privileges, validates the tag ID and input name,
+ * ensures the tag slug is unique (excluding the tag being updated), updates the tag,
+ * and returns the updated tag object.
+ *
+ * @param params - Route parameters; `params.id` must be a valid UUID identifying the tag to update.
+ * @returns The updated tag object as `{ tag: { ... } }` on success. On failure returns a JSON error message with an appropriate HTTP status code (e.g., 400, 401, 403, 404, 409, 500).
  */
 export async function PUT(
   request: NextRequest,
@@ -118,8 +124,11 @@ export async function PUT(
 }
 
 /**
- * DELETE /api/tags/[id]
- * Delete a tag (admin only)
+ * Delete a tag by ID, restricted to admin users.
+ *
+ * @param request - The incoming Next.js request (unused).
+ * @param params.id - The UUID of the tag to delete.
+ * @returns A NextResponse with JSON: on success `{ success: true }`; on failure `{ error: string }` and an appropriate HTTP status code (400, 401, 403, 404, or 500).
  */
 export async function DELETE(
   request: NextRequest,
@@ -180,4 +189,3 @@ export async function DELETE(
     );
   }
 }
-
