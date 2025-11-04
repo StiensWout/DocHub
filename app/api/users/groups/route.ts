@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session';
 import { getUserGroups, isAdmin } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { log } from '@/lib/logger';
+import { validateUUID, validateArray } from '@/lib/validation/api-validation';
 
 /**
  * GET /api/users/groups
@@ -20,6 +21,15 @@ export async function GET(request: NextRequest) {
 
     // If userId is specified and user is admin, get that user's groups
     if (userId) {
+      // Validate userId UUID format
+      const userIdValidation = validateUUID(userId, 'userId');
+      if (!userIdValidation.valid) {
+        return NextResponse.json(
+          { error: userIdValidation.error },
+          { status: 400 }
+        );
+      }
+
       const userIsAdmin = await isAdmin();
       if (!userIsAdmin) {
         return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
@@ -84,6 +94,32 @@ export async function POST(request: NextRequest) {
     if (!userId || !Array.isArray(groups)) {
       return NextResponse.json(
         { error: 'userId and groups array are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate userId UUID format
+    const userIdValidation = validateUUID(userId, 'userId');
+    if (!userIdValidation.valid) {
+      return NextResponse.json(
+        { error: userIdValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate groups array
+    const groupsValidation = validateArray(groups, 'groups', 0);
+    if (!groupsValidation.valid) {
+      return NextResponse.json(
+        { error: groupsValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate that all group names are strings
+    if (!groups.every(g => typeof g === 'string' && g.trim().length > 0)) {
+      return NextResponse.json(
+        { error: 'All group names must be non-empty strings' },
         { status: 400 }
       );
     }

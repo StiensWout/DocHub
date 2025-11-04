@@ -10,6 +10,7 @@ import {
   sanitizeFilename,
 } from "@/lib/constants/file-validation";
 import { log } from "@/lib/logger";
+import { validateUUID } from "@/lib/validation/api-validation";
 
 /**
  * Check if a user has permission to modify/delete a file
@@ -115,6 +116,15 @@ export async function PUT(
     if (!fileId) {
       return NextResponse.json(
         { error: "File ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate fileId UUID format
+    const fileIdValidation = validateUUID(fileId, 'fileId');
+    if (!fileIdValidation.valid) {
+      return NextResponse.json(
+        { error: fileIdValidation.error },
         { status: 400 }
       );
     }
@@ -363,6 +373,15 @@ export async function DELETE(
     if (!fileId) {
       return NextResponse.json(
         { error: "File ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate fileId UUID format
+    const fileIdValidation = validateUUID(fileId, 'fileId');
+    if (!fileIdValidation.valid) {
+      return NextResponse.json(
+        { error: fileIdValidation.error },
         { status: 400 }
       );
     }

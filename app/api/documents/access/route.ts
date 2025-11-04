@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { log } from '@/lib/logger';
+import { validateUUID, validateArray } from '@/lib/validation/api-validation';
 
 /**
  * POST /api/documents/access
@@ -26,6 +27,32 @@ export async function POST(request: NextRequest) {
     if (!documentId || !Array.isArray(groups)) {
       return NextResponse.json(
         { error: 'documentId and groups array are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate documentId UUID format
+    const documentIdValidation = validateUUID(documentId, 'documentId');
+    if (!documentIdValidation.valid) {
+      return NextResponse.json(
+        { error: documentIdValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate groups array
+    const groupsValidation = validateArray(groups, 'groups', 0);
+    if (!groupsValidation.valid) {
+      return NextResponse.json(
+        { error: groupsValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate that all group names are strings
+    if (!groups.every(g => typeof g === 'string' && g.trim().length > 0)) {
+      return NextResponse.json(
+        { error: 'All group names must be non-empty strings' },
         { status: 400 }
       );
     }
@@ -83,6 +110,15 @@ export async function GET(request: NextRequest) {
     if (!documentId) {
       return NextResponse.json(
         { error: 'documentId is required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate documentId UUID format
+    const documentIdValidation = validateUUID(documentId, 'documentId');
+    if (!documentIdValidation.valid) {
+      return NextResponse.json(
+        { error: documentIdValidation.error },
         { status: 400 }
       );
     }

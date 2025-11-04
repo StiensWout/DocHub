@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session';
 import { getUserGroups, isAdmin } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { log } from '@/lib/logger';
+import { validateUUID, validateEnum, DocumentType } from '@/lib/validation/api-validation';
 
 /**
  * POST /api/documents/validate-access
@@ -32,6 +33,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate UUID formats
+    const documentIdValidation = validateUUID(documentId, 'documentId');
+    if (!documentIdValidation.valid) {
+      return NextResponse.json(
+        { error: documentIdValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const teamIdValidation = validateUUID(teamId, 'teamId');
+    if (!teamIdValidation.valid) {
+      return NextResponse.json(
+        { error: teamIdValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const appIdValidation = validateUUID(appId, 'appId');
+    if (!appIdValidation.valid) {
+      return NextResponse.json(
+        { error: appIdValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate documentType enum
+    const documentTypeValidation = validateEnum(documentType, DocumentType, 'documentType');
+    if (!documentTypeValidation.valid) {
+      return NextResponse.json(
+        { error: documentTypeValidation.error },
+        { status: 400 }
+      );
+    }
+
     log.info('[validate-access] Checking admin status');
     const userIsAdmin = await isAdmin();
     log.info('[validate-access] Admin status', { userIsAdmin });
@@ -40,13 +75,15 @@ export async function POST(request: NextRequest) {
     const userGroups = await getUserGroups(session.user.id);
     log.info('[validate-access] User groups', { userGroups, count: userGroups.length });
 
-    if (documentType === 'base') {
+    const validatedDocumentType = documentTypeValidation.value!;
+    
+    if (validatedDocumentType === 'base') {
       // Base documents are always accessible
       log.info('[validate-access] Base document - access granted');
       return NextResponse.json({ hasAccess: true });
     }
 
-    if (documentType === 'team') {
+    if (validatedDocumentType === 'team') {
       // Team documents require group access or admin
       if (userIsAdmin) {
         log.info('[validate-access] Admin user - access granted');

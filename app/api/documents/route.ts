@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session';
 import { getUserGroups, isAdmin } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { log } from '@/lib/logger';
+import { validateUUID } from '@/lib/validation/api-validation';
 
 /**
  * GET /api/documents?teamId=xxx&appId=xxx
@@ -23,6 +24,23 @@ export async function GET(request: NextRequest) {
     if (!teamId || !appId) {
       return NextResponse.json(
         { error: 'teamId and appId are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate UUID formats
+    const teamIdValidation = validateUUID(teamId, 'teamId');
+    if (!teamIdValidation.valid) {
+      return NextResponse.json(
+        { error: teamIdValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const appIdValidation = validateUUID(appId, 'appId');
+    if (!appIdValidation.valid) {
+      return NextResponse.json(
+        { error: appIdValidation.error },
         { status: 400 }
       );
     }

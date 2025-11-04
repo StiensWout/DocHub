@@ -4,6 +4,7 @@ import { isAdmin, getUserRole } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { getUserOrganizationMemberships, updateUserRoleInOrganization } from '@/lib/workos/organizations';
 import { log } from '@/lib/logger';
+import { validateUUID, validateEnum } from '@/lib/validation/api-validation';
 
 /**
  * GET /api/users/role
@@ -21,6 +22,15 @@ export async function GET(request: NextRequest) {
 
     // If userId is specified, check if user is admin
     if (userId) {
+      // Validate userId UUID format
+      const userIdValidation = validateUUID(userId, 'userId');
+      if (!userIdValidation.valid) {
+        return NextResponse.json(
+          { error: userIdValidation.error },
+          { status: 400 }
+        );
+      }
+
       const userIsAdmin = await isAdmin();
       if (!userIsAdmin) {
         return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 403 });
@@ -87,10 +97,20 @@ export async function POST(request: NextRequest) {
     const isCurrentUserRoleChange = userId === session.user.id;
     log.debug(`[POST /api/users/role] Is current user role change: ${isCurrentUserRoleChange}`);
 
-    if (!userId || !role || !['admin', 'user'].includes(role)) {
-      log.warn(`[POST /api/users/role] Invalid request - userId: ${userId}, role: ${role}`);
+    // Validate userId UUID format
+    const userIdValidation = validateUUID(userId, 'userId');
+    if (!userIdValidation.valid) {
       return NextResponse.json(
-        { error: 'userId and role (admin or user) are required' },
+        { error: userIdValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate role enum
+    const roleValidation = validateEnum(role, ['admin', 'user'] as const, 'role');
+    if (!roleValidation.valid) {
+      return NextResponse.json(
+        { error: roleValidation.error },
         { status: 400 }
       );
     }
@@ -105,13 +125,15 @@ export async function POST(request: NextRequest) {
     previousRole = existingRole?.role || null;
     log.debug(`[POST /api/users/role] Previous role for user ${userId}: ${previousRole || 'none'}`);
 
+    const validatedRole = roleValidation.value!;
+
     // Update database role
-    log.info(`[POST /api/users/role] Updating database role for user ${userId} to "${role}"`);
+    log.info(`[POST /api/users/role] Updating database role for user ${userId} to "${validatedRole}"`);
     const { error: dbError, data: dbData } = await supabaseAdmin
       .from('user_roles')
       .upsert({
         user_id: userId,
-        role,
+        role: validatedRole,
         updated_at: new Date().toISOString(),
       }, {
         onConflict: 'user_id',
@@ -149,14 +171,14 @@ export async function POST(request: NextRequest) {
             message: 'Role updated in database. User has no WorkOS organization memberships.',
             warning: 'User may need to be added to an organization for WorkOS role sync',
             currentUserRoleChanged: isCurrentUserRoleChange,
-            roleChanged: role
+            roleChanged: validatedRole
           });
         } else {
           // Update role in all organizations the user belongs to
           log.info(`[POST /api/users/role] Updating role in ${memberships.length} organization(s)`);
           const updatePromises = memberships.map((membership, index) => {
             log.debug(`[POST /api/users/role] Updating role in org ${membership.organizationId} (${membership.organizationName})`);
-            return updateUserRoleInOrganization(userId, membership.organizationId, role);
+            return updateUserRoleInOrganization(userId, membership.organizationId, validatedRole);
           });
           
           const results = await Promise.allSettled(updatePromises);
@@ -233,7 +255,7 @@ export async function POST(request: NextRequest) {
                 warning: 'Some WorkOS role updates failed. User may need to re-login for all changes to take effect.',
                 partialFailure: true,
                 currentUserRoleChanged: isCurrentUserRoleChange,
-                roleChanged: role
+                roleChanged: validatedRole
               });
             }
           } else {
@@ -243,7 +265,7 @@ export async function POST(request: NextRequest) {
               message: 'Role updated in database and WorkOS',
               organizationsUpdated: memberships.length,
               currentUserRoleChanged: isCurrentUserRoleChange,
-              roleChanged: role
+              roleChanged: validatedRole
             });
           }
         }
@@ -290,7 +312,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Role updated in database',
       currentUserRoleChanged: isCurrentUserRoleChange,
-      roleChanged: role
+      roleChanged: validatedRole
     });
   } catch (error: any) {
     log.error('[POST /api/users/role] Unexpected error:', error);

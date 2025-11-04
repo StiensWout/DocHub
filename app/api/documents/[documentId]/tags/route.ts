@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { log } from '@/lib/logger';
+import { validateUUID, validateEnum, validateUUIDArray, DocumentType } from '@/lib/validation/api-validation';
 
 /**
  * GET /api/documents/[documentId]/tags
@@ -18,12 +19,24 @@ export async function GET(
     }
 
     const documentId = params.documentId;
+    
+    // Validate documentId UUID format
+    const documentIdValidation = validateUUID(documentId, 'documentId');
+    if (!documentIdValidation.valid) {
+      return NextResponse.json(
+        { error: documentIdValidation.error },
+        { status: 400 }
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const documentType = searchParams.get('type') || 'base'; // 'base' or 'team'
 
-    if (!['base', 'team'].includes(documentType)) {
+    // Validate documentType enum
+    const documentTypeValidation = validateEnum(documentType, DocumentType, 'documentType');
+    if (!documentTypeValidation.valid) {
       return NextResponse.json(
-        { error: 'Invalid document type. Must be "base" or "team".' },
+        { error: documentTypeValidation.error },
         { status: 400 }
       );
     }
@@ -79,19 +92,33 @@ export async function POST(
     }
 
     const documentId = params.documentId;
-    const body = await request.json();
-    const { tagIds, documentType = 'base' } = body;
-
-    if (!Array.isArray(tagIds) || tagIds.length === 0) {
+    
+    // Validate documentId UUID format
+    const documentIdValidation = validateUUID(documentId, 'documentId');
+    if (!documentIdValidation.valid) {
       return NextResponse.json(
-        { error: 'tagIds must be a non-empty array' },
+        { error: documentIdValidation.error },
         { status: 400 }
       );
     }
 
-    if (!['base', 'team'].includes(documentType)) {
+    const body = await request.json();
+    const { tagIds, documentType = 'base' } = body;
+
+    // Validate tagIds array
+    const tagIdsValidation = validateUUIDArray(tagIds, 'tagIds');
+    if (!tagIdsValidation.valid) {
       return NextResponse.json(
-        { error: 'Invalid document type. Must be "base" or "team".' },
+        { error: tagIdsValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Validate documentType enum
+    const documentTypeValidation = validateEnum(documentType, DocumentType, 'documentType');
+    if (!documentTypeValidation.valid) {
+      return NextResponse.json(
+        { error: documentTypeValidation.error },
         { status: 400 }
       );
     }
@@ -99,7 +126,7 @@ export async function POST(
     // Prepare tag associations
     const tagAssociations = tagIds.map((tagId: string) => ({
       document_id: documentId,
-      document_type: documentType,
+      document_type: documentTypeValidation.value!,
       tag_id: tagId,
     }));
 
@@ -156,26 +183,49 @@ export async function DELETE(
     }
 
     const documentId = params.documentId;
-    const searchParams = request.nextUrl.searchParams;
-    const documentType = searchParams.get('type') || 'base';
-    const tagIds = searchParams.get('tagIds');
-
-    if (!['base', 'team'].includes(documentType)) {
+    
+    // Validate documentId UUID format
+    const documentIdValidation = validateUUID(documentId, 'documentId');
+    if (!documentIdValidation.valid) {
       return NextResponse.json(
-        { error: 'Invalid document type. Must be "base" or "team".' },
+        { error: documentIdValidation.error },
         { status: 400 }
       );
     }
+
+    const searchParams = request.nextUrl.searchParams;
+    const documentType = searchParams.get('type') || 'base';
+
+    // Validate documentType enum
+    const documentTypeValidation = validateEnum(documentType, DocumentType, 'documentType');
+    if (!documentTypeValidation.valid) {
+      return NextResponse.json(
+        { error: documentTypeValidation.error },
+        { status: 400 }
+      );
+    }
+
+    const tagIds = searchParams.get('tagIds');
 
     let deleteQuery = supabaseAdmin
       .from('document_tags')
       .delete()
       .eq('document_id', documentId)
-      .eq('document_type', documentType);
+      .eq('document_type', documentTypeValidation.value!);
 
     // If tagIds provided, delete only those tags; otherwise delete all tags
     if (tagIds) {
       const tagIdArray = tagIds.split(',').map((id) => id.trim());
+      // Validate each tagId is a valid UUID
+      for (const tagId of tagIdArray) {
+        const tagIdValidation = validateUUID(tagId, 'tagId');
+        if (!tagIdValidation.valid) {
+          return NextResponse.json(
+            { error: tagIdValidation.error },
+            { status: 400 }
+          );
+        }
+      }
       deleteQuery = deleteQuery.in('tag_id', tagIdArray);
     }
 

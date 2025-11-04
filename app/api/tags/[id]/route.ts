@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session';
 import { isAdmin } from '@/lib/auth/user-groups';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { log } from '@/lib/logger';
+import { validateUUID } from '@/lib/validation/api-validation';
 
 /**
  * PUT /api/tags/[id]
@@ -28,6 +29,16 @@ export async function PUT(
     }
 
     const tagId = params.id;
+    
+    // Validate tagId UUID format
+    const tagIdValidation = validateUUID(tagId, 'tagId');
+    if (!tagIdValidation.valid) {
+      return NextResponse.json(
+        { error: tagIdValidation.error },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
     const { name, color } = body;
 
@@ -130,6 +141,15 @@ export async function DELETE(
     }
 
     const tagId = params.id;
+
+    // Validate tagId UUID format
+    const tagIdValidation = validateUUID(tagId, 'tagId');
+    if (!tagIdValidation.valid) {
+      return NextResponse.json(
+        { error: tagIdValidation.error },
+        { status: 400 }
+      );
+    }
 
     // Delete the tag (cascade will handle document_tags)
     const { error } = await supabaseAdmin
