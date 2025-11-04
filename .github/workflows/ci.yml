@@ -164,7 +164,7 @@ jobs:
         continue-on-error: true  # Continue if tests fail (can be changed to false once tests are fixed)
       
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-report
           path: coverage/
@@ -230,7 +230,7 @@ jobs:
         # Set these in GitHub Settings → Secrets → Actions for production builds
       
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-artifacts
           path: .next/
