@@ -12,9 +12,23 @@ import type { DocumentFile } from "@/types";
 import { supabase } from "@/lib/supabase/client";
 
 // Dynamically import react-pdf to avoid SSR issues
-const Document = dynamic(() => import("react-pdf").then((mod) => mod.Document), {
-  ssr: false,
-});
+// Configure worker before importing components to prevent Object.defineProperty errors
+const Document = dynamic(
+  () => import("react-pdf").then((mod) => {
+    // Configure worker synchronously before returning Document
+    if (typeof window !== "undefined") {
+      try {
+        mod.pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${mod.pdfjs.version}/build/pdf.worker.min.mjs`;
+      } catch (error) {
+        console.warn("Failed to configure PDF worker:", error);
+      }
+    }
+    return mod.Document;
+  }),
+  {
+    ssr: false,
+  }
+);
 
 const Page = dynamic(() => import("react-pdf").then((mod) => mod.Page), {
   ssr: false,
@@ -44,10 +58,19 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
   const [docxArrayBuffer, setDocxArrayBuffer] = useState<ArrayBuffer | null>(null);
 
   // Configure PDF.js worker on client-side only
+  // This is a backup configuration in case the dynamic import configuration doesn't work
   useEffect(() => {
     if (typeof window !== "undefined") {
       import("react-pdf").then((reactPdf) => {
-        reactPdf.pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${reactPdf.pdfjs.version}/pdf.worker.min.js`;
+        // Ensure worker is configured (may already be set in dynamic import)
+        if (!reactPdf.pdfjs.GlobalWorkerOptions.workerSrc) {
+          try {
+            reactPdf.pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${reactPdf.pdfjs.version}/build/pdf.worker.min.mjs`;
+          } catch (error) {
+            console.warn("Failed to set worker, using CDN fallback:", error);
+            reactPdf.pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${reactPdf.pdfjs.version}/pdf.worker.min.js`;
+          }
+        }
       }).catch((error) => {
         console.error("Failed to configure PDF worker:", error);
       });
