@@ -19,7 +19,7 @@ jobs:
     permissions:
       contents: read
       issues: write
-      pull-requests: read
+      pull-requests: write  # Required for coverage comments and linting issue creation
     
     steps:
       - name: Checkout code
