@@ -160,8 +160,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify the update actually succeeded
+    if (!dbData || dbData.length === 0) {
+      log.error(`[POST /api/users/role] Database update returned no data - update may have failed silently`);
+      return NextResponse.json(
+        { error: 'Failed to set user role in database', details: 'Update operation returned no data' },
+        { status: 500 }
+      );
+    }
+
+    // Verify the role was actually set correctly
+    const updatedRole = dbData[0]?.role;
+    if (updatedRole !== validatedRole) {
+      log.error(`[POST /api/users/role] Database update mismatch - expected "${validatedRole}" but got "${updatedRole}"`);
+      return NextResponse.json(
+        { error: 'Failed to set user role in database', details: `Role mismatch: expected "${validatedRole}" but got "${updatedRole}"` },
+        { status: 500 }
+      );
+    }
+
     dbUpdateSuccess = true;
-    log.info(`[POST /api/users/role] ✅ Database role updated successfully`);
+    log.info(`[POST /api/users/role] ✅ Database role updated successfully - verified: "${updatedRole}"`);
 
     // Also update WorkOS organization membership role if using WorkOS Organizations
     const useWorkOSGroups = process.env.WORKOS_USE_ORGANIZATIONS === 'true';
