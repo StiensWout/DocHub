@@ -82,7 +82,7 @@ export function validateUUID(
  * @param value - The input to validate; leading/trailing whitespace will be trimmed
  * @param allowedValues - Array of permitted string values
  * @param fieldName - Field name used in generated error messages
- * @returns `{ valid: true, value: T }` with the trimmed value when the input is one of `allowedValues`; `{ valid: false, error: string }` describing the validation failure otherwise
+ * @returns `{ valid: true, value: T }` containing the trimmed allowed value on success; `{ valid: false, error: string }` describing the validation failure otherwise
  */
 export function validateEnum<T extends string>(
   value: string | null | undefined,
@@ -122,17 +122,19 @@ export function validateEnum<T extends string>(
 }
 
 /**
- * Validate that a non-empty array contains only valid UUID strings.
+ * Check whether an array contains only valid UUID strings and meets a minimum length requirement.
  *
  * @param uuids - Array whose elements are expected to be UUID strings
  * @param fieldName - Field name used in error messages (defaults to "IDs")
- * @param strict - If `true`, require UUID v4 format; if `false`, accept any UUID version (default: `false`)
- * @returns An object with `valid: true` when every element is a valid UUID; otherwise `valid: false` and an `error` message describing the first failure
+ * @param strict - When `true`, require UUID v4 format; when `false`, accept any UUID version (default: `false`)
+ * @param minLength - Minimum required number of elements in the array (default: 1). Set to 0 to allow an empty array
+ * @returns `{ valid: true }` when every element is a valid UUID and the array length is at least `minLength`; otherwise `{ valid: false, error: string }` describing the first failure
  */
 export function validateUUIDArray(
   uuids: string[] | null | undefined,
   fieldName: string = 'IDs',
-  strict: boolean = false
+  strict: boolean = false,
+  minLength: number = 1
 ): { valid: boolean; error?: string } {
   if (!Array.isArray(uuids)) {
     return {
@@ -140,11 +142,11 @@ export function validateUUIDArray(
       error: `${fieldName} must be an array`,
     };
   }
-  
-  if (uuids.length === 0) {
+
+  if (uuids.length < minLength) {
     return {
       valid: false,
-      error: `${fieldName} array cannot be empty`,
+      error: `${fieldName} must contain at least ${minLength} element(s)`,
     };
   }
   

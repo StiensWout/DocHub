@@ -5,13 +5,11 @@ import { log } from '@/lib/logger';
 import { validateUUID, validateEnum, validateUUIDArray, DocumentType } from '@/lib/validation/api-validation';
 
 /**
- * Retrieve tag objects associated with a specific document.
- *
- * Requires an authenticated session. Validates `documentId` as a UUID and the optional `type` query parameter against `DocumentType`. Returns 401 if unauthenticated, 400 for validation failures, and 500 for server or database errors.
+ * Retrieve tags associated with a document.
  *
  * @param request - Incoming request; may include the `type` query parameter to filter by document type (`base` or `team`).
  * @param params.documentId - The document's UUID.
- * @returns An object with a `tags` array containing tag objects (`id`, `name`, `slug`, `color`).
+ * @returns An object with a `tags` array containing tag objects with `id`, `name`, `slug`, and `color`.
  */
 export async function GET(
   request: NextRequest,
@@ -46,6 +44,8 @@ export async function GET(
       );
     }
 
+    const validatedDocumentType = documentTypeValidation.value!;
+
     // Get tags for the document
     const { data: documentTags, error } = await supabaseAdmin
       .from('document_tags')
@@ -59,7 +59,7 @@ export async function GET(
         )
       `)
       .eq('document_id', documentId)
-      .eq('document_type', documentType);
+      .eq('document_type', validatedDocumentType);
 
     if (error) {
       log.error('Error fetching document tags:', error);
@@ -83,9 +83,11 @@ export async function GET(
 }
 
 /**
- * Associate one or more existing tags with the specified document and return the associated tag objects.
+ * Associate one or more existing tags with a document and return the associated tag objects.
  *
- * @returns The response body: on success, an object with `tags` — an array of tag objects (`id`, `name`, `slug`, `color`); on error, an object with `error` describing the failure.
+ * @param request - Incoming request whose JSON body must include `tagIds` (array of tag UUIDs) and may include `documentType` (defaults to `'base'`).
+ * @param params.documentId - The target document's UUID.
+ * @returns On success, an object with `tags`: an array of tag objects (`id`, `name`, `slug`, `color`); on failure, an object with an `error` string describing the problem.
  */
 export async function POST(
   request: NextRequest,
@@ -111,8 +113,8 @@ export async function POST(
     const body = await request.json();
     const { tagIds, documentType = 'base' } = body;
 
-    // Validate tagIds array
-    const tagIdsValidation = validateUUIDArray(tagIds, 'tagIds');
+    // Validate tagIds array (must have at least one tag)
+    const tagIdsValidation = validateUUIDArray(tagIds, 'tagIds', false, 1);
     if (!tagIdsValidation.valid) {
       return NextResponse.json(
         { error: tagIdsValidation.error },
@@ -129,10 +131,12 @@ export async function POST(
       );
     }
 
+    const validatedDocumentType = documentTypeValidation.value!;
+
     // Prepare tag associations
     const tagAssociations = tagIds.map((tagId: string) => ({
       document_id: documentId,
-      document_type: documentTypeValidation.value!,
+      document_type: validatedDocumentType,
       tag_id: tagId,
     }));
 
@@ -175,14 +179,10 @@ export async function POST(
 }
 
 /**
- * Remove one or more tag associations from a document.
+ * Delete tag associations for a document, optionally restricting the deletion to a provided list of tag IDs.
  *
- * Validates authentication, the `documentId` UUID, the optional `type` query enum (defaults to `base`),
- * and an optional `tagIds` query containing a comma-separated list of tag UUIDs. If `tagIds` is provided,
- * only those tag associations are removed; otherwise all tags for the document and type are removed.
- *
- * @param params.documentId - The UUID of the document to modify
- * @returns A JSON object `{ success: true }` on success. On failure returns a JSON error message with an appropriate HTTP status (`401` for unauthorized, `400` for validation errors, `500` for server/database errors).
+ * @param params.documentId - The UUID of the document whose tag associations will be removed
+ * @returns A JSON object `{ success: true }` when the deletion succeeds
  */
 export async function DELETE(
   request: NextRequest,
@@ -217,13 +217,15 @@ export async function DELETE(
       );
     }
 
+    const validatedDocumentType = documentTypeValidation.value!;
+
     const tagIds = searchParams.get('tagIds');
 
     let deleteQuery = supabaseAdmin
       .from('document_tags')
       .delete()
       .eq('document_id', documentId)
-      .eq('document_type', documentTypeValidation.value!);
+      .eq('document_type', validatedDocumentType);
 
     // If tagIds provided, delete only those tags; otherwise delete all tags
     if (tagIds) {
