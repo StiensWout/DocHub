@@ -143,7 +143,8 @@ export default function DocumentEditor({
       }
 
       toast.success("Document saved successfully!");
-      onSave();
+      // Wait for onSave to complete before closing to ensure DocumentViewer receives updated content
+      await onSave();
       onClose();
     } catch (error) {
       console.error("Error:", error);

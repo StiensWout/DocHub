@@ -696,13 +696,18 @@ function HomeContent() {
               teamId={selectedTeamId}
               breadcrumbs={getBreadcrumbs()}
               onSave={async () => {
+                // Refresh documents list first
                 await refreshDocuments();
-                // Update selected document if it was the one being edited
+                
+                // Update selected document with latest content from database
                 if (editingDocument) {
                   const allDocs = await getAllDocumentsForApp(selectedTeamId, selectedDocumentAppId);
-                  const updatedDoc = allDocs.find((d) => d.id === editingDocument.id);
+                  const updatedDoc = allDocs.find((d) => d.id === editingDocument.id && d.type === editingDocument.type);
                   if (updatedDoc) {
+                    // Update selected document before closing editor to ensure DocumentViewer shows latest content
                     setSelectedDocument(updatedDoc);
+                    // Small delay to ensure state update completes before closing editor
+                    await new Promise(resolve => setTimeout(resolve, 100));
                   }
                 }
                 setEditingDocument(null);
