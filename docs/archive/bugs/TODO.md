@@ -2,15 +2,15 @@
 
 **Last Updated:** December 2024  
 **Status:** 📋 Active Development  
-**GitHub Issues:** [View Bugs](https://github.com/StiensWout/DLWait/issues)  
-**GitHub Projects:** [View Project Board](https://github.com/StiensWout/DLWait/projects)
+**GitHub Issues:** [View Bugs](https://github.com/StiensWout/DocHub/issues)  
+**GitHub Projects:** [View Project Board](https://github.com/StiensWout/DocHub/projects)
 
 ## 📋 Overview
 
 This TODO list covers features, optimizations, infrastructure improvements, rebranding tasks, and all non-bug development work. 
 
-**Bug Tracking:** All bugs are tracked in [GitHub Issues](https://github.com/StiensWout/DLWait/issues).  
-**Task Management:** Tasks can be synced to [GitHub Projects](https://github.com/StiensWout/DLWait/projects) - see [GitHub Projects Sync Guide](./GITHUB_PROJECTS_SYNC.md).
+**Bug Tracking:** All bugs are tracked in [GitHub Issues](https://github.com/StiensWout/DocHub/issues).  
+**Task Management:** Tasks can be synced to [GitHub Projects](https://github.com/StiensWout/DocHub/projects) - see [GitHub Projects Sync Guide](./GITHUB_PROJECTS_SYNC.md).
 
 ## 🔗 Related Files
 
@@ -140,27 +140,27 @@ This TODO list covers features, optimizations, infrastructure improvements, rebr
 **Category:** Rebranding / Migration
 **Files:** All files (global search/replace), GitHub settings, Local directory
 
-- [ ] Prepare for GitHub repository migration:
-  - [ ] Audit all references to "DLWait" / "dlwait" in codebase
-  - [ ] Create migration checklist
-  - [ ] Document all locations that need updating
-- [ ] Update codebase branding:
-  - [ ] Replace "dlwait" with "dochub" in package.json
-  - [ ] Update all file references
-  - [ ] Update all string references in code
-  - [ ] Update environment variable names if needed
-  - [ ] Update documentation and README
-- [ ] Update GitHub repository:
-  - [ ] Rename repository from dlwait to dochub (or create new repo)
+- [x] Prepare for GitHub repository migration:
+  - [x] Audit all references to "DLWait" / "dlwait" in codebase
+  - [x] Create migration checklist
+  - [x] Document all locations that need updating
+- [x] Update codebase branding:
+  - [x] Replace "dlwait" with "dochub" in package.json
+  - [x] Update all file references
+  - [x] Update all string references in code
+  - [x] Update environment variable names if needed
+  - [x] Update documentation and README
+- [x] Update GitHub repository:
+  - [x] Rename repository from dlwait to dochub (or create new repo)
   - [ ] Update repository description
   - [ ] Update repository topics/tags
   - [ ] Update GitHub Pages if applicable
   - [ ] Update webhook URLs if any
-- [ ] Local directory migration:
-  - [ ] Create migration script for local directory rename
-  - [ ] Update all absolute path references
-  - [ ] Update git remote URLs
-  - [ ] Update local development setup instructions
+- [x] Local directory migration:
+  - [x] Create migration script for local directory rename
+  - [x] Update all absolute path references
+  - [x] Update git remote URLs
+  - [x] Update local development setup instructions
 - [ ] Update external references:
   - [ ] Update CI/CD pipeline references
   - [ ] Update deployment scripts
@@ -599,8 +599,8 @@ When completing items, update:
 - [../docs/ROADMAP.md](../docs/ROADMAP.md) - Future features
 
 ### External Links
-- [GitHub Issues](https://github.com/StiensWout/DLWait/issues) - Bug tracking
-- [GitHub Projects](https://github.com/StiensWout/DLWait/projects) - Project board
+- [GitHub Issues](https://github.com/StiensWout/DocHub/issues) - Bug tracking
+- [GitHub Projects](https://github.com/StiensWout/DocHub/projects) - Project board
 
 ---
 

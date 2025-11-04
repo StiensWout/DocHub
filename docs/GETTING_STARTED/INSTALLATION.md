@@ -16,8 +16,8 @@ Before you begin, ensure you have:
 ### Step 1: Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd DLWait
+git clone https://github.com/StiensWout/DocHub.git
+cd DocHub
 ```
 
 ### Step 2: Install Dependencies

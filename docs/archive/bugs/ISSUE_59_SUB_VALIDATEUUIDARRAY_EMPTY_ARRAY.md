@@ -1,7 +1,7 @@
 # Issue: validateUUIDArray Empty Array Rejection Too Restrictive
 
 **Related PR**: #59  
-**Related Discussion**: [PR discussion](https://github.com/StiensWout/DLWait/pull/59#discussion_r2489274241)  
+**Related Discussion**: [PR discussion](https://github.com/StiensWout/DocHub/pull/59#discussion_r2489274241)  
 **Status**: Fixed  
 **Priority**: Medium
 
