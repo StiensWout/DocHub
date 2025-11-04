@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import dynamic from "next/dynamic";
 
 import { useState, useEffect, useRef } from "react";
 import { X, Download, ZoomIn, ZoomOut, Maximize2, Loader2, Edit, Save } from "lucide-react";
@@ -10,15 +9,6 @@ import DOMPurify from "dompurify";
 import { isMimeTypeAllowed, getFileExtension } from "@/lib/constants/file-validation";
 import type { DocumentFile } from "@/types";
 import { supabase } from "@/lib/supabase/client";
-
-// Dynamically import react-pdf to avoid SSR issues
-const Document = dynamic(() => import("react-pdf").then((mod) => mod.Document), {
-  ssr: false,
-});
-
-const Page = dynamic(() => import("react-pdf").then((mod) => mod.Page), {
-  ssr: false,
-});
 
 interface FileViewerProps {
   file: DocumentFile | null;
@@ -32,7 +22,6 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
   const [error, setError] = useState<string | null>(null);
   
   // PDF state
-  const [numPages, setNumPages] = useState<number | null>(null);
   const [scale, setScale] = useState(1.0);
   const [textContent, setTextContent] = useState<string | null>(null);
   const [docxRendered, setDocxRendered] = useState(false);
@@ -43,16 +32,6 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
   const docxContainerRef = useRef<HTMLDivElement>(null);
   const [docxArrayBuffer, setDocxArrayBuffer] = useState<ArrayBuffer | null>(null);
 
-  // Configure PDF.js worker on client-side only
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      import("react-pdf").then((reactPdf) => {
-        reactPdf.pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${reactPdf.pdfjs.version}/pdf.worker.min.js`;
-      }).catch((error) => {
-        console.error("Failed to configure PDF worker:", error);
-      });
-    }
-  }, []);
 
   useEffect(() => {
     if (!file || !isOpen) {
@@ -329,14 +308,8 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
           
           <div className="flex items-center gap-2">
             {/* PDF Controls */}
-            {isPDF && numPages && (
+            {isPDF && (
               <>
-                <span className="text-sm text-gray-400 px-2">
-                  {numPages} page{numPages !== 1 ? 's' : ''}
-                </span>
-
-                <div className="w-px h-6 bg-gray-700 mx-2" />
-
                 <button
                   onClick={() => setScale(Math.max(0.5, scale - 0.25))}
                   className="
@@ -477,43 +450,22 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
               </div>
             </div>
           ) : isPDF && fileUrl ? (
-            <div className="flex flex-col items-center gap-4 pb-8">
-              <Document
-                file={fileUrl}
-                onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-                onLoadError={(error) => {
-                  console.error("PDF load error:", error);
-                  setError("Failed to load PDF");
+            <div className="flex items-center justify-center h-full w-full overflow-auto">
+              <iframe
+                src={`${fileUrl}#toolbar=1&navpanes=1&scrollbar=1&zoom=${Math.round(scale * 100)}`}
+                className="border-0"
+                style={{
+                  width: `${scale * 100}%`,
+                  height: 'calc(95vh - 120px)',
+                  minHeight: '600px',
                 }}
-                loading={
-                  <div className="flex items-center justify-center p-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
-                  </div>
-                }
-                error={
-                  <div className="text-red-400 p-8 text-center">
-                    Failed to load PDF. 
-                    <button
-                      onClick={handleDownload}
-                      className="block mt-4 text-blue-400 hover:underline"
-                    >
-                      Download instead
-                    </button>
-                  </div>
-                }
-              >
-                {numPages && Array.from({ length: numPages }, (_, i) => (
-                  <div key={i + 1} className="mb-4">
-                    <Page
-                      pageNumber={i + 1}
-                      scale={scale}
-                      renderTextLayer={true}
-                      renderAnnotationLayer={true}
-                      className="shadow-lg"
-                    />
-                  </div>
-                ))}
-              </Document>
+                title={file.file_name}
+                onLoad={() => setLoading(false)}
+                onError={() => {
+                  setError("Failed to load PDF");
+                  setLoading(false);
+                }}
+              />
             </div>
           ) : isImage && fileUrl ? (
             <div className="flex items-center justify-center h-full">

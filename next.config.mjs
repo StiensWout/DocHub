@@ -10,6 +10,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   webpack: (config, { isServer }) => {
+    // Configure aliases
     config.resolve.alias = {
       ...config.resolve.alias,
       canvas: false,
