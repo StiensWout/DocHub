@@ -587,10 +587,10 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 
 ## ✅ ARCHIVED FIXES - RESOLVED
 
-The following issues have been resolved and validated. See [BUG_FIX_TODO.md](./BUG_FIX_TODO.md) for validation details.
+The following issues have been resolved and validated. See [TODO.md](./TODO.md) for validation details.
 
 **Related Files:**
-- [BUG_FIX_TODO.md](./BUG_FIX_TODO.md) - Detailed fix tracking and validation
+- [TODO.md](./TODO.md) - Comprehensive project TODO list with bug fixes, infrastructure tasks, and optimizations
 - [BUG_REPORTS.md](./BUG_REPORTS.md) - User bug reports staging area
 
 ### 1. TypeScript Compilation Errors ✅ RESOLVED
