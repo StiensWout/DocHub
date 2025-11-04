@@ -91,6 +91,26 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
     }
   }, []);
 
+  const loadOrganizations = useCallback(async () => {
+    try {
+      const response = await fetch('/api/organizations');
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.warn('Failed to load organizations:', data.error);
+        return;
+      }
+
+      setAvailableOrganizations(data.organizations || []);
+      
+      // Reload users to ensure we have the latest roles (roles are extracted from users)
+      // This ensures we capture all custom roles from existing memberships
+      await loadUsers();
+    } catch (error: any) {
+      console.error('Error loading organizations:', error);
+    }
+  }, [loadUsers]);
+
   useEffect(() => {
     if (isOpen) {
       loadUsers();
@@ -117,26 +137,6 @@ export default function UserGroupManager({ isOpen, onClose }: UserGroupManagerPr
         });
     }
   }, [isOpen, loadOrganizations, loadUsers]);
-
-  const loadOrganizations = useCallback(async () => {
-    try {
-      const response = await fetch('/api/organizations');
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.warn('Failed to load organizations:', data.error);
-        return;
-      }
-
-      setAvailableOrganizations(data.organizations || []);
-      
-      // Reload users to ensure we have the latest roles (roles are extracted from users)
-      // This ensures we capture all custom roles from existing memberships
-      await loadUsers();
-    } catch (error: any) {
-      console.error('Error loading organizations:', error);
-    }
-  }, [loadUsers]);
 
   const handleEditUser = (user: User) => {
     setEditingUser(user);
