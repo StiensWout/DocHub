@@ -149,7 +149,5 @@ When multiple features are ready for release:
 
 ## Related Documentation
 
-- [Release Management](./RELEASE_MANAGEMENT.md)
-- [Deployment Process](./DEPLOYMENT.md)
 - [CI/CD Pipeline](../INFRASTRUCTURE/CI_CD_PIPELINE_SETUP.md)
 

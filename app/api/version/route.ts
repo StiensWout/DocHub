@@ -5,7 +5,7 @@ import { getVersionInfo } from "@/lib/version";
  * GET /api/version
  * Returns the current application version information
  */
-export async function GET() {
+export function GET() {
   try {
     const versionInfo = getVersionInfo();
     
