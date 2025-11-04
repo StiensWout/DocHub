@@ -1,20 +1,24 @@
 "use client";
 
 import Image from "next/image";
+import dynamic from "next/dynamic";
 
 import { useState, useEffect, useRef } from "react";
 import { X, Download, ZoomIn, ZoomOut, Maximize2, Loader2, Edit, Save } from "lucide-react";
-import { Document, Page, pdfjs } from "react-pdf";
 import { renderAsync } from "docx-preview";
 import DOMPurify from "dompurify";
 import { isMimeTypeAllowed, getFileExtension } from "@/lib/constants/file-validation";
 import type { DocumentFile } from "@/types";
 import { supabase } from "@/lib/supabase/client";
 
-// Configure PDF.js worker
-if (typeof window !== "undefined") {
-  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-}
+// Dynamically import react-pdf to avoid SSR issues
+const Document = dynamic(() => import("react-pdf").then((mod) => mod.Document), {
+  ssr: false,
+});
+
+const Page = dynamic(() => import("react-pdf").then((mod) => mod.Page), {
+  ssr: false,
+});
 
 interface FileViewerProps {
   file: DocumentFile | null;
@@ -38,6 +42,17 @@ export default function FileViewer({ file, isOpen, onClose }: FileViewerProps) {
   const [isSaving, setIsSaving] = useState(false);
   const docxContainerRef = useRef<HTMLDivElement>(null);
   const [docxArrayBuffer, setDocxArrayBuffer] = useState<ArrayBuffer | null>(null);
+
+  // Configure PDF.js worker on client-side only
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      import("react-pdf").then((reactPdf) => {
+        reactPdf.pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${reactPdf.pdfjs.version}/pdf.worker.min.js`;
+      }).catch((error) => {
+        console.error("Failed to configure PDF worker:", error);
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!file || !isOpen) {

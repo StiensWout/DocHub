@@ -1,67 +1,32 @@
 -- ============================================================================
--- DocHub Complete Database Schema
+-- DocHub Database Schema Creation Script
 -- ============================================================================
--- This script cleans and recreates the entire database schema to the latest version
--- Run this in Supabase SQL Editor to reset your database
--- WARNING: This will DELETE ALL DATA in the following tables:
---   - document_files
---   - document_versions
---   - document_templates
---   - team_documents
---   - base_documents
---   - applications
---   - teams
+-- This script creates the complete DocHub database schema from scratch.
+-- Run this in Supabase SQL Editor to set up a fresh database.
+-- 
+-- WARNING: This script will fail if tables already exist.
+-- Use purge.sql first if you need to reset an existing database.
 -- ============================================================================
 
 -- ============================================================================
--- STEP 1: DROP EXISTING OBJECTS (in reverse dependency order)
+-- STEP 1: CREATE EXTENSIONS
 -- ============================================================================
 
--- Drop triggers first (they depend on tables)
-DROP TRIGGER IF EXISTS create_initial_team_version ON team_documents;
-DROP TRIGGER IF EXISTS create_initial_base_version ON base_documents;
-DROP TRIGGER IF EXISTS create_team_document_version ON team_documents;
-DROP TRIGGER IF EXISTS create_base_document_version ON base_documents;
-DROP TRIGGER IF EXISTS update_team_documents_updated_at ON team_documents;
-DROP TRIGGER IF EXISTS update_base_documents_updated_at ON base_documents;
-DROP TRIGGER IF EXISTS update_applications_updated_at ON applications;
-DROP TRIGGER IF EXISTS update_teams_updated_at ON teams;
-DROP TRIGGER IF EXISTS update_document_templates_updated_at ON document_templates;
-DROP TRIGGER IF EXISTS update_document_files_updated_at ON document_files;
-
--- Drop tables (drop dependent tables first)
-DROP TABLE IF EXISTS document_files CASCADE;
-DROP TABLE IF EXISTS document_versions CASCADE;
-DROP TABLE IF EXISTS document_templates CASCADE;
-DROP TABLE IF EXISTS team_documents CASCADE;
-DROP TABLE IF EXISTS base_documents CASCADE;
-DROP TABLE IF EXISTS applications CASCADE;
-DROP TABLE IF EXISTS teams CASCADE;
-
--- Drop functions
-DROP FUNCTION IF EXISTS create_document_version() CASCADE;
-DROP FUNCTION IF EXISTS create_initial_version() CASCADE;
-DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
-
--- ============================================================================
--- STEP 2: CREATE EXTENSIONS
--- ============================================================================
-
--- Enable UUID extension
+-- Enable UUID extension for generating UUIDs
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================================================
--- STEP 3: CREATE FUNCTIONS
+-- STEP 2: CREATE FUNCTIONS
 -- ============================================================================
 
--- Function to update updated_at timestamp
+-- Function to update updated_at timestamp automatically
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
 -- Function to create initial version on document creation
 CREATE OR REPLACE FUNCTION create_initial_version()
@@ -145,13 +110,26 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ============================================================================
--- STEP 4: CREATE TABLES
+-- STEP 3: CREATE CORE TABLES
 -- ============================================================================
 
 -- Teams table
 CREATE TABLE teams (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
+  workos_organization_id TEXT, -- Maps to WorkOS organization ID (optional, for syncing)
+  parent_organization_id TEXT, -- References parent organization's WorkOS ID (for subgroups)
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Application groups table (for organizing applications)
+CREATE TABLE application_groups (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  icon_name TEXT, -- Optional icon (Lucide icon name)
+  color TEXT, -- Optional color (Tailwind color class)
+  display_order INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -162,6 +140,7 @@ CREATE TABLE applications (
   name TEXT NOT NULL,
   icon_name TEXT NOT NULL, -- e.g., 'Globe', 'Database', etc.
   color TEXT NOT NULL, -- Tailwind color classes
+  group_id UUID REFERENCES application_groups(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -211,7 +190,7 @@ CREATE TABLE document_versions (
   title TEXT,
   category TEXT,
   change_summary TEXT, -- Optional summary of changes
-  created_by TEXT, -- Will be user ID when auth is implemented
+  created_by TEXT, -- WorkOS user ID
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   
   -- Ensure unique version per document
@@ -231,12 +210,9 @@ CREATE TABLE document_files (
   file_size BIGINT NOT NULL, -- bytes
   storage_bucket TEXT NOT NULL DEFAULT 'documents',
   visibility TEXT NOT NULL DEFAULT 'team' CHECK (visibility IN ('public', 'team')), -- public = all teams, team = specific team
-  uploaded_by UUID, -- REFERENCES auth.users(id) when auth is implemented
+  uploaded_by TEXT, -- WorkOS user ID
   uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  
-  -- Note: Foreign key constraint handled in application logic
-  -- (can't use FK because document_id references different tables)
   
   -- Ensure file paths are unique
   UNIQUE(file_path),
@@ -249,23 +225,57 @@ CREATE TABLE document_files (
 );
 
 -- ============================================================================
+-- STEP 4: CREATE USER GROUPS AND ACCESS CONTROL TABLES
+-- ============================================================================
+
+-- User groups table (maps to WorkOS user IDs)
+CREATE TABLE user_groups (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id TEXT NOT NULL, -- WorkOS user ID (prof_xxxxx for SSO)
+  group_name TEXT NOT NULL, -- Group name (e.g., "Engineering", "Sales", "Support")
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, group_name) -- User can only be in a group once
+);
+
+-- User roles table (admin, user, etc.)
+CREATE TABLE user_roles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id TEXT NOT NULL UNIQUE, -- WorkOS user ID
+  role TEXT NOT NULL DEFAULT 'user', -- 'admin' or 'user'
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Document access groups (which groups can access which team documents)
+CREATE TABLE document_access_groups (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  team_document_id UUID NOT NULL REFERENCES team_documents(id) ON DELETE CASCADE,
+  group_name TEXT NOT NULL, -- Must match group_name in user_groups
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(team_document_id, group_name)
+);
+
+-- ============================================================================
 -- STEP 5: CREATE INDEXES
 -- ============================================================================
 
--- Indexes for documents
+-- Core table indexes
 CREATE INDEX idx_base_documents_app_id ON base_documents(application_id);
 CREATE INDEX idx_team_documents_team_app ON team_documents(team_id, application_id);
 CREATE INDEX idx_team_documents_app_id ON team_documents(application_id);
+CREATE INDEX idx_applications_group_id ON applications(group_id);
+CREATE INDEX idx_teams_workos_org_id ON teams(workos_organization_id);
 
--- Indexes for templates
+-- Template indexes
 CREATE INDEX idx_document_templates_category ON document_templates(category);
 CREATE INDEX idx_document_templates_app_id ON document_templates(application_id);
 
--- Indexes for versions
+-- Version indexes
 CREATE INDEX idx_document_versions_doc ON document_versions(document_id, document_type);
 CREATE INDEX idx_document_versions_created ON document_versions(created_at DESC);
 
--- Indexes for files
+-- File indexes
 CREATE INDEX idx_document_files_document ON document_files(document_id, document_type);
 CREATE INDEX idx_document_files_application ON document_files(application_id);
 CREATE INDEX idx_document_files_team ON document_files(team_id);
@@ -273,11 +283,24 @@ CREATE INDEX idx_document_files_visibility ON document_files(visibility);
 CREATE INDEX idx_document_files_uploaded_at ON document_files(uploaded_at DESC);
 CREATE INDEX idx_document_files_file_type ON document_files(file_type);
 
+-- User groups and roles indexes
+CREATE INDEX idx_user_groups_user_id ON user_groups(user_id);
+CREATE INDEX idx_user_groups_group_name ON user_groups(group_name);
+CREATE INDEX idx_user_roles_user_id ON user_roles(user_id);
+CREATE INDEX idx_user_roles_role ON user_roles(role);
+CREATE INDEX idx_document_access_groups_doc_id ON document_access_groups(team_document_id);
+CREATE INDEX idx_document_access_groups_group_name ON document_access_groups(group_name);
+
+-- Application groups indexes
+CREATE INDEX idx_application_groups_display_order ON application_groups(display_order);
+
 -- ============================================================================
 -- STEP 6: ENABLE ROW LEVEL SECURITY (RLS)
 -- ============================================================================
 
+-- Enable RLS on core tables
 ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
+ALTER TABLE application_groups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE base_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_documents ENABLE ROW LEVEL SECURITY;
@@ -285,12 +308,23 @@ ALTER TABLE document_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_versions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_files ENABLE ROW LEVEL SECURITY;
 
+-- Enable RLS on user groups and roles tables (defense in depth)
+-- NOTE: We use WorkOS for authentication, not Supabase Auth, so RLS policies
+-- that rely on auth.jwt() won't work. However, we enable RLS with deny-all policies
+-- to protect against direct database access. The service role client bypasses RLS.
+ALTER TABLE user_groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE document_access_groups ENABLE ROW LEVEL SECURITY;
+
 -- ============================================================================
 -- STEP 7: CREATE RLS POLICIES
 -- ============================================================================
 
--- Read policies for all tables
+-- Read policies for core tables (allow public read for now)
 CREATE POLICY "Allow public read access to teams" ON teams
+  FOR SELECT USING (true);
+
+CREATE POLICY "Allow public read access to application_groups" ON application_groups
   FOR SELECT USING (true);
 
 CREATE POLICY "Allow public read access to applications" ON applications
@@ -311,7 +345,13 @@ CREATE POLICY "Allow public read access to document_versions" ON document_versio
 CREATE POLICY "Allow public read access to document_files" ON document_files
   FOR SELECT USING (true);
 
--- Insert policies for documents
+-- Insert policies for core tables
+CREATE POLICY "Allow public insert to application_groups" ON application_groups
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Allow public insert to applications" ON applications
+  FOR INSERT WITH CHECK (true);
+
 CREATE POLICY "Allow public insert to base_documents" ON base_documents
   FOR INSERT WITH CHECK (true);
 
@@ -324,25 +364,55 @@ CREATE POLICY "Allow public insert to document_versions" ON document_versions
 CREATE POLICY "Allow public insert to document_files" ON document_files
   FOR INSERT WITH CHECK (true);
 
--- Update policies for documents
+-- Update policies for core tables
+CREATE POLICY "Allow public update to application_groups" ON application_groups
+  FOR UPDATE USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow public update to applications" ON applications
+  FOR UPDATE USING (true) WITH CHECK (true);
+
 CREATE POLICY "Allow public update to base_documents" ON base_documents
   FOR UPDATE USING (true) WITH CHECK (true);
 
 CREATE POLICY "Allow public update to team_documents" ON team_documents
   FOR UPDATE USING (true) WITH CHECK (true);
 
--- Delete policies for documents
+CREATE POLICY "Allow public update to document_files" ON document_files
+  FOR UPDATE USING (true) WITH CHECK (true);
+
+-- Delete policies for core tables
+CREATE POLICY "Allow public delete to application_groups" ON application_groups
+  FOR DELETE USING (true);
+
+CREATE POLICY "Allow public delete to applications" ON applications
+  FOR DELETE USING (true);
+
 CREATE POLICY "Allow public delete to base_documents" ON base_documents
   FOR DELETE USING (true);
 
 CREATE POLICY "Allow public delete to team_documents" ON team_documents
   FOR DELETE USING (true);
 
-CREATE POLICY "Allow public update to document_files" ON document_files
-  FOR UPDATE USING (true) WITH CHECK (true);
-
 CREATE POLICY "Allow public delete to document_files" ON document_files
   FOR DELETE USING (true);
+
+-- ============================================================================
+-- SECURITY POLICIES: User groups, roles, and access control
+-- These tables contain sensitive information and should NOT be publicly accessible
+-- All access is through the service role client with application-level authorization
+-- ============================================================================
+
+-- Deny all access to user_groups table (only service role can access)
+CREATE POLICY "Deny all access to user_groups" ON user_groups
+  FOR ALL USING (false) WITH CHECK (false);
+
+-- Deny all access to user_roles table (only service role can access)
+CREATE POLICY "Deny all access to user_roles" ON user_roles
+  FOR ALL USING (false) WITH CHECK (false);
+
+-- Deny all access to document_access_groups table (only service role can access)
+CREATE POLICY "Deny all access to document_access_groups" ON document_access_groups
+  FOR ALL USING (false) WITH CHECK (false);
 
 -- ============================================================================
 -- STEP 8: CREATE TRIGGERS
@@ -350,6 +420,9 @@ CREATE POLICY "Allow public delete to document_files" ON document_files
 
 -- Triggers for updated_at timestamps
 CREATE TRIGGER update_teams_updated_at BEFORE UPDATE ON teams
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_application_groups_updated_at BEFORE UPDATE ON application_groups
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_applications_updated_at BEFORE UPDATE ON applications
@@ -365,6 +438,12 @@ CREATE TRIGGER update_document_templates_updated_at BEFORE UPDATE ON document_te
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_document_files_updated_at BEFORE UPDATE ON document_files
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_user_groups_updated_at BEFORE UPDATE ON user_groups
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_user_roles_updated_at BEFORE UPDATE ON user_roles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Triggers for version tracking (initial versions)
@@ -393,8 +472,19 @@ CREATE TRIGGER create_team_document_version
 -- SCHEMA CREATION COMPLETE
 -- ============================================================================
 -- Next steps:
--- 1. Run: bun run seed (to populate initial data)
--- 2. Create Supabase Storage bucket 'documents' for file uploads
--- 3. Configure storage policies if needed
+-- 1. Run: bun run seed (to populate initial data if you have a seed script)
+-- 2. Create your first admin user in user_roles table:
+--    INSERT INTO user_roles (user_id, role)
+--    VALUES ('prof_xxxxxxxxxxxxx', 'admin')
+--    ON CONFLICT (user_id) DO UPDATE SET role = 'admin';
+--    (Replace 'prof_xxxxxxxxxxxxx' with your WorkOS user ID)
+-- 3. Create Supabase Storage bucket 'documents' for file uploads:
+--    - Go to Supabase Dashboard → Storage
+--    - Create new bucket named 'documents'
+--    - Configure storage policies if needed
+-- 4. Verify tables were created:
+--    SELECT table_name FROM information_schema.tables 
+--    WHERE table_schema = 'public' 
+--    ORDER BY table_name;
 -- ============================================================================
 

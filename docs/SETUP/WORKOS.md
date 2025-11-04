@@ -1,7 +1,5 @@
 # WorkOS Setup Guide
 
-**Last Updated**: 2025-01-30
-
 ---
 
 ## Overview
@@ -175,7 +173,7 @@ See [Troubleshooting](../TROUBLESHOOTING.md) for more help.
 
 ## Related Documentation
 
-- [Authentication Features](../FEATURES/AUTHENTICATION.md)
-- [Teams & Organizations](../FEATURES/TEAMS.md)
+- [Authentication & Authorization](https://github.com/StiensWout/DocHub/issues) - See GitHub Issues for feature details
+- [Teams & Organizations](https://github.com/StiensWout/DocHub/issues) - See GitHub Issues for feature details
 - [Admin Setup](../ADMIN_SETUP.md)
 

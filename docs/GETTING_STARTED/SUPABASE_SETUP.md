@@ -1,6 +1,8 @@
 # Supabase Setup Guide
 
-## Finding Your Supabase Service Role Key
+Complete guide for setting up Supabase for DocHub.
+
+> **Database Schema**: The complete database schema is available in `supabase/database_dump.sql`. See [Database Dump Guide](../INFRASTRUCTURE/DATABASE_DUMP.md) for instructions on exporting and updating the schema.
 
 The Supabase Service Role Key is a secret key that bypasses Row Level Security (RLS) policies. It's already created by Supabase when you create a project - you just need to find it in your dashboard.
 

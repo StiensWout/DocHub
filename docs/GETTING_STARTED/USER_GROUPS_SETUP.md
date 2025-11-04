@@ -5,7 +5,7 @@
 ### Step 1: Run Database Schema
 
 1. Go to Supabase Dashboard → SQL Editor
-2. Copy and paste contents of `supabase/user_groups_schema.sql`
+2. Run `supabase/create.sql` (if not already run) - this includes the user groups schema
 3. Click "Run"
 4. Verify tables are created: `user_groups`, `user_roles`, `document_access_groups`
 
@@ -90,5 +90,5 @@ The system is ready for AD group integration. When implementing:
 3. Auto-assign roles based on AD group membership
 4. Use WorkOS Directory Sync or custom sync mechanism
 
-See `docs/FEATURES/completed/user-groups-access-control.md` for detailed documentation.
+See [GitHub Issues](https://github.com/StiensWout/DocHub/issues) for detailed feature documentation.
 

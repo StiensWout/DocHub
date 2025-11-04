@@ -12,7 +12,8 @@
     "test:coverage": "jest --coverage",
     "seed": "bun run scripts/seed.ts",
     "check-db": "bun run scripts/check-db.ts",
-    "validate": "bun run scripts/validate.ts"
+    "validate": "bun run scripts/validate.ts",
+    "dump-db": "bun run scripts/dump-database.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.78.0",
@@ -28,11 +29,11 @@
     "html2pdf.js": "^0.12.1",
     "lucide-react": "^0.552.0",
     "next": "^14.2.0",
-    "pdfjs-dist": "5.4.394",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-pdf": "10.2.0",
     "server-only": "^0.0.1",
+    "supabase": "^2.54.11",
     "turndown": "^7.2.2",
     "winston": "^3.18.3"
   },
@@ -47,13 +48,13 @@
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "@types/winston": "^2.4.4",
-    "autoprefixer": "^10.4.19",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.0.1",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^4.1.16",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.0",
     "ts-jest": "^29.4.5",
     "typescript": "^5.5.0"
   }

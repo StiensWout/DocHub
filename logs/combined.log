@@ -2334,3 +2334,60 @@
 {"appId":"risonweb","documentId":"fefcbcfa-abcf-478f-8b68-a0bf61ce1ddc","documentType":"team","level":"info","message":"[validate-access] Request body","service":"dochub","teamId":"a7bf863d-4379-4cdf-a728-7c6591c0f73a","timestamp":"2025-11-04 13:26:57"}
 {"level":"debug","message":"SSO authorization using: organization ID","service":"dochub","timestamp":"2025-11-04 13:30:17"}
 {"level":"debug","message":"✅ Using organization ID (org_01K8WG3DSX12ES2Z703H7A3475). To switch providers, update the organization's connection in WorkOS Dashboard.","service":"dochub","timestamp":"2025-11-04 13:30:17"}
+{"currentTime":"2025-11-04T15:16:23.406Z","expiredAt":"2025-11-04T14:10:05.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dochub","timestamp":"2025-11-04 16:16:23"}
+{"currentTime":"2025-11-04T15:16:23.615Z","expiredAt":"2025-11-04T14:10:05.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dochub","timestamp":"2025-11-04 16:16:23"}
+{"currentTime":"2025-11-04T15:16:23.848Z","expiredAt":"2025-11-04T14:10:05.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dochub","timestamp":"2025-11-04 16:16:23"}
+{"level":"debug","message":"SSO authorization using: organization ID","service":"dochub","timestamp":"2025-11-04 16:16:49"}
+{"level":"debug","message":"✅ Using organization ID (org_01K8WG3DSX12ES2Z703H7A3475). To switch providers, update the organization's connection in WorkOS Dashboard.","service":"dochub","timestamp":"2025-11-04 16:16:49"}
+{"currentTime":"2025-11-04T15:18:40.696Z","expiredAt":"2025-11-04T14:10:05.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dochub","timestamp":"2025-11-04 16:18:40"}
+{"currentTime":"2025-11-04T15:18:40.792Z","expiredAt":"2025-11-04T14:10:05.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dochub","timestamp":"2025-11-04 16:18:40"}
+{"currentTime":"2025-11-04T15:18:40.929Z","expiredAt":"2025-11-04T14:10:05.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dochub","timestamp":"2025-11-04 16:18:40"}
+{"currentTime":"2025-11-04T15:22:20.031Z","expiredAt":"2025-11-04T14:10:05.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dochub","timestamp":"2025-11-04 16:22:20"}
+{"currentTime":"2025-11-04T15:22:20.647Z","expiredAt":"2025-11-04T14:10:05.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dochub","timestamp":"2025-11-04 16:22:20"}
+{"currentTime":"2025-11-04T15:22:22.331Z","expiredAt":"2025-11-04T14:10:05.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dochub","timestamp":"2025-11-04 16:22:22"}
+{"currentTime":"2025-11-04T15:22:22.347Z","expiredAt":"2025-11-04T14:10:05.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dochub","timestamp":"2025-11-04 16:22:22"}
+{"currentTime":"2025-11-04T15:22:22.371Z","expiredAt":"2025-11-04T14:10:05.000Z","level":"info","message":"[session] Token expired, expiring session","service":"dochub","timestamp":"2025-11-04 16:22:22"}
+{"level":"debug","message":"[signin] Syncing user user_01K8WJG016RNBNKRBJMTGM9EKC to local database","service":"dochub","timestamp":"2025-11-04 16:22:36"}
+{"level":"debug","message":"[syncUserFromWorkOS] Syncing user: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dochub","timestamp":"2025-11-04 16:22:36"}
+{"level":"info","message":"[syncUserFromWorkOS] ✅ Successfully synced user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dochub","timestamp":"2025-11-04 16:22:36"}
+{"level":"debug","message":"[signin] Syncing teams for user user_01K8WJG016RNBNKRBJMTGM9EKC after email/password authentication","service":"dochub","timestamp":"2025-11-04 16:22:36"}
+{"level":"debug","message":"[getUserGroups] Called for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dochub","timestamp":"2025-11-04 16:22:36"}
+{"level":"debug","message":"[getUserGroups] WORKOS_USE_ORGANIZATIONS=true, useWorkOSGroups=true","service":"dochub","timestamp":"2025-11-04 16:22:36"}
+{"level":"debug","message":"[getUserGroups] Starting WorkOS organization sync for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dochub","timestamp":"2025-11-04 16:22:36"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dochub","timestamp":"2025-11-04 16:22:36"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[getUserGroups] Fetched 1 organization memberships (cached for reuse)","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[syncTeamsFromUserOrganizations] Starting sync for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[syncTeamsFromUserOrganizations] Found 1 organization memberships:","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[syncTeamsFromUserOrganizations] Processing 1 organization memberships","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[syncTeamsFromUserOrganizations] Processing membership 1/1: CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[getUserSubgroupsInOrganization] Getting user's team (role) for user user_01K8WJG016RNBNKRBJMTGM9EKC in org CDLE","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[getUserSubgroupsInOrganization] User has role \"member\" in organization \"CDLE\"","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[getUserSubgroupsInOrganization] Skipping role \"member\" (empty or generic)","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[getUserSubgroupsInOrganization] Found 0 team(s) for user in org CDLE:","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[syncTeamsFromUserOrganizations] Organization \"CDLE\" serves as parent - teams are subgroups only","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"info","message":"[syncTeamsFromUserOrganizations] ✅ Sync complete. Created/found 0 teams:","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[getUserGroups] Synced 0 teams:","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[getUserGroupsFromWorkOS] Using provided memberships (1 memberships)","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"0":"CDLE","level":"debug","message":"[getUserGroups] WorkOS groups found:","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"0":"CDLE (role: member)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[isUserInAdminOrganization] ❌ User is NOT in admin organization or has admin role. Expected org: \"admin\"","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"0":"CDLE (role: member)","level":"debug","message":"[isUserInAdminOrganization] User's organizations and roles:","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[getUserGroups] Is user in admin organization: false","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[getUserGroups] No valid role found for user in organization \"CDLE\"","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[getUserGroups] Returning user's team(s) only:","service":"dochub","timestamp":"2025-11-04 16:22:37"}
+{"level":"debug","message":"[getUserOrganizationMemberships] 🔄 Fetching memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dochub","timestamp":"2025-11-04 16:22:40"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Found 1 raw memberships for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dochub","timestamp":"2025-11-04 16:22:40"}
+{"level":"debug","message":"[getUserOrganizationMemberships] Enriching memberships with organization details...","service":"dochub","timestamp":"2025-11-04 16:22:40"}
+{"0":"CDLE (org_01K8WG3DSX12ES2Z703H7A3475)","level":"debug","message":"[getUserOrganizationMemberships] ✅ Returning 1 enriched memberships (cached):","service":"dochub","timestamp":"2025-11-04 16:22:40"}
+{"level":"debug","message":"[isUserInAdminOrganization] Checking admin status for user user_01K8WJG016RNBNKRBJMTGM9EKC","service":"dochub","timestamp":"2025-11-04 16:22:40"}
+{"level":"debug","message":"[isUserInAdminOrganization] Looking for organization name: \"admin\" (case-insensitive)","service":"dochub","timestamp":"2025-11-04 16:22:40"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dochub","timestamp":"2025-11-04 16:22:40"}
+{"0":"CDLE (role: member)","level":"debug","message":"[isUserInAdminOrganization] Found 1 organization memberships:","service":"dochub","timestamp":"2025-11-04 16:22:40"}
+{"level":"debug","message":"[isUserInAdminOrganization] ❌ User is NOT in admin organization or has admin role. Expected org: \"admin\"","service":"dochub","timestamp":"2025-11-04 16:22:40"}
+{"0":"CDLE (role: member)","level":"debug","message":"[isUserInAdminOrganization] User's organizations and roles:","service":"dochub","timestamp":"2025-11-04 16:22:40"}
+{"level":"debug","message":"[getUserOrganizationMemberships] ✅ Using cached memberships for userId: user_01K8WJG016RNBNKRBJMTGM9EKC (1 memberships)","service":"dochub","timestamp":"2025-11-04 16:22:41"}

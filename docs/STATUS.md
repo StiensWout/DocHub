@@ -1,8 +1,5 @@
 # DocHub Current Status
 
-**Last Updated**: 2025-01-30  
-**Current Branch**: `feature/document-search-filtering`
-
 ---
 
 ## 🎯 Quick Status
@@ -48,21 +45,19 @@ NEXT_PUBLIC_WORKOS_REDIRECT_URI=http://localhost:3000/auth/callback
 
 ### Core Features ✅
 
-| Feature | Status | Documentation |
-|---------|--------|---------------|
-| Authentication & SSO | ✅ Complete | [Authentication](FEATURES/AUTHENTICATION.md) |
-| Teams & Organizations | ✅ Complete | [Teams](FEATURES/TEAMS.md) |
-| Document Management | ✅ Complete | [Documents](FEATURES/DOCUMENTS.md) |
-| Search & Discovery | ✅ Complete* | [Search](FEATURES/SEARCH.md) |
-| File Management | ✅ Complete | [Files](FEATURES/FILES.md) |
-
-*Enhanced features in progress - see [Enhanced Search](FEATURES/pending/enhanced-document-search-filtering.md)
+| Feature | Status | Tracking |
+|---------|--------|----------|
+| Authentication & SSO | ✅ Complete | [GitHub Issues](https://github.com/StiensWout/DocHub/issues) |
+| Teams & Organizations | ✅ Complete | [GitHub Issues](https://github.com/StiensWout/DocHub/issues) |
+| Document Management | ✅ Complete | [GitHub Issues](https://github.com/StiensWout/DocHub/issues) |
+| Search & Discovery | ✅ Complete | [GitHub Issues](https://github.com/StiensWout/DocHub/issues) |
+| File Management | ✅ Complete | [GitHub Issues](https://github.com/StiensWout/DocHub/issues) |
 
 ### In Development 🚧
 
-| Feature | Status | Documentation |
-|---------|--------|---------------|
-| Enhanced Search & Filtering | 🚧 Phase 1.6 | [Feature Request](FEATURES/pending/enhanced-document-search-filtering.md) |
+| Feature | Status | Tracking |
+|---------|--------|----------|
+| Enhanced Search & Filtering | 🚧 In Progress | [GitHub Issues](https://github.com/StiensWout/DocHub/issues) |
 
 ---
 
@@ -80,7 +75,7 @@ NEXT_PUBLIC_WORKOS_REDIRECT_URI=http://localhost:3000/auth/callback
 - 🚧 Search result presentation improvements
 - 🚧 Sorting options for search results
 
-See [Feature Request](FEATURES/pending/enhanced-document-search-filtering.md) for details.
+See [GitHub Issues](https://github.com/StiensWout/DocHub/issues) for feature details.
 
 ---
 
@@ -103,14 +98,7 @@ See [Feature Request](FEATURES/pending/enhanced-document-search-filtering.md) fo
 
 ## 📝 Recent Changes
 
-**2025-01-30**:
-- ✅ Created tag system (database, API, UI)
-- ✅ Integrated tags into document creation/editing
-- ✅ Added tag filtering to search
-- ✅ Created document metadata editor
-- ✅ Auto-open newly created documents
-- ✅ Modernized search bar UI
-- ✅ Documentation overhaul
+See [Changelog](CHANGELOG.md) for detailed change history.
 
 ---
 

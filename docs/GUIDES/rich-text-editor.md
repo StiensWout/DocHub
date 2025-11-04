@@ -24,8 +24,8 @@ bun install
 
 The `document_templates` table is created by:
 
-- **Option A**: Running `supabase/complete_schema.sql` (includes everything)
-- **Option B**: Running `supabase/templates_schema.sql` separately
+- **Option A**: Running `supabase/purge.sql` then `supabase/create.sql` (includes everything)
+- **Option B**: Running `supabase/database_dump.sql` (if available)
 
 The table structure:
 
