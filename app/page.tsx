@@ -172,7 +172,7 @@ function HomeContent() {
     return () => {
       window.removeEventListener('userRoleChanged', handleRoleChange as EventListener);
     };
-  }, [selectedTeamId, selectedDocumentAppId]); // Removed refreshDocuments from dependencies
+  }, [selectedTeamId]); // Only depend on selectedTeamId since refreshDocuments doesn't depend on selectedDocumentAppId
 
   // Load initial data - only after mount to avoid hydration issues
   useEffect(() => {
