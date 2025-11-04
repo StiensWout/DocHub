@@ -6,8 +6,12 @@ import { log } from '@/lib/logger';
 import { validateUUID, validateString } from '@/lib/validation/api-validation';
 
 /**
- * POST /api/applications
- * Create a new application (requires authentication)
+ * Create a new application from the request body, enforcing authentication and input validation.
+ *
+ * Validates required fields: `id` (UUID), `name` (1–255 chars), `iconName` (1–100 chars), `color` (hex `#RRGGBB`), and optional `groupId` (UUID).
+ * Responds with appropriate HTTP status codes for authentication failures, validation errors, permission errors, duplicate IDs, and server errors.
+ *
+ * @returns A JSON NextResponse containing `{ success: true }` on successful creation; on failure, a JSON error object with an explanatory message and an appropriate HTTP status (401, 400, 403, 409, or 500).
  */
 export async function POST(request: NextRequest) {
   try {
@@ -190,4 +194,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

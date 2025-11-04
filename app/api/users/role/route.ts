@@ -7,9 +7,10 @@ import { log } from '@/lib/logger';
 import { validateUUID, validateEnum } from '@/lib/validation/api-validation';
 
 /**
- * GET /api/users/role
- * Get current user's role
- */
+ * Return a user's role; if the `userId` query parameter is provided, return that user's role (requires the caller to be an admin), otherwise return the current session user's role.
+ *
+ * @param request - Incoming request. May include the optional `userId` query parameter; when `userId` is present it must be a valid UUID and the caller must be an admin, otherwise a 400 or 403 response is returned.
+ * @returns An object with a `role` property containing the user's role (for example, `"admin"` or `"user"`). On failure an error object is returned. */
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
@@ -64,8 +65,19 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/users/role
- * Set user role (admin only)
+ * Set a user's role (admin only) and optionally propagate the change to WorkOS organizations.
+ *
+ * Updates the target user's role in the database and, if WORKOS_USE_ORGANIZATIONS is enabled,
+ * attempts to update the user's membership role across all WorkOS organizations. If WorkOS updates
+ * fail completely the database change is rolled back when possible; partial WorkOS failures produce
+ * a partial-success response.
+ *
+ * @param request - Incoming NextRequest whose JSON body must include `userId` (UUID) and `role` (`'admin'` | `'user'`)
+ * @returns A NextResponse with JSON describing the outcome:
+ *  - Success (200): { success: true, message: string, roleChanged: 'admin' | 'user', currentUserRoleChanged: boolean, organizationsUpdated?: number }
+ *  - Partial success (200): includes `partialFailure: true` and a `warning` describing partial WorkOS updates
+ *  - Validation/auth errors (400 / 401 / 403): { error: string }
+ *  - Failure (500): { success: false, error: string, details?: string, rollback?: 'attempted' | 'successful' | 'failed' | 'not_attempted' }
  */
 export async function POST(request: NextRequest) {
   let dbUpdateSuccess = false;
@@ -353,4 +365,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

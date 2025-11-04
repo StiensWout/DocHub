@@ -6,8 +6,16 @@ import { log } from '@/lib/logger';
 import { validateUUID, validateEnum, DocumentType } from '@/lib/validation/api-validation';
 
 /**
- * POST /api/documents/validate-access
- * Validate if current user has access to a specific document
+ * Validate whether the current user has access to the specified document.
+ *
+ * Performs session and input validation, checks admin status and user group membership,
+ * and returns an access decision for the requested document.
+ *
+ * @returns An object describing the result or an error.
+ * - On successful access check: `{ hasAccess: true }` or `{ hasAccess: false }`.
+ * - If no session is found: responds with 401 and `{ error: 'Unauthorized' }`.
+ * - If input validation fails: responds with 400 and `{ error: <message> }`.
+ * - On unexpected internal errors the endpoint fails open and returns `{ hasAccess: true }`.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -157,4 +165,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ hasAccess: true });
   }
 }
-

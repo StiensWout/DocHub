@@ -6,10 +6,11 @@ import { log } from '@/lib/logger';
 import { validateUUID } from '@/lib/validation/api-validation';
 
 /**
- * GET /api/documents?teamId=xxx&appId=xxx
- * Get documents filtered by user's groups
- * Admins see all documents
- */
+ * Retrieve base and team documents for a specified team and application, filtered by the caller's group memberships and admin status.
+ *
+ * Required query parameters: `teamId` and `appId` (both validated as UUIDs). Returns `401` if the user session is missing and `400` for missing/invalid parameters. Admin users receive all team documents; non-admin users receive only team documents that are accessible to at least one of their groups. Base documents for the application are always included.
+ *
+ * @returns An object with `documents`, `isAdmin`, and `userGroups`. `documents` is an array of objects with fields: `id`, `title`, `category`, `type` (either `'base'` or `'team'`), optional `content`, `updated` (human-readable time ago), and `appId`. `isAdmin` is `true` when the caller is an admin, `false` otherwise. `userGroups` is the list of group names the user belongs to.
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
@@ -158,4 +159,3 @@ function formatTimeAgo(timestamp: string): string {
     return `${diffWeeks} ${diffWeeks === 1 ? "week" : "weeks"} ago`;
   }
 }
-
