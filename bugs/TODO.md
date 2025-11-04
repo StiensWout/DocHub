@@ -60,7 +60,21 @@ _All high priority bugs have been resolved ✅_
    - **Estimated Time:** 2-4 hours (remaining work)
    - **See:** [Bug #29 Details](#bug-29-custom-workos-roles-not-fully-displayed-in-admin-user-group-menu--partially-addressed)
 
-5. **Bug #25** - Tag Search Bar Not Refreshing After Tag Creation
+5. **Bug #30** - Session Expiration Not Enforced
+   - **Severity:** MEDIUM
+   - **Status:** 🔴 ACTIVE
+   - **Impact:** Security concern - sessions persist for 7 days instead of intended 24 hours
+   - **Estimated Time:** 2-3 hours
+   - **See:** [Bug #30 Details](#bug-30-session-expiration-not-enforced---cookie-expires-after-7-days-instead-of-24-hours--active)
+
+6. **Bug #31** - Application Group Update Not Persisting
+   - **Severity:** MEDIUM
+   - **Status:** 🔴 ACTIVE
+   - **Impact:** User experience issue - changes appear to save but don't persist after refresh
+   - **Estimated Time:** 2-3 hours
+   - **See:** [Bug #31 Details](#bug-31-application-group-update-not-persisting-after-save--active)
+
+7. **Bug #25** - Tag Search Bar Not Refreshing After Tag Creation
    - **Severity:** MEDIUM
    - **Status:** ⚠️ STATUS UNKNOWN (Implementation complete in TODO.md, but marked ACTIVE in BUG_LIST.md)
    - **Action Required:** Verify implementation and update BUG_LIST.md if complete
@@ -375,6 +389,60 @@ _All high priority bugs have been resolved ✅_
 **Estimated Time:** 3-4 hours  
 **Actual Time:** ~1.5 hours  
 **Status:** ✅ Fixed - Final upload now uses verified staged file instead of original newFile, ensuring staging approach provides intended protection
+
+---
+
+### Bug #30: Session Expiration Not Enforced - Cookie Expires After 7 Days Instead of 24 Hours 🔴 ACTIVE
+**Files:** `app/api/auth/signin/route.ts`, `app/api/auth/signup/route.ts`, `app/api/auth/verify-email/route.ts`, `lib/auth/session.ts`
+
+**Severity:** MEDIUM
+**Category:** Security / Authentication
+**Status:** 🔴 ACTIVE
+
+- [ ] Change cookie `maxAge` from 7 days to 24 hours (`60 * 60 * 24`) in all auth routes:
+  - [ ] `app/api/auth/signin/route.ts:67`
+  - [ ] `app/api/auth/signup/route.ts:70`
+  - [ ] `app/api/auth/verify-email/route.ts:55`
+- [ ] Add token expiration validation in `getSession()` function
+- [ ] Check WorkOS token expiration claims (JWT `exp` claim) if available
+- [ ] Implement session expiration check that validates token age, not just cookie existence
+- [ ] Consider adding token refresh mechanism if 24-hour expiration is too short for user experience
+- [ ] Ensure refresh token expiration (30 days) aligns with security requirements
+- [ ] Test session expiration:
+  - [ ] Verify cookie expires after 24 hours
+  - [ ] Verify session is invalidated after token expiration
+  - [ ] Verify user is logged out after expiration
+  - [ ] Test token refresh flow if implemented
+
+**Estimated Time:** 2-3 hours  
+**Status:** 🔴 ACTIVE - Session cookie set to 7 days instead of intended 24 hours
+
+---
+
+### Bug #31: Application Group Update Not Persisting After Save 🔴 ACTIVE
+**Files:** `components/ApplicationGroupManager.tsx`, `lib/supabase/queries.ts:533-553`
+
+**Severity:** MEDIUM
+**Category:** Functionality / Data Integrity
+**Status:** 🔴 ACTIVE
+
+- [ ] Add error logging to `updateApplicationGroup` function to capture any database errors
+- [ ] Verify database update is actually succeeding (check return value/error)
+- [ ] Add client-side validation that update succeeded before showing success toast
+- [ ] Check if there are any database triggers or constraints preventing updates
+- [ ] Verify `updated_at` timestamp is being updated correctly
+- [ ] Add refresh mechanism that re-fetches from database after update
+- [ ] Check for any caching that might be serving stale data
+- [ ] Test update operation end-to-end: UI → API → Database → UI refresh
+- [ ] Consider adding optimistic UI update + database confirmation pattern
+- [ ] Add detailed logging to track:
+  - [ ] Update request received
+  - [ ] Database update execution
+  - [ ] Update result (success/failure)
+  - [ ] UI refresh after update
+
+**Estimated Time:** 2-3 hours  
+**Status:** 🔴 ACTIVE - Updates appear to save but don't persist after refresh
 
 ---
 
@@ -1447,10 +1515,10 @@ After fixing each bug category, ensure:
 ## 📊 Progress Tracking
 
 ### Bug Fixes
-**Total Bugs:** 29
+**Total Bugs:** 31
 - **Critical:** 3 bugs (all fixed ✅)
 - **High Priority:** 7 bugs (Bug #4 ✅, Bug #5 ✅, Bug #6 ✅, Bug #7 ✅, Bug #21 ✅, Bug #22 ✅, Bug #26 ✅, Bug #27 ✅)
-- **Medium Priority:** 10 bugs (Bug #8 ✅, Bug #9, Bug #10, Bug #11, Bug #12, Bug #13, Bug #14, Bug #23 🔴 ACTIVE, Bug #24 🔴 ACTIVE, Bug #25 ⚠️ STATUS UNKNOWN, Bug #28 🔴 ACTIVE, Bug #29 ⚠️ PARTIALLY ADDRESSED)
+- **Medium Priority:** 12 bugs (Bug #8 ✅, Bug #9, Bug #10, Bug #11, Bug #12, Bug #13, Bug #14, Bug #23 🔴 ACTIVE, Bug #24 🔴 ACTIVE, Bug #25 ⚠️ STATUS UNKNOWN, Bug #28 🔴 ACTIVE, Bug #29 ⚠️ PARTIALLY ADDRESSED, Bug #30 🔴 ACTIVE, Bug #31 🔴 ACTIVE)
 - **Low Priority:** 5 bugs (Bug #15, Bug #16, Bug #17, Bug #18, Bug #19, Bug #20)
 
 ### Infrastructure & DevOps Tasks

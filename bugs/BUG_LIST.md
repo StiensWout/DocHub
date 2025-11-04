@@ -81,6 +81,74 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 
 ## 🟡 MEDIUM PRIORITY ISSUES
 
+### 30. Session Expiration Not Enforced - Cookie Expires After 7 Days Instead of 24 Hours
+
+**Severity:** MEDIUM
+**Category:** Security / Authentication
+**Status:** 🔴 ACTIVE
+**Files:** `app/api/auth/signin/route.ts`, `app/api/auth/signup/route.ts`, `app/api/auth/verify-email/route.ts`, `lib/auth/session.ts`
+
+#### Issues:
+- Session cookie `wos-session` is set with `maxAge: 60 * 60 * 24 * 7` (7 days) in all auth routes
+- User reports session remains active after 4+ days when it should expire after 24 hours
+- `getSession()` function in `lib/auth/session.ts` only checks if token exists and is valid with WorkOS
+- No token expiration validation based on intended 24-hour expiration
+- Cookie expiration (`maxAge`) doesn't match intended session expiration (24 hours)
+- WorkOS token may have its own expiration, but cookie keeps session alive longer than intended
+
+#### Impact:
+- **MEDIUM** - Security concern - sessions persist longer than intended
+- Users remain logged in beyond intended session duration
+- Potential unauthorized access if session should expire after 24 hours
+- Session management doesn't match intended security policy
+
+#### Fix Required:
+- Change cookie `maxAge` from 7 days to 24 hours (`60 * 60 * 24`) in all auth routes:
+  - `app/api/auth/signin/route.ts:67`
+  - `app/api/auth/signup/route.ts:70`
+  - `app/api/auth/verify-email/route.ts:55`
+- Add token expiration validation in `getSession()` function
+- Check WorkOS token expiration claims (JWT `exp` claim) if available
+- Implement session expiration check that validates token age, not just cookie existence
+- Consider adding token refresh mechanism if 24-hour expiration is too short for user experience
+- Ensure refresh token expiration (30 days) aligns with security requirements
+
+---
+
+### 31. Application Group Update Not Persisting After Save
+
+**Severity:** MEDIUM
+**Category:** Functionality / Data Integrity
+**Status:** 🔴 ACTIVE
+**Files:** `components/ApplicationGroupManager.tsx`, `lib/supabase/queries.ts:533-553`
+
+#### Issues:
+- User reports: "Updating an application group is not working. It states it saved but on refresh no change happened"
+- `updateApplicationGroup` function in `lib/supabase/queries.ts` appears correct (lines 533-553)
+- Component shows success toast after update (line 110)
+- Component calls `loadGroups()` after update (line 113) which should refresh the list
+- Changes may not be persisting to database or may be overwritten on refresh
+- Could be a race condition, caching issue, or database update failure
+
+#### Impact:
+- **MEDIUM** - User experience issue - changes appear to save but don't persist
+- Users cannot reliably update application groups
+- Data integrity concern - UI shows success but data isn't updated
+- Confusing UX - success message shown but changes lost
+
+#### Fix Required:
+- Add error logging to `updateApplicationGroup` function to capture any database errors
+- Verify database update is actually succeeding (check return value/error)
+- Add client-side validation that update succeeded before showing success toast
+- Check if there are any database triggers or constraints preventing updates
+- Verify `updated_at` timestamp is being updated correctly
+- Add refresh mechanism that re-fetches from database after update
+- Check for any caching that might be serving stale data
+- Test update operation end-to-end: UI → API → Database → UI refresh
+- Consider adding optimistic UI update + database confirmation pattern
+
+---
+
 ### 8. Excessive Console Logging in Production
 
 **Severity:** MEDIUM
@@ -558,7 +626,7 @@ _All critical issues have been resolved. See [ARCHIVED FIXES](#-archived-fixes--
 
 - **Critical Issues:** 0 (All 3 resolved ✅)
 - **High Priority:** 0 (All 6 resolved ✅)
-- **Medium Priority:** 10 (9 existing + Bug #29)
+- **Medium Priority:** 12 (9 existing + Bug #29 + Bug #30 + Bug #31)
 - **Low Priority:** 5
 
 ### Recommended Action Plan:
